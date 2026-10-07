@@ -29,6 +29,7 @@ Les instructions d'installation et de lancement seront ajoutées dès que la sta
 ├── .gitignore        # Fichiers ignorés par Git
 ├── CHANGELOG.md      # Historique des versions
 ├── CONTRIBUTING.md   # Guide de contribution
+├── LICENSE           # Licence MIT
 └── SECURITY.md       # Signalement des failles de sécurité
 ```
 
@@ -38,4 +39,4 @@ Les contributions sont les bienvenues : lisez [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Licence
 
-Aucune licence n'est encore définie. Sans licence, le code reste protégé par défaut (tous droits réservés).
+Distribué sous licence MIT. Voir [LICENSE](LICENSE).
