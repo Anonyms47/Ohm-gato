@@ -1,0 +1,35 @@
+# Systèmes d'exploitation
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs et IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*~
+
+# Secrets et environnement
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Journaux et fichiers temporaires
+*.log
+tmp/
+.cache/
+
+# Dépendances et builds (courants)
+node_modules/
+dist/
+build/
+coverage/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+target/

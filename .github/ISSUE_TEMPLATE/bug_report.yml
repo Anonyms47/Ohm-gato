@@ -1,0 +1,31 @@
+name: Signaler un bug
+description: Quelque chose ne fonctionne pas comme prévu
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Que se passe-t-il ?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportement attendu
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environnement
+      placeholder: OS, navigateur, version...
