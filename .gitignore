@@ -33,3 +33,16 @@ __pycache__/
 .venv/
 venv/
 target/
+
+# Next.js / tests
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+test-results/
+playwright-report/
+blob-report/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/

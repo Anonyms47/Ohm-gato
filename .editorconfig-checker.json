@@ -1,0 +1,6 @@
+{
+  "Disable": {
+    "IndentSize": true
+  },
+  "Exclude": ["\\.png$", "package-lock\\.json$", "^supabase/config\\.toml$"]
+}

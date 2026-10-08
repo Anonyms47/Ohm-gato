@@ -1,0 +1,138 @@
+@import "../styles/fonts.css";
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-creme: var(--ohm-creme);
+  --color-blanc-casse: var(--ohm-blanc-casse);
+  --color-chocolat: var(--ohm-chocolat);
+  --color-cacao: var(--ohm-cacao);
+  --color-caramel: var(--ohm-caramel);
+  --color-caramel-encre: var(--ohm-caramel-encre);
+  --color-rose: var(--ohm-rose);
+  --color-rose-encre: var(--ohm-rose-encre);
+  --color-orange: var(--ohm-orange);
+  --color-orange-encre: var(--ohm-orange-encre);
+  --color-grille: var(--ohm-grille);
+  --color-encre-douce: var(--ohm-encre-douce);
+  --color-succes: var(--ohm-succes);
+  --color-erreur: var(--ohm-erreur);
+  --color-wave: var(--ohm-wave);
+  --color-wave-encre: var(--ohm-wave-encre);
+  --color-orange-money: var(--ohm-orange-money);
+
+  --font-display: var(--ohm-font-display);
+  --font-script: var(--ohm-font-script);
+  --font-text: var(--ohm-font-text);
+
+  --breakpoint-xs: 23rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--ohm-creme);
+    color: var(--ohm-chocolat);
+    font-family: var(--ohm-font-text);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    overflow-x: clip;
+  }
+
+  :focus-visible {
+    outline: var(--ohm-focus);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--ohm-rose);
+    color: var(--ohm-cacao);
+  }
+
+  h1, h2, h3, h4 {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Quadrillage irrégulier des affiches : les lignes ne tombent jamais tout à fait au même endroit. */
+  .ohm-grille {
+    background-color: var(--ohm-creme);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' fill='none' stroke='%23e7cfc4' stroke-width='1.4'%3E%3Cpath d='M0 31.5H260M0 64H260M0 98.5H260M0 129H260M0 163.5H260M0 194H260M0 228.5H260M0 259H260'/%3E%3Cpath d='M30.5 0V260M63 0V260M97.5 0V260M131 0V260M162.5 0V260M196 0V260M227.5 0V260M259 0V260'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+  }
+
+  .ohm-cacao {
+    background-color: var(--ohm-cacao);
+    color: var(--ohm-creme);
+  }
+
+  /* Cercle caramel posé derrière un produit. */
+  .ohm-cercle {
+    border-radius: 9999px;
+    background: var(--ohm-caramel);
+  }
+
+  /* Tampon (PAYÉE, À VÉRIFIER, Carnet retrouvé…). */
+  .ohm-tampon {
+    display: inline-block;
+    border: 3px solid currentColor;
+    border-radius: 6px;
+    padding: 0.2em 0.6em;
+    font-family: var(--ohm-font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transform: rotate(-6deg);
+    mix-blend-mode: multiply;
+  }
+
+  .ohm-tampon-pose {
+    animation: ohm-tampon 420ms var(--ohm-courbe) both;
+  }
+
+}
+
+@keyframes ohm-tampon {
+  0% { opacity: 0; transform: rotate(-6deg) scale(1.6); }
+  70% { opacity: 1; transform: rotate(-6deg) scale(0.94); }
+  100% { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+
+@keyframes ohm-trace {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ohm-impression {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes ohm-ajout {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ohm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Un produit entre légèrement dans la composition. */
+@keyframes ohm-entree {
+  from { opacity: 0; transform: translateY(14px) rotate(-1deg); }
+  to { opacity: 1; transform: none; }
+}

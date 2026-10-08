@@ -1,0 +1,42 @@
+import "server-only";
+import { z } from "zod";
+
+/** Variables serveur. Aucun secret n'est préfixé NEXT_PUBLIC_. */
+const schema = z.object({
+  APP_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
+  NEXT_PUBLIC_SITE_URL: z.url(),
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  SUPABASE_SECRET_KEY: z.string().min(1),
+  /** Secret de dérivation des liens de suivi (32 caractères minimum). */
+  TRACKING_TOKEN_SECRET: z.string().min(32),
+  PAYMENT_TEST_MODE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  PAYMENT_TEST_WEBHOOK_SECRET: z.string().min(32).optional(),
+  WAVE_API_KEY: z.string().min(1).optional(),
+  WAVE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  ORANGE_MONEY_CLIENT_ID: z.string().min(1).optional(),
+  ORANGE_MONEY_CLIENT_SECRET: z.string().min(1).optional(),
+  ORANGE_MONEY_MERCHANT_CODE: z.string().min(1).optional(),
+  ORANGE_MONEY_WEBHOOK_SECRET: z.string().min(1).optional(),
+});
+
+export type ServerEnv = z.infer<typeof schema>;
+
+let cached: ServerEnv | null = null;
+
+export function serverEnv(): ServerEnv {
+  if (cached) return cached;
+  const parsed = schema.safeParse(process.env);
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
+    throw new Error(`Configuration serveur incomplète : ${fields}. Voir .env.example.`);
+  }
+  if (parsed.data.APP_ENV === "production" && parsed.data.PAYMENT_TEST_MODE) {
+    throw new Error("PAYMENT_TEST_MODE est interdit en production.");
+  }
+  cached = parsed.data;
+  return cached;
+}

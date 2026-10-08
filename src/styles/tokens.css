@@ -1,0 +1,60 @@
+/*
+ * OHMEGATO — tokens de marque centralisés.
+ * Toute couleur, police ou durée utilisée dans l'interface doit venir d'ici.
+ *
+ * Contrastes vérifiés (WCAG 2.1) :
+ *   chocolat / crème ........ 10.7  (texte courant)
+ *   caramel-encre / crème ...  5.2  (texte courant AA)
+ *   rose-encre / crème ......  5.2  (texte courant AA)
+ *   orange-encre / crème ....  4.8  (texte courant AA)
+ *   crème / cacao ........... 14.8  (sections immersives)
+ *   caramel / cacao .........  5.2
+ *   chocolat / caramel ......  3.7  (grands titres et éléments graphiques uniquement)
+ */
+:root {
+  /* Palette */
+  --ohm-creme: #f5e9d6;          /* crème pâtissière : fond des affiches */
+  --ohm-blanc-casse: #fbf6ee;    /* jamais de blanc clinique */
+  --ohm-chocolat: #4a2a1c;       /* titres, texte, bouton principal */
+  --ohm-cacao: #24140d;          /* sections immersives */
+  --ohm-caramel: #c27a2e;        /* cercles, accents graphiques */
+  --ohm-caramel-encre: #8f5216;  /* caramel lisible sur crème */
+  --ohm-rose: #e28ba3;           /* rose du logo — accent, jamais dominant (à ajuster sur le logo officiel) */
+  --ohm-rose-encre: #a8385a;
+  --ohm-orange: #e3772a;         /* produits fruités */
+  --ohm-orange-encre: #a84a0c;
+  --ohm-grille: #e7cfc4;         /* quadrillage beige rosé */
+  --ohm-encre-douce: #6b4a3a;    /* texte secondaire */
+  --ohm-succes: #2f6b3a;
+  --ohm-erreur: #a3261b;
+  --ohm-wave: #1dc8f2;           /* bleu Wave (bouton de paiement) */
+  --ohm-wave-encre: #08354a;
+  --ohm-orange-money: #ff7900;   /* orange Orange Money */
+
+  /*
+   * Typographie.
+   * TEMPORAIRE : Young Serif, Gochi Hand et Atkinson Hyperlegible Next remplacent
+   * OhmegatoDisplay et OhmegatoScript tant que les WOFF2 officiels ne sont pas livrés.
+   * Pour basculer : déposer les fichiers dans public/fonts/, décommenter les @font-face
+   * de src/styles/fonts.css, puis remplacer uniquement les deux premières variables.
+   */
+  --ohm-font-display: "Young Serif", "Georgia", serif;       /* → "OhmegatoDisplay" */
+  --ohm-font-script: "Gochi Hand", "Comic Sans MS", cursive; /* → "OhmegatoScript" */
+  --ohm-font-text: "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, sans-serif;
+
+  /* Mouvement */
+  --ohm-duree-courte: 160ms;
+  --ohm-duree-moyenne: 280ms;
+  --ohm-courbe: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Interaction */
+  --ohm-cible-min: 44px;
+  --ohm-focus: 3px solid var(--ohm-rose-encre);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ohm-duree-courte: 0ms;
+    --ohm-duree-moyenne: 0ms;
+  }
+}
