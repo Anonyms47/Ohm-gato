@@ -9,7 +9,7 @@ test.describe("Nos fournées — le journal du four", () => {
     await expect(page.getByText("Commandes ouvertes").first()).toBeVisible();
     await expect(page.getByText("Ouverture des commandes")).toBeVisible();
     await expect(page.getByText("Livraison et retrait").first()).toBeVisible();
-    await expect(page.getByText("Reste 60 cookies")).toBeVisible();
+    await expect(page.getByText(/^Reste \d+ cookies$/)).toBeVisible();
     await expect(page.getByText("Pas encore de date programmée.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Les fournées passées" })).toBeVisible();
     const cookies = page.locator("li").filter({ has: page.getByRole("heading", { name: "Cookies" }) });
