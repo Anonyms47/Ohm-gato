@@ -45,6 +45,11 @@ returns int[] language sql as $$
   where cycle_id = (select cycle_id from ids) and product_id = (select cookies_id from ids);
 $$;
 
+-- Stock de départ connu, quel que soit l'état de la base locale (annulé au rollback).
+update public.inventory_units set reserved_units = 0, sold_units = 0
+  where cycle_id = '00000000-0000-4000-8000-000000000012';
+update public.orders set status = 'cancelled' where status not in ('cancelled', 'expired', 'refunded');
+
 set local role service_role;
 
 -- ---------------------------------------------------------------------------
