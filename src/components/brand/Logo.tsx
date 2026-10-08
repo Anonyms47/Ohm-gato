@@ -15,7 +15,7 @@ export function Logo({ className, tone = "chocolat" }: { className?: string; ton
       className={cn("inline-flex min-h-11 items-center", className)}
     >
       {brand.logo ? (
-        <Image src={brand.logo.src} width={brand.logo.width} height={brand.logo.height} alt="" priority className="h-10 w-auto" />
+        <Image src={brand.logo.src} width={brand.logo.width} height={brand.logo.height} alt="" priority className="size-12 sm:size-14" />
       ) : (
         <span
           className={cn(

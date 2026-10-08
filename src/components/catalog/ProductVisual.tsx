@@ -44,7 +44,7 @@ export function ProductVisual({
           height={image.height}
           sizes={sizes}
           priority={priority}
-          className="h-[88%] w-auto max-w-[96%] object-contain drop-shadow-[0_18px_18px_rgb(36_20_13/0.28)]"
+          className="absolute inset-[3%] h-[94%] w-[94%] object-contain drop-shadow-[0_18px_18px_rgb(36_20_13/0.28)]"
         />
       ) : (
         <span

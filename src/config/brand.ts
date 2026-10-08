@@ -12,9 +12,8 @@ export const brand = {
   instagramUrl: "https://www.instagram.com/ohmegato/",
   pickupAddress: "Rue GY-69, Cité Sonatel 2, Sud Foire",
   /**
-   * Logo officiel : déposer le fichier vectoriel dans public/brand/ puis renseigner
-   * son chemin et ses dimensions ici. Tant qu'il vaut null, le nom s'affiche en
-   * texte simple (aucune imitation du logo).
+   * Logo officiel (médaillon fourni par la marque, détouré sans retouche).
+   * À remplacer par la version vectorielle (SVG) dès qu'elle est disponible.
    */
-  logo: null as null | { src: string; width: number; height: number },
+  logo: { src: "/brand/logo-ohmegato.webp", width: 640, height: 640 } as null | { src: string; width: number; height: number },
 } as const;

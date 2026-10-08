@@ -31,5 +31,5 @@
 ## Limites connues
 
 - Wave n'est pas vérifié contre l'API réelle ; Orange Money n'est pas implémenté.
-- Les photos et le logo n'étant pas fournis, les visuels sont des compositions typographiques.
+- Les visuels produits viennent des affiches fournies ; leur authenticité (photos réelles ou non) reste à confirmer par Alima.
 - L'occupation des créneaux compte toutes les commandes non annulées, y compris celles en attente de paiement.
