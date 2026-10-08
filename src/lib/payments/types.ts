@@ -1,6 +1,6 @@
 import type { PaymentStatus } from "@/lib/order-status";
 
-export type ProviderId = "test" | "wave" | "orange_money";
+export type ProviderId = "test" | "wave" | "wave_link" | "orange_money";
 
 export interface CheckoutRequest {
   paymentId: string;

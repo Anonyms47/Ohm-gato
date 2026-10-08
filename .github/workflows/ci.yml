@@ -66,6 +66,7 @@ jobs:
             echo "TRACKING_TOKEN_SECRET=$(openssl rand -hex 32)"
             echo "PAYMENT_TEST_MODE=true"
             echo "OTP_TEST_MODE=true"
+            echo "WAVE_PAYMENT_LINK=https://pay.wave.com/m/M_sn_qG-azdQrGkds/c/sn/"
             echo "PAYMENT_TEST_WEBHOOK_SECRET=$(openssl rand -hex 32)"
           } > .env.local
       - run: npx playwright install --with-deps chromium

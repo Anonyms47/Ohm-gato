@@ -14,7 +14,8 @@ Couche d'adaptation : `src/lib/payments/`. Chaque fournisseur implémente `Payme
 | Fournisseur | État | Variables |
 |---|---|---|
 | Test (`test`) | Terminé, hors production uniquement | `PAYMENT_TEST_MODE`, `PAYMENT_TEST_WEBHOOK_SECRET` |
-| Wave | Écrit d'après la documentation publique Wave Checkout, **non vérifié** faute d'identifiants | `WAVE_API_KEY`, `WAVE_WEBHOOK_SECRET` |
+| Wave (lien marchand) | **Actif** : lien fourni par OHMEGATO. Décision d'OHMEGATO : la commande est confirmée dès que le client choisit Wave ; le paiement reste « en attente » jusqu'à ce que l'équipe le constate dans l'application Wave et touche « Paiement Wave reçu » dans /admin (sinon elle annule, le stock revient). « Payée » n'est jamais affiché avant. | `WAVE_PAYMENT_LINK` |
+| Wave Checkout (API) | Écrit d'après la documentation publique, **non vérifié** faute d'identifiants. Prend le relais du lien quand il est configuré. | `WAVE_API_KEY`, `WAVE_WEBHOOK_SECRET` |
 | Orange Money | **Non implémenté** : l'API dépend du contrat marchand | `ORANGE_MONEY_*` |
 
 Webhooks à déclarer chez les fournisseurs : `https://<domaine>/api/payments/webhook/wave` et `/api/payments/webhook/orange_money`.

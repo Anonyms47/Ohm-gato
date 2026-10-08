@@ -6,7 +6,7 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 
 | Donnée | Effet tant qu'elle manque |
 |---|---|
-| Identifiants marchands **Wave** (clé API Checkout + secret de webhook) | Bouton Wave désactivé : « Paiement temporairement indisponible » |
+| Identifiants marchands **Wave** (clé API Checkout + secret de webhook) | Le lien marchand Wave fonctionne déjà, avec vérification manuelle par Alima ; l'API rendrait la confirmation automatique |
 | Contrat et documentation API **Orange Money** (identifiants, code marchand, format des notifications) | Bouton Orange Money désactivé |
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
 | **Allergènes confirmés** recette par recette (gluten, œufs, lait, soja, fruits à coque, chocolat) | Seul le message « Une allergie ? Écrivez-nous » est affiché |

@@ -343,3 +343,42 @@ test.describe("Mise en page des nouvelles pages", () => {
     });
   }
 });
+
+test.describe("Paiement par lien Wave", () => {
+  test("commande confirmée au choix de Wave, « Payée » seulement après enregistrement par OHMEGATO", async ({ page }) => {
+    await addToBox(page, "cake-orange", "4 tranches");
+    await fillPickupCheckout(page);
+    await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
+    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Payer avec Wave" }).click();
+    await expect(page).toHaveURL(/\/suivi\/[A-Za-z0-9_-]{43}\?retour=wave/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Commande confirmée");
+    const panel = page.getByTestId("paiement-wave");
+    await expect(panel).toContainText("1 000 FCFA");
+    const link = panel.getByRole("link", { name: /Payer 1 000 FCFA avec Wave/ });
+    await expect(link).toHaveAttribute("href", /^https:\/\/pay\.wave\.com\/m\/.+amount=1000/);
+    await expect(page.getByText("Payée", { exact: true })).toHaveCount(0);
+    const reference = (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
+    const trackingUrl = page.url().replace(/\?.*$/, "");
+
+    // Ma boîte est vidée : la commande est passée.
+    await page.goto("/ma-boite");
+    await expect(page.getByText("Votre boîte est vide.")).toBeVisible();
+
+    // OHMEGATO constate le paiement.
+    const admin = testPhone();
+    await login(page, admin, "/admin");
+    await grantAdmin(e164(admin));
+    await page.goto("/admin");
+    await expect(page.getByText(/Paiements Wave à vérifier/)).toBeVisible();
+    await page.getByRole("link", { name: reference }).first().click();
+    await waitForHydration(page);
+    await page.getByLabel(/Référence de la transaction Wave/).fill("TX-123");
+    await page.getByRole("button", { name: "Paiement Wave reçu" }).click();
+    await page.getByRole("button", { name: "Oui, paiement reçu" }).click();
+    await expect(page.getByText("Paiement enregistré : la commande est payée.")).toBeVisible();
+
+    await page.goto(trackingUrl);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
+  });
+});

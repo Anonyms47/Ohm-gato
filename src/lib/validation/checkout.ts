@@ -60,7 +60,7 @@ export const deliverySchema = z.object({
   longitude: z.number({ message: "Placez le repère de livraison sur la carte." }).min(-17.6).max(-16.9),
 });
 
-export const paymentProviderSchema = z.enum(["wave", "orange_money", "test"]);
+export const paymentProviderSchema = z.enum(["wave", "wave_link", "orange_money", "test"]);
 export type PaymentProviderId = z.infer<typeof paymentProviderSchema>;
 
 export const placeOrderSchema = z

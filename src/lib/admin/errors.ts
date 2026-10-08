@@ -12,6 +12,8 @@ const messages: Record<string, string> = {
   REQUEST_NOT_FOUND: "Demande introuvable.",
   REQUEST_LOCKED: "Cette demande ne peut plus recevoir de proposition (paiement ouvert ou terminé).",
   PRICE_REQUIRED: "Indiquez un prix total.",
+  PAYMENT_NOT_FOUND: "Aucun paiement en attente pour cette commande.",
+  ORDER_NOT_PAYABLE: "Cette commande est annulée ou expirée : le paiement ne peut plus être enregistré.",
 };
 
 export function adminErrorMessage(error: { message: string; details?: string | null }): string {

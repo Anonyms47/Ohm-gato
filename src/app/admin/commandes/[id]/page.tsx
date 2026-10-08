@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminMap } from "@/components/admin/AdminMap";
 import { OrderStatusActions } from "@/components/admin/OrderActions";
 import { PositionLinks } from "@/components/admin/PositionLinks";
+import { RecordPayment } from "@/components/admin/RecordPayment";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { brand } from "@/config/brand";
 import { getOrderDetail } from "@/lib/admin/data";
@@ -44,6 +45,10 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
           </Link>
         </div>
       </header>
+
+      {order.paymentStatus === "pending" && !["pending_payment", "cancelled", "expired", "refunded"].includes(order.status) && (
+        <RecordPayment orderId={order.id} reference={order.reference} amountFcfa={order.totalFcfa} />
+      )}
 
       <section aria-labelledby="statut" className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5">
         <h2 id="statut" className="mb-3 font-display text-[1.4rem]">

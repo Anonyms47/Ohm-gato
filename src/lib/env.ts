@@ -22,6 +22,14 @@ const schema = z.object({
   ORANGE_MONEY_MERCHANT_CODE: z.string().min(1).optional(),
   ORANGE_MONEY_WEBHOOK_SECRET: z.string().min(1).optional(),
   /**
+   * Lien de paiement marchand Wave (sans API). La commande est confirmée au choix de Wave,
+   * le paiement est vérifié et enregistré à la main par OHMEGATO dans /admin.
+   */
+  WAVE_PAYMENT_LINK: z
+    .url()
+    .refine((v) => v.startsWith("https://pay.wave.com/"), "Lien Wave attendu (https://pay.wave.com/…).")
+    .optional(),
+  /**
    * Codes de connexion affichés à l'écran au lieu d'être envoyés (développement et tests).
    * Interdit en production.
    */
