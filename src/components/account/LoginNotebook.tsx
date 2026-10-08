@@ -124,8 +124,14 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
       setError(result.error);
       return;
     }
+    // Pas de rafraîchissement ici : la page de connexion redirigerait aussitôt vers le carnet
+    // sans laisser voir le tampon « Carnet retrouvé ». Il a lieu à l'ouverture du carnet.
     setOutcome(result.data);
     setStep("found");
+  };
+
+  const openNotebook = () => {
+    router.push(next);
     router.refresh();
   };
 
@@ -133,7 +139,7 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
     event.preventDefault();
     if (nameState === "loading") return;
     if (name.trim().length < 2) {
-      router.push(next);
+      openNotebook();
       return;
     }
     setNameState("loading");
@@ -146,8 +152,7 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
       setNameState("error");
       return;
     }
-    router.push(next);
-    router.refresh();
+    openNotebook();
   };
 
   const codeExpired = error?.code === "CODE_EXPIRED" || error?.code === "TOO_MANY_ATTEMPTS" || error?.code === "NO_CODE";
@@ -338,7 +343,7 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
                   </Button>
                 </form>
               ) : (
-                <Button onClick={() => router.push(next)}>Ouvrir mon carnet</Button>
+                <Button onClick={openNotebook}>Ouvrir mon carnet</Button>
               )}
             </div>
           )}
