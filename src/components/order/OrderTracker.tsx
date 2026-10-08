@@ -27,7 +27,7 @@ export interface TrackerOrder {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   fulfillment: Fulfillment;
-  customerName: string;
+  customerName: string | null;
   addressLine: string | null;
   district: string | null;
   landmark: string | null;
@@ -38,8 +38,10 @@ export interface TrackerOrder {
   deliveryFeeFcfa: number | null;
   totalFcfa: number;
   reservationExpiresAt: string | null;
-  cycleNumber: number;
-  slot: { startsAt: string; endsAt: string };
+  cycleNumber: number | null;
+  slot: { startsAt: string; endsAt: string } | null;
+  /** Informations personnelles visibles (navigateur d'origine ou propriétaire connecté). */
+  showPrivate: boolean;
   items: { productName: string; variantLabel: string; flavorName: string | null; quantity: number; lineTotalFcfa: number }[];
   history: { status: OrderStatus; createdAt: string }[];
   storage: { productName: string; advice: string }[];
@@ -230,7 +232,7 @@ export function OrderTracker({
       {/* Le ticket devient le carnet de route */}
       <section aria-labelledby="ticket-commande" className="relative mx-auto w-full max-w-md bg-blanc-casse px-6 py-6 shadow-[0_6px_14px_-8px_rgb(36_20_13/0.4)]">
         <h2 id="ticket-commande" className="text-center font-bold tracking-[0.2em]">
-          {brand.name} · Fournée n°{order.cycleNumber}
+          {brand.name} · {order.cycleNumber !== null ? `Fournée n°${order.cycleNumber}` : "Sur-mesure"}
         </h2>
         {paid && (
           <p className={cn("ohm-tampon absolute right-4 top-14 text-[1.4rem] text-succes", animateStamp && "ohm-tampon-pose")}>Payée</p>
@@ -268,10 +270,19 @@ export function OrderTracker({
         </dl>
         <div className="mt-4 flex flex-col gap-1">
           <p>
-            <strong>{order.fulfillment === "pickup" ? "Retrait" : "Livraison"} :</strong> {formatSlot(order.slot.startsAt, order.slot.endsAt)}
+            <strong>{order.fulfillment === "pickup" ? "Retrait" : "Livraison"} :</strong>{" "}
+            {order.slot ? formatSlot(order.slot.startsAt, order.slot.endsAt) : "date convenue avec OHMEGATO"}
           </p>
           {order.fulfillment === "pickup" ? (
             <p>{pickupAddress}</p>
+          ) : !order.showPrivate ? (
+            <p className="text-encre-douce">
+              Adresse masquée sur ce lien.{" "}
+              <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                Se connecter avec le numéro de la commande
+              </a>{" "}
+              pour afficher vos informations.
+            </p>
           ) : (
             <p>
               {[order.addressLine, order.district, order.landmark].filter(Boolean).join(", ")}
@@ -290,6 +301,15 @@ export function OrderTracker({
           )}
         </div>
         {order.fulfillment === "delivery" && <p className="mt-3 font-bold">{DELIVERY_FEE_NOTICE}</p>}
+        {!order.showPrivate && order.fulfillment === "pickup" && paid && (
+          <p className="mt-4 text-encre-douce">
+            Le code de retrait s&apos;affiche sur le navigateur qui a passé la commande, ou après{" "}
+            <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+              connexion avec le numéro de la commande
+            </a>
+            .
+          </p>
+        )}
         {order.pickupCode && (
           <p className="mt-4 rounded-[10px] border-2 border-chocolat p-3 text-center">
             Code de retrait

@@ -1,37 +1,33 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
+import { PositionPicker } from "@/components/checkout/PositionPicker";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
+import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
 import type { CheckoutFormValues } from "@/lib/validation/checkout-form";
 
-const AddressMap = dynamic(() => import("@/components/checkout/AddressMap"), {
-  ssr: false,
-  loading: () => <p className="text-encre-douce">Chargement de la carte…</p>,
-});
+export interface SavedAddress {
+  id: string;
+  label: string | null;
+  recipientName: string;
+  recipientPhone: string;
+  addressLine: string;
+  district: string | null;
+  landmark: string | null;
+  floorDoor: string | null;
+  instructions: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
 
-type GeoState = "idle" | "locating" | "denied" | "unavailable" | "outside";
-
-const geoMessage: Record<Exclude<GeoState, "idle" | "locating">, string> = {
-  denied: "Accès à la position refusé. Touchez la carte à l'endroit de livraison pour poser le repère.",
-  unavailable: "Position introuvable pour le moment. Touchez la carte à l'endroit de livraison pour poser le repère.",
-  outside: "Votre position semble hors de la région de Dakar. Placez le repère sur la carte à l'endroit de livraison.",
-};
-
-/**
- * Livraison : adresse écrite, quartier, point de repère, contact du destinataire et
- * position exacte sur la carte, transmise à OHMEGATO pour organiser la livraison.
- */
-export function DeliveryFields() {
+export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: SavedAddress[] }) {
   const {
     register,
     setValue,
     watch,
     formState: { errors },
-  } = useFormContext<CheckoutFormValues>();
-  const [geo, setGeo] = useState<GeoState>("idle");
+  } = useFormContext<{ delivery: CheckoutFormValues["delivery"] }>();
 
   const latitude = watch("delivery.latitude");
   const longitude = watch("delivery.longitude");
@@ -45,31 +41,38 @@ export function DeliveryFields() {
     setValue("delivery.longitude", Math.round(next.lng * 1e6) / 1e6, options);
   };
 
-  // La position n'est demandée qu'après ce geste explicite du client.
-  const locate = () => {
-    if (!("geolocation" in navigator)) {
-      setGeo("unavailable");
-      return;
-    }
-    setGeo("locating");
-    navigator.geolocation.getCurrentPosition(
-      (result) => {
-        const { latitude: lat, longitude: lng } = result.coords;
-        if (lat < 14.4 || lat > 15 || lng < -17.6 || lng > -16.9) {
-          setGeo("outside");
-          return;
-        }
-        setPosition({ lat, lng });
-        setGeo("idle");
-      },
-      (error) => setGeo(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
-    );
+  const applySaved = (id: string) => {
+    const saved = savedAddresses.find((a) => a.id === id);
+    if (!saved) return;
+    const options = { shouldDirty: true };
+    setValue("delivery.addressLine", saved.addressLine, options);
+    setValue("delivery.district", saved.district ?? "", options);
+    setValue("delivery.landmark", saved.landmark ?? "", options);
+    setValue("delivery.floorDoor", saved.floorDoor ?? "", options);
+    setValue("delivery.recipientName", saved.recipientName, options);
+    setValue("delivery.recipientPhone", saved.recipientPhone, options);
+    setValue("delivery.instructions", saved.instructions ?? "", options);
+    if (saved.latitude !== null && saved.longitude !== null) setPosition({ lat: saved.latitude, lng: saved.longitude });
   };
 
   return (
     <div className="flex flex-col gap-5">
       <DeliveryFeeNotice />
+      {savedAddresses.length > 0 && (
+        <OhmegatoSelect
+          label="Adresse enregistrée"
+          optional
+          hint="Remplit les champs ci-dessous ; vous pouvez ensuite les ajuster."
+          value={null}
+          onValueChange={applySaved}
+          placeholder="Choisir dans mon carnet d'adresses"
+          options={savedAddresses.map((a) => ({
+            value: a.id,
+            label: a.label || a.addressLine,
+            description: [a.district, a.landmark].filter(Boolean).join(" · ") || undefined,
+          }))}
+        />
+      )}
 
       <Field id="delivery.addressLine" label="Adresse" hint="Rue, numéro de villa, immeuble…" error={deliveryErrors?.addressLine?.message}>
         {({ id, describedBy, invalid }) => (
@@ -94,44 +97,7 @@ export function DeliveryFields() {
         )}
       </Field>
 
-      <fieldset
-        id="delivery.latitude"
-        tabIndex={-1}
-        aria-describedby={positionError ? "position-erreur" : undefined}
-        className="flex flex-col gap-3 rounded-[12px] border-2 border-chocolat/20 p-4 outline-none aria-[describedby]:border-erreur"
-      >
-        <legend className="px-1 font-bold">Position exacte de livraison</legend>
-        <p className="text-encre-douce">
-          Touchez la carte à l&apos;endroit exact de livraison, ou utilisez votre position. Elle est transmise à OHMEGATO pour organiser la
-          livraison.
-        </p>
-        <button
-          type="button"
-          onClick={locate}
-          disabled={geo === "locating"}
-          className="min-h-11 self-start rounded-[10px] border-2 border-chocolat px-4 font-bold disabled:opacity-60"
-        >
-          {geo === "locating" ? "Recherche de votre position…" : "Utiliser ma position"}
-        </button>
-        {geo !== "idle" && geo !== "locating" && (
-          <p role="status" className="font-bold text-orange-encre">
-            {geoMessage[geo]}
-          </p>
-        )}
-        <AddressMap position={position} onChange={setPosition} label="Carte de Dakar : touchez l'endroit de livraison pour poser le repère" />
-        {position ? (
-          <p role="status" className="font-bold text-succes">
-            Repère placé. Vous pouvez le déplacer pour l&apos;ajuster.
-          </p>
-        ) : (
-          positionError && (
-            <p id="position-erreur" className="flex items-start gap-1.5 font-bold text-erreur">
-              <span aria-hidden>✕</span>
-              {positionError}
-            </p>
-          )
-        )}
-      </fieldset>
+      <PositionPicker id="delivery.latitude" position={position} onChange={setPosition} error={positionError} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="delivery.recipientName" label="Qui réceptionne ?" error={deliveryErrors?.recipientName?.message}>

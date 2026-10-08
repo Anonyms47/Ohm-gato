@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { CartProvider } from "@/components/cart/CartProvider";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { CartAnnouncer, MobileNav, ResumeBanner, SiteHeader } from "@/components/layout/SiteChrome";
 import { brand } from "@/config/brand";
-import { getCatalog } from "@/lib/catalog";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -26,32 +21,14 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-// Stock et statut de fournée en temps réel : rendu à chaque requête.
+// Stock, statut de fournée et session en temps réel : rendu à chaque requête.
 export const dynamic = "force-dynamic";
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
-  const catalog = await getCatalog();
+/** Racine commune au site client et à l'administration (chacun a sa propre mise en page). */
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr-SN">
-      <body className="flex min-h-dvh flex-col">
-        <a
-          href="#contenu"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-[8px] focus:bg-chocolat focus:px-4 focus:py-3 focus:text-creme"
-        >
-          Aller au contenu
-        </a>
-        <CartProvider catalog={catalog}>
-          <SiteHeader />
-          <ResumeBanner />
-          <main id="contenu" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-          <MobileNav />
-          <CartDrawer />
-          <CartAnnouncer />
-        </CartProvider>
-      </body>
+      <body className="flex min-h-dvh flex-col">{children}</body>
     </html>
   );
 }

@@ -13,6 +13,14 @@ export function isSameOriginJson(request: Request): boolean {
   return origin === expected || origin === new URL(request.url).origin;
 }
 
+/** Même origine, pour les envois de formulaires avec fichiers (multipart). */
+export function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  const expected = new URL(serverEnv().NEXT_PUBLIC_SITE_URL).origin;
+  return origin === expected || origin === new URL(request.url).origin;
+}
+
 export function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   return forwarded?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "inconnue";

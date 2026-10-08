@@ -21,6 +21,16 @@ Webhooks à déclarer chez les fournisseurs : `https://<domaine>/api/payments/we
 
 Pour Wave, à valider avec le compte réel : format exact de l'en-tête `Wave-Signature`, noms des événements (`checkout.session.completed`, `checkout.session.payment_failed`), délai d'expiration des sessions.
 
+## Connexion par code (comptes clients)
+
+- Supabase Auth gère le code (usage unique). Le « Send SMS hook » (`public.hook_send_sms`) dépose le code dans `otp_outbox` ; le serveur le remet aussitôt par le canal configuré puis l'efface.
+- OHMEGATO ajoute : expiration à 10 minutes, 5 essais maximum, renvoi après 30 secondes, limitation par IP et par numéro (`src/lib/auth/otp.ts`).
+- Canal téléphone : WhatsApp Cloud API (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_TEMPLATE` — modèle « authentification » approuvé par Meta). **Non vérifié** faute de compte.
+- E-mail : envoyé par Supabase (prévoir un SMTP dans le tableau de bord Supabase en production).
+- En production, dans le tableau de bord Supabase : activer le fournisseur Téléphone, activer le hook « Send SMS » vers `pg-functions://postgres/public/hook_send_sms`, régler l'expiration du code SMS (600 s) et les limites d'envoi.
+- `OTP_TEST_MODE=true` (interdit en production) affiche le code à l'écran pour les tests.
+- Premier administrateur : se connecter une fois sur `/connexion`, puis `npm run admin:grant -- 77 123 45 67`. Les autres rôles se gèrent ensuite dans `/admin/reglages`.
+
 ## Carte et adresses
 
 - Carte : Leaflet, tuiles OpenStreetMap par défaut (`NEXT_PUBLIC_MAP_TILE_URL`, `NEXT_PUBLIC_MAP_ATTRIBUTION`). Pour la production, utiliser un fournisseur de tuiles avec clé (MapTiler, Stadia…) : la politique d'usage des tuiles OSM publiques ne convient pas à un site commercial à fort trafic.

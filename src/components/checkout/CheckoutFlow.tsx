@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, type FieldPath, type Resolver } from "react-hook-form";
 import { useCart } from "@/components/cart/CartProvider";
-import { DeliveryFields } from "@/components/checkout/DeliveryFields";
+import { DeliveryFields, type SavedAddress } from "@/components/checkout/DeliveryFields";
 import { TicketPrinter } from "@/components/checkout/TicketPrinter";
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { ErrorSummary, Field, TextArea, TextInput } from "@/components/ui/Field";
@@ -80,9 +80,12 @@ function newKey() {
 export function CheckoutFlow({
   slots,
   paymentMethods,
+  member = null,
 }: {
   slots: SlotSummary[];
   paymentMethods: PaymentMethodView[];
+  /** Membre connecté : coordonnées pré-remplies et carnet d'adresses proposé. */
+  member?: { contact: { name: string; phone: string; email: string }; addresses: SavedAddress[] } | null;
 }) {
   const { resolved, catalog, hydrated, cart } = useCart();
   const cycle = catalog.cycle;
@@ -112,8 +115,10 @@ export function CheckoutFlow({
   // Brouillon du bon de fournée (coordonnées, adresse…) conservé localement.
   useEffect(() => {
     const draft = readDraft();
-    if (draft) reset({ ...emptyCheckoutForm, ...draft, delivery: { ...emptyCheckoutForm.delivery, ...draft.delivery }, slotId: "" });
-  }, [reset]);
+    const base = member ? { ...emptyCheckoutForm, contact: member.contact } : emptyCheckoutForm;
+    if (draft) reset({ ...base, ...draft, contact: { ...base.contact, ...draft.contact }, delivery: { ...base.delivery, ...draft.delivery }, slotId: "" });
+    else if (member) reset(base);
+  }, [reset]); // eslint-disable-line react-hooks/exhaustive-deps
   // Une erreur affichée disparaît dès que le champ est corrigé.
   useEffect(() => {
     const subscription = watch((values, { name }) => {
@@ -387,7 +392,7 @@ export function CheckoutFlow({
                             <p className="mt-2 font-bold text-erreur">{formState.errors.fulfillment.message}</p>
                           )}
                         </fieldset>
-                        {fulfillment === "delivery" && <DeliveryFields />}
+                        {fulfillment === "delivery" && <DeliveryFields savedAddresses={member?.addresses ?? []} />}
                       </>
                     )}
 

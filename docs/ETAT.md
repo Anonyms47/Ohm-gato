@@ -1,35 +1,34 @@
 # État d'avancement
 
-## Terminé : parcours fournée → produit → Ma boîte → commande → paiement de test → confirmation → suivi
+## Terminé
 
-**Base de données** (`supabase/migrations/`)
-- Toutes les entités du schéma minimal, montants entiers en FCFA, instantané des lignes de commande.
-- RLS forcée sur toutes les tables. Le client ne lit que ses données ; le livreur passe par une vue limitée aux livraisons prêtes ; aucun rôle ne s'accorde depuis le navigateur.
-- `place_order` : prix recalculés, fournée ouverte, créneau et capacité, parfums autorisés, stock commun entre formats, verrous ordonnés, idempotence.
-- `apply_payment_event` : idempotent, contrôle du montant, réservé → vendu, libération en cas d'échec, paiement tardif.
-- Limitation de débit persistée (commande, statut, reprise de paiement).
+**Parcours d'achat** : fournée → produit → Ma boîte → bon de fournée → paiement (test) → confirmation → suivi. Prix recalculés côté serveur, stock en unités réelles avec réservation pendant le paiement, libération à l'échec ou à l'expiration, vente idempotente, frais de livraison jamais encaissés (réglés au livreur).
 
-**Interface**
-- Tokens de marque centralisés (contrastes AA vérifiés), polices temporaires isolées, `BrandHeading`.
-- Boutons (primaire, secondaire, accent, texte, icône, destructif, Wave, Orange Money) avec états chargement, succès et erreur, sans double clic.
-- Listes : `OhmegatoSelect`, `OhmegatoCombobox`, `OhmegatoMultiSelect`, `OhmegatoBottomSheetSelect` (clavier complet, raisons d'indisponibilité, feuille sur téléphone).
-- La Fournée (5 actes, la note d'Alima reste masquée tant qu'elle n'est pas fournie), La Carte (menu et scène sur tablette et ordinateur, affiches et index sur téléphone, deux vues), fiches produits (mise en scène propre à chaque produit, conservation et allergènes affichés seulement s'ils sont confirmés, données structurées).
-- Ma boîte : tiroir, page complète, revalidation en direct, bande mobile, reprise « Une boîte vous attendait ».
-- Le bon de fournée : 6 étapes, validation par étape avec résumé des erreurs, téléphone sénégalais, quartier recherchable, carte avec repère, géolocalisation volontaire, saisie manuelle, hors zone validé avant paiement, ticket imprimé (animation ignorable et réduite), brouillon conservé.
-- Suivi par lien personnel opaque : interrogation du vrai statut, reprise du paiement, tampon « PAYÉE » après confirmation serveur, carnet de route, code de retrait, reçu imprimable.
+**Pages client**
+- La Fournée (accueil), La Carte, fiches produits (conservation d'Alima, préférés), Ma boîte, bon de fournée (pré-rempli pour les membres, carnet d'adresses).
+- **Nos fournées — le journal du four** (`/fournees`) : fournée actuelle, statut réel (programmée, ouverte, clôturée, préparation, livraison, terminée, annulée), quatre dates, créneaux, produits et formats autorisés, stock restant réel, ajout direct à Ma boîte, prochaine fournée ou « pas encore de date », archives ; chargement et erreur gérés.
+- **Sur-mesure & Événements** (`/sur-mesure`) : carnet conversationnel en 11 questions + envoi (occasion, date et heure, invités, produits, formats/quantités/parfums, ambiance, inspiration, budget, réception avec carte, coordonnées, résumé). Brouillon conservé. Une demande n'est jamais une commande : statuts Reçue → … → Terminée, échanges avec pièces jointes, modification, propositions chiffrées par OHMEGATO, acceptation qui ouvre seulement alors le paiement.
+- **Notre histoire** (`/notre-histoire`) : Oumy Gâteau → OHMEGATO → Ω (animation typographique, version fixe sans animation), ESP, événement étudiant, entourage, carte élargie, bonnes ondes, futur café présenté comme un projet. Emplacements archives, photo d'Alima, citation et audio masqués tant qu'ils ne sont pas fournis (gérés dans /admin/reglages).
+- **Retrouvons votre carnet** (`/connexion`) : code temporaire par téléphone (e-mail en complément), sans mot de passe ; création de compte au premier code, commandes invitées retrouvées, code incorrect / expiré / renvoi / trop de tentatives / échec d'envoi, tampon « Carnet retrouvé ».
+- **Mon carnet** (`/compte`) : commande active en priorité, tickets, détail, recomposition au prix et stock actuels, boîte et brouillons, demandes et propositions, paiements, adresses et positions, préférés, alertes, consentements, sessions (fermeture), export JSON, suppression du compte. Barre mobile Accueil / Commandes / Ma boîte / Profil.
 
-**Tests** : 33 unitaires, 33 pgTAP, 60 Playwright (téléphone, tablette, ordinateur).
+**Administration** (`/admin`, interface séparée, rôle vérifié côté serveur à chaque page et action, journal d'audit)
+- Tableau de bord : commandes du jour, à préparer, paiements, fournée active, stock faible, sur-mesure, livraisons, retraits.
+- Fournées : création, dates, message d'accueil, produit vedette, programmer / ouvrir / clôturer / préparation / livraison / terminer / annuler, produits, formats, parfums, stock, créneaux.
+- Produits : textes, catégorie, unités de stock, formats et prix, parfums, allergènes (confirmés), conservation, photos, publication.
+- Commandes : recherche, filtres, détail, position sur la carte, statut avec historique, WhatsApp, reçu imprimable.
+- Positions de livraison : carte, fiche de chaque arrêt, itinéraire, copie et partage au livreur, « confiée au livreur », « livraison terminée ».
+- Stock : disponible / réservé / vendu, ajustements avec raison, historique, réservations en cours.
+- Sur-mesure, clients (historique, adresses, consentements, notes internes), réglages éditoriaux, rôles, journal d'audit.
 
-## Prochaines étapes (dans l'ordre du brief)
+**Sécurité** : RLS forcée partout (vérifiée avec deux comptes dans `supabase/tests/accounts_admin_test.sql`), rôles jamais accordés depuis le navigateur, actions admin réservées au serveur, limitation de débit (codes, commandes, demandes, messages), contrôle d'origine, validation Zod, fichiers contrôlés par leurs octets, liens de suivi opaques ; sur un lien ouvert ailleurs que sur le navigateur d'origine, les informations personnelles ne s'affichent qu'après connexion par code avec le numéro de la commande.
 
-1. Pages éditoriales : Nos Fournées (journal du four, archives), Sur-mesure (carnet en 8 étapes et statuts), Notre Histoire.
-2. Connexion sans mot de passe (OTP téléphone via un fournisseur SMS ou WhatsApp, e-mail en complément), suivi invité par référence + téléphone + code, espace « Mon carnet ».
-3. Administration `/admin` : fournées, produits, stocks, commandes (avec la position de livraison), créneaux, demandes, journal des actions, confirmations.
-4. Animations restantes : couverture de fournée en table gourmande, carnet de connexion.
-5. Recherche d'adresse sur la carte.
+**Tests** : 47 unitaires, 67 pgTAP, parcours Playwright (téléphone, tablette, ordinateur).
 
 ## Limites connues
 
-- Wave n'est pas vérifié contre l'API réelle ; Orange Money n'est pas implémenté.
-- Les accès marchands Wave et Orange Money peuvent dépendre de l'immatriculation de l'activité (voir docs/DONNEES-A-FOURNIR.md).
-- L'occupation des créneaux compte toutes les commandes non annulées, y compris celles en attente de paiement.
+- Codes de connexion : WhatsApp Cloud API écrite d'après la documentation publique, **non vérifiée** faute de compte ; sans canal configuré en production, l'envoi échoue proprement.
+- Wave non vérifié contre l'API réelle ; Orange Money non implémenté (contrat marchand requis).
+- Logos officiels Wave et Orange Money à fournir pour les boutons de paiement (couleurs officielles déjà appliquées).
+- Les alertes (nouvelle fournée) sont enregistrées ; leur envoi attend un canal de messagerie.
+- Recherche d'adresse (géocodage) non faite : le client pose le repère sur la carte.

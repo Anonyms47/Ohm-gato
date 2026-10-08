@@ -7,9 +7,12 @@ import { serverEnv } from "@/lib/env";
  * connue du seul navigateur) et d'un secret serveur. Un double envoi retrouve donc
  * exactement le même lien. Seul le hachage SHA-256 est stocké en base.
  */
-export function generateTrackingToken(idempotencyKey: string): { token: string; hash: string } {
+export function generateTrackingToken(
+  idempotencyKey: string,
+  purpose: "suivi" | "sur-mesure" = "suivi",
+): { token: string; hash: string } {
   const token = createHmac("sha256", serverEnv().TRACKING_TOKEN_SECRET)
-    .update(`suivi:${idempotencyKey}`, "utf8")
+    .update(`${purpose}:${idempotencyKey}`, "utf8")
     .digest("base64url");
   return { token, hash: hashTrackingToken(token) };
 }
