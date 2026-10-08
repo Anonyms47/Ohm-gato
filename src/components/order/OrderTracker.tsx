@@ -76,7 +76,7 @@ export function OrderTracker({
   pickupAddress: string;
 }) {
   const router = useRouter();
-  const { clear } = useCart();
+  const { clear, hydrated } = useCart();
   const [animateStamp, setAnimateStamp] = useState(false);
   const [resume, setResume] = useState<{ provider: string | null; state: ButtonState; message?: string }>({ provider: null, state: "idle" });
   const paid = order.paymentStatus === "paid";
@@ -123,8 +123,9 @@ export function OrderTracker({
   }, [waiting, token, router]);
 
   // Paiement confirmé par le serveur : tampon « PAYÉE » (une seule fois) et boîte vidée sur cet appareil.
+  // On attend que Ma boîte soit relue depuis le navigateur, sinon cette relecture la remplirait à nouveau.
   useEffect(() => {
-    if (!paid) return;
+    if (!paid || !hydrated) return;
     const fromThisDevice = readPendingOrders().some((o) => o.reference === order.reference);
     if (fromThisDevice) {
       clear();
@@ -135,7 +136,7 @@ export function OrderTracker({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- animation déclenchée par la confirmation serveur
       setAnimateStamp(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     }
-  }, [paid, order.reference, clear]);
+  }, [paid, hydrated, order.reference, clear]);
 
   const resumePayment = async (provider: string) => {
     setResume({ provider, state: "loading" });

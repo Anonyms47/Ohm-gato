@@ -11,26 +11,29 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | **Zones de livraison** : liste des quartiers par zone et tarif de chaque zone | Aucune livraison payable (les données actuelles sont fictives et marquées TEST) |
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
 | **Allergènes confirmés** recette par recette (gluten, œufs, lait, soja, fruits à coque, chocolat) | Seul le message « Une allergie ? Écrivez-nous » est affiché |
-| **Informations juridiques** (raison sociale, NINEA, mentions légales, conditions de vente, politique de remboursement) | Pages légales non publiées |
+| **Conditions de vente et politique de remboursement** (rédigées avec Alima) | Pas de page de conditions ; à publier avant la mise en ligne |
 
 ## Pour compléter l'expérience
 
 | Donnée | Utilisation |
 |---|---|
-| **Logo en vecteur (SVG)** | Le logo actuel est le médaillon PNG fourni, détouré ; un SVG restera net à toutes les tailles |
 | **Photos de mise en scène** (cookie cassé en gros plan, coupe du moelleux, pyramide de choux…) en plus des visuels détourés | Fiches produits plus riches |
-| **Confirmation que les visuels représentent les vraies recettes** (voir ci-dessous) | Conformité de la carte |
 | Conservation du **cake à l'orange**, des **choux** et des **verrines** | Section « Conservation » de ces fiches (masquée aujourd'hui) |
 | Nombre de **tranches dans une barre entière** de cake à l'orange | Calcul du stock (10 provisoire, non affiché) |
 | **Note d'Alima** pour l'accueil | Acte 3 « Pause humaine » (masqué sans texte) |
 | **Citation finale** et éventuel **audio** d'Alima | Page Notre Histoire |
 | **Photos personnelles et archives** (premiers muffins, événement à l'ESP…) | Page Notre Histoire |
-| **E-mail officiel** et **horaires de contact** | Pied de page et reçus |
+| **Horaires de contact** | Pied de page et page de suivi |
 | Polices exclusives **OhmegatoDisplay** et **OhmegatoScript** (WOFF2) | Remplacent les polices temporaires (voir docs/INTEGRATIONS.md) |
 | Témoignages réels (avec accord écrit des clients) | Aucun avis n'est affiché sans cela |
 
-## Visuels reçus
+## Visuels et identité
 
-Les 8 affiches produits et le logo ont été intégrés : chaque produit a été détouré automatiquement depuis son affiche (fond crème uni retiré, produit non retouché) et rangé dans `public/products/`. L'affiche des choux a été reçue en double.
+- Les 8 visuels produits sont de vraies photos des pâtisseries OHMEGATO (confirmé par la marque). Ils ont été détourés depuis les affiches, sans retouche, dans `public/products/`.
+- Le logo a été vectorisé depuis le médaillon fourni (`public/brand/logo-ohmegato.svg`), avec ses couleurs d'origine.
 
-Certains visuels ont l'aspect d'images de synthèse (notamment le moelleux au chocolat et les choux nappés). Le site ne doit pas présenter une image générée comme une photo du vrai produit : si c'est le cas, il faudra les remplacer par des photos réelles des pâtisseries OHMEGATO.
+## Situation administrative
+
+- OHMEGATO n'est pas encore immatriculée (pas de NINEA ni de RCCM) : le site n'affiche donc ni raison sociale ni numéro d'identification.
+- Pas d'e-mail officiel : le contact passe par WhatsApp et le téléphone, et le bon de fournée ne demande plus d'adresse e-mail (aucun e-mail n'est envoyé).
+- **À vérifier avant de demander les accès API** : l'ouverture d'un compte marchand Wave Business avec API de paiement en ligne et d'un compte Orange Money marchand peut exiger des documents d'entreprise (NINEA, registre de commerce). À confirmer auprès de Wave et d'Orange Money ; sans ces accès, le paiement en ligne reste bloqué et les commandes se finalisent sur WhatsApp.

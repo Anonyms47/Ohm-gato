@@ -12,8 +12,8 @@ export const brand = {
   instagramUrl: "https://www.instagram.com/ohmegato/",
   pickupAddress: "Rue GY-69, Cité Sonatel 2, Sud Foire",
   /**
-   * Logo officiel (médaillon fourni par la marque, détouré sans retouche).
-   * À remplacer par la version vectorielle (SVG) dès qu'elle est disponible.
+   * Logo officiel en vecteur, vectorisé depuis le médaillon fourni par la marque
+   * (palette d'origine conservée, aucun texte retapé).
    */
-  logo: { src: "/brand/logo-ohmegato.webp", width: 640, height: 640 } as null | { src: string; width: number; height: number },
+  logo: { src: "/brand/logo-ohmegato.svg", width: 640, height: 640 } as null | { src: string; width: number; height: number },
 } as const;

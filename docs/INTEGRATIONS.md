@@ -34,7 +34,7 @@ Voir `src/styles/fonts.css`. Déposer `ohmegato-display.woff2` et `ohmegato-scri
 
 ## Logo
 
-Médaillon officiel détouré dans `public/brand/logo-ohmegato.webp` (favicons générés dans `src/app/`). Pour passer au SVG, le déposer dans `public/brand/` et modifier `brand.logo` dans `src/config/brand.ts`.
+Logo vectoriel dans `public/brand/logo-ohmegato.svg`, vectorisé depuis le médaillon fourni (palette réduite aux couleurs d'origine). Les favicons sont dans `src/app/`. Si la marque fournit un jour le fichier source de son graphiste, il suffit de remplacer ce SVG.
 
 ## Photos produits
 
