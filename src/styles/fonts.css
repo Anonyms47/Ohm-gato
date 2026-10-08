@@ -1,0 +1,30 @@
+/*
+ * Polices OHMEGATO.
+ *
+ * Polices officielles (à activer dès réception des fichiers) :
+ *
+ * @font-face {
+ *   font-family: "OhmegatoDisplay";
+ *   src: url("/fonts/ohmegato-display.woff2") format("woff2");
+ *   font-weight: 400 900;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ *
+ * @font-face {
+ *   font-family: "OhmegatoScript";
+ *   src: url("/fonts/ohmegato-script.woff2") format("woff2");
+ *   font-weight: 400;
+ *   font-style: normal;
+ *   font-display: swap;
+ * }
+ *
+ * Puis dans tokens.css :
+ *   --ohm-font-display: "OhmegatoDisplay", "Georgia", serif;
+ *   --ohm-font-script: "OhmegatoScript", cursive;
+ *
+ * Polices temporaires (auto-hébergées, aucune requête externe) — à supprimer ensuite.
+ */
+@import "@fontsource/young-serif/400.css";
+@import "@fontsource/gochi-hand/400.css";
+@import "@fontsource-variable/atkinson-hyperlegible-next/index.css";
