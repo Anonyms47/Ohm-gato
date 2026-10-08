@@ -138,3 +138,19 @@ from (values
 join public.products p on p.slug = v.product
 join public.flavors f on f.slug = v.flavor
 on conflict do nothing;
+
+-- Visuels officiels (détourés depuis les affiches OHMEGATO, livrés avec le site dans public/products).
+insert into public.product_images (product_id, storage_path, alt, width, height, role, sort_order)
+select p.id, v.path, v.alt, v.width, v.height, 'cutout', 1
+from (values
+  ('cookies', '/products/cookies.webp', 'Cookie cassé en deux, pépites de chocolat fondant au cœur', 1233, 846),
+  ('brownies', '/products/brownies.webp', 'Trois carrés de brownie empilés, éclats de chocolat', 935, 1347),
+  ('moelleux-chocolat', '/products/moelleux-chocolat.webp', 'Part de moelleux au chocolat nappée de sauce chocolat', 1027, 895),
+  ('muffins-pepites', '/products/muffins-pepites.webp', 'Muffin aux pépites de chocolat dans sa caissette', 803, 733),
+  ('moelleux-pommes', '/products/moelleux-pommes.webp', 'Part de moelleux aux pommes, morceaux de pomme dans la mie', 1341, 787),
+  ('cake-orange', '/products/cake-orange.webp', 'Tranche de cake à l''orange saupoudrée de sucre, rondelle d''orange', 1284, 913),
+  ('choux-creme', '/products/choux-creme.webp', 'Pyramide de choux garnis de crème au chocolat', 1114, 1328),
+  ('verrines-fruitees', '/products/verrines-fruitees.webp', 'Deux verrines en couches : crème, génoise et coulis de fruits', 1302, 919)
+) as v(slug, path, alt, width, height)
+join public.products p on p.slug = v.slug
+where not exists (select 1 from public.product_images i where i.product_id = p.id and i.storage_path = v.path);

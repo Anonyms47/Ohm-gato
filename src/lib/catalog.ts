@@ -103,7 +103,9 @@ export const getArchivedCycles = cache(async (): Promise<CycleSummary[]> => {
   return (data ?? []).map((row) => toCycle(row, Date.now()));
 });
 
+/** Chemin local (« /products/… », livré avec le site) ou objet du bucket Supabase « products ». */
 function imageUrl(path: string): string {
+  if (path.startsWith("/")) return path;
   return `${serverEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/products/${path}`;
 }
 

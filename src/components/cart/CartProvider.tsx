@@ -126,7 +126,11 @@ export function CartProvider({ catalog, children }: { catalog: Catalog; children
       add,
       setLineQuantity: (key, quantity) => setCart((c) => setQuantity(c, key, quantity)),
       remove: (key) => setCart((c) => removeLine(c, key)),
-      clear: () => setCart(emptyCart(cycleId)),
+      clear: () => {
+        const empty = emptyCart(cycleId);
+        writeStorage(empty); // immédiat : une navigation juste après ne doit pas retrouver l'ancienne boîte
+        setCart(empty);
+      },
       drawerOpen,
       setDrawerOpen,
       resumePending,

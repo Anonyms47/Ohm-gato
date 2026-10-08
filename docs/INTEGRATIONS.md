@@ -34,11 +34,11 @@ Voir `src/styles/fonts.css`. Déposer `ohmegato-display.woff2` et `ohmegato-scri
 
 ## Logo
 
-Déposer le SVG dans `public/brand/` et renseigner `brand.logo` dans `src/config/brand.ts`.
+Logo vectoriel dans `public/brand/logo-ohmegato.svg`, vectorisé depuis le médaillon fourni (palette réduite aux couleurs d'origine). Les favicons sont dans `src/app/`. Si la marque fournit un jour le fichier source de son graphiste, il suffit de remplacer ce SVG.
 
 ## Photos produits
 
-Bucket Supabase `products` (public en lecture, écriture admin, 5 Mo max, WebP/AVIF/PNG/JPEG). Chaque image est déclarée dans `product_images` avec ses dimensions réelles et un texte alternatif. Le rôle `cutout` sert aux compositions.
+Les visuels actuels sont livrés avec le site (`public/products/`, chemins commençant par `/`). Les prochains pourront être téléversés dans le bucket Supabase `products` (public en lecture, écriture admin, 5 Mo max, WebP/AVIF/PNG/JPEG). Chaque image est déclarée dans `product_images` avec ses dimensions réelles et un texte alternatif. Le rôle `cutout` sert aux compositions.
 
 ## Déploiement
 

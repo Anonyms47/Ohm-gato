@@ -42,7 +42,7 @@ const STEPS: { id: StepId; title: string }[] = [
 ];
 
 const STEP_FIELDS: Partial<Record<StepId, FieldPath<CheckoutFormValues>[]>> = {
-  coordonnees: ["contact.name", "contact.phone", "contact.email"],
+  coordonnees: ["contact.name", "contact.phone"],
   reception: [
     "fulfillment",
     "delivery.district",
@@ -351,19 +351,6 @@ export function CheckoutFlow({
                               aria-describedby={describedBy}
                               aria-invalid={invalid}
                               {...register("contact.phone")}
-                            />
-                          )}
-                        </Field>
-                        <Field id="contact.email" label="E-mail" optional hint="Pour recevoir le reçu par e-mail." error={formState.errors.contact?.email?.message}>
-                          {({ id, describedBy, invalid }) => (
-                            <TextInput
-                              id={id}
-                              type="email"
-                              inputMode="email"
-                              autoComplete="email"
-                              aria-describedby={describedBy}
-                              aria-invalid={invalid}
-                              {...register("contact.email")}
                             />
                           )}
                         </Field>

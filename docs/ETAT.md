@@ -31,5 +31,5 @@
 ## Limites connues
 
 - Wave n'est pas vérifié contre l'API réelle ; Orange Money n'est pas implémenté.
-- Les photos et le logo n'étant pas fournis, les visuels sont des compositions typographiques.
+- Les accès marchands Wave et Orange Money peuvent dépendre de l'immatriculation de l'activité (voir docs/DONNEES-A-FOURNIR.md).
 - L'occupation des créneaux compte toutes les commandes non annulées, y compris celles en attente de paiement.

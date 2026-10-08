@@ -12,6 +12,9 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"]],
+  // En développement, chaque page est compilée à sa première visite : une redirection
+  // vers une page encore jamais ouverte peut dépasser le délai par défaut de 5 s.
+  expect: { timeout: 15_000 },
   use: {
     baseURL: "http://localhost:3000",
     locale: "fr-SN",

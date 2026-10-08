@@ -19,7 +19,8 @@
   --ohm-cacao: #24140d;          /* sections immersives */
   --ohm-caramel: #c27a2e;        /* cercles, accents graphiques */
   --ohm-caramel-encre: #8f5216;  /* caramel lisible sur crème */
-  --ohm-rose: #e28ba3;           /* rose du logo — accent, jamais dominant (à ajuster sur le logo officiel) */
+  --ohm-rose: #f5c3cb;           /* rose clair du logo — accent, jamais dominant */
+  --ohm-rose-vif: #d96590;       /* liseré du logo — décor uniquement (pas de texte) */
   --ohm-rose-encre: #a8385a;
   --ohm-orange: #e3772a;         /* produits fruités */
   --ohm-orange-encre: #a84a0c;
