@@ -181,15 +181,17 @@ export default async function FourneePage() {
               )}
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Livraison</dt>
-                <dd className="sm:text-right">Dans Dakar, en général le lendemain matin. Tarif selon le quartier.</dd>
+                <dd className="sm:text-right">
+                  Dans Dakar, en général le lendemain matin. Frais non compris, à régler directement au livreur selon votre position.
+                </dd>
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Retrait</dt>
-                <dd className="sm:text-right">{brand.pickupAddress}</dd>
+                <dd className="sm:text-right">{brand.pickupAddress}. Gratuit.</dd>
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Paiement</dt>
-                <dd className="sm:text-right">Intégral à la commande, par Wave ou Orange Money.</dd>
+                <dd className="sm:text-right">Les produits, en intégralité à la commande, par Wave ou Orange Money.</dd>
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Délais</dt>

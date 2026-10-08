@@ -1,5 +1,6 @@
 /** Types du catalogue partagés serveur / navigateur. */
 import type { AvailabilityState } from "@/lib/availability";
+import type { StorageRule } from "@/lib/storage";
 
 export type Accent = "caramel" | "chocolate" | "orange" | "rose";
 
@@ -38,7 +39,7 @@ export interface CatalogProduct {
   staging: string;
   accent: Accent;
   /** null tant que la conservation n'est pas confirmée : rien n'est affiché. */
-  storage: { rule: "refrigerated_48h" | "ambient_airtight_48h"; note: string | null } | null;
+  storage: { rule: StorageRule; note: string | null } | null;
   /** Allergènes confirmés uniquement. */
   allergens: { slug: string; name: string }[];
   pairingSlugs: string[];
@@ -73,13 +74,6 @@ export interface SlotSummary {
   startsAt: string;
   endsAt: string;
   isFull: boolean;
-}
-
-export interface ZoneSummary {
-  id: string;
-  name: string;
-  districts: string[];
-  feeFcfa: number | null;
 }
 
 export interface Catalog {

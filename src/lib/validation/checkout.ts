@@ -44,17 +44,20 @@ export const contactSchema = z.object({
     .transform((v) => v || undefined),
 });
 
+/**
+ * Livraison : adresse écrite, quartier, point de repère, contact du destinataire et
+ * position exacte (transmise à OHMEGATO). Les frais se règlent au livreur.
+ */
 export const deliverySchema = z.object({
-  zoneId: z.uuid().nullable(), // null = quartier hors liste, validation par l'équipe
-  district: trimmed(80).min(2, "Indiquez votre quartier."),
   addressLine: trimmed(200).min(4, "Décrivez l'adresse (rue, villa, immeuble…)."),
-  landmark: trimmed(160).optional(),
+  district: trimmed(80).min(2, "Indiquez votre quartier."),
+  landmark: trimmed(160).min(3, "Indiquez un point de repère (pharmacie, mosquée, boutique…)."),
   floorDoor: trimmed(80).optional(),
   recipientName: trimmed(80).min(2, "Indiquez qui réceptionne la commande."),
   recipientPhone: senegalPhone,
   instructions: trimmed(300).optional(),
-  latitude: z.number().min(14.4).max(15.0).nullable(),
-  longitude: z.number().min(-17.6).max(-16.9).nullable(),
+  latitude: z.number({ message: "Placez le repère de livraison sur la carte." }).min(14.4).max(15.0),
+  longitude: z.number({ message: "Placez le repère de livraison sur la carte." }).min(-17.6).max(-16.9),
 });
 
 export const paymentProviderSchema = z.enum(["wave", "orange_money", "test"]);
@@ -70,8 +73,7 @@ export const placeOrderSchema = z
     delivery: deliverySchema.nullable(),
     notes: trimmed(500).optional(),
     lines: cartLinesSchema,
-    /** null : demande hors zone, validée par l'équipe avant tout paiement. */
-    paymentProvider: paymentProviderSchema.nullable(),
+    paymentProvider: paymentProviderSchema,
   })
   .superRefine((value, ctx) => {
     if (value.fulfillment === "delivery" && !value.delivery) {

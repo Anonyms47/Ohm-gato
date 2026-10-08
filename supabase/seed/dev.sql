@@ -1,12 +1,6 @@
 -- ⚠️ DONNÉES DE TEST — développement et tests automatisés uniquement.
--- Ne jamais exécuter en production : zones, tarifs, créneaux et stocks sont fictifs.
+-- Ne jamais exécuter en production : fournées, créneaux et stocks sont fictifs.
 -- Les vraies valeurs se saisissent dans /admin.
-
-insert into public.delivery_zones (name, districts, fee_fcfa, sort_order) values
-  ('TEST — Zone A', '{"Sud Foire","Cité Sonatel 2","Ouest Foire","Yoff"}', 1000, 1),
-  ('TEST — Zone B', '{"Mermoz","Sacré-Cœur","Point E","Fann","Liberté 6"}', 1500, 2),
-  ('TEST — Zone C', '{"Plateau","Médina","Almadies","Ngor","Ouakam"}', 2000, 3),
-  ('TEST — Zone sur devis', '{"Rufisque","Keur Massar"}', null, 4);
 
 -- Fournée ouverte, dates relatives pour rester valide après chaque `db reset`.
 insert into public.production_cycles

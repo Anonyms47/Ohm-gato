@@ -43,9 +43,9 @@ values
   ('cookies', 'Cookies',
    'Bords croustillants, cœur moelleux.',
    'Bords croustillants, cœur moelleux, chocolat noir et chocolat au lait concassés, note caramélisée.',
-   'Quelques secondes au four ou au micro-ondes : le chocolat redevient fondant.',
+   null,
    'cookie', 'cookies', 'cookie-casse', 'caramel',
-   'ambient_airtight_48h', null, true, '{brownies,muffins-pepites}', 10),
+   'ambient_airtight_48h', 'Peuvent être légèrement réchauffés avant dégustation.', true, '{brownies,muffins-pepites}', 10),
 
   ('brownies', 'Brownies',
    'Petits carrés très chocolatés.',
@@ -59,7 +59,7 @@ values
    'Gâteau au chocolat, sauce chocolat servie dessus et pépites.',
    null,
    'part', 'parts', 'sauce-moelleux', 'chocolate',
-   'refrigerated_48h', 'La sauce est livrée directement sur le gâteau.', true, '{verrines-fruitees,cookies}', 30),
+   'refrigerated_48h', 'La sauce est déjà servie dessus.', true, '{verrines-fruitees,cookies}', 30),
 
   ('muffins-pepites', 'Muffins aux pépites de chocolat',
    'Moelleux, pépites, légère note de cannelle.',
@@ -80,7 +80,7 @@ values
    'Barre rectangulaire, base de gâteau au yaourt et véritable goût d’orange.',
    null,
    'tranche', 'tranches', 'cake-tranches', 'orange',
-   null, null, false, -- À CONFIRMER : conservation
+   'cool_wrapped_1w', null, true,
    '{moelleux-pommes,verrines-fruitees}', 60),
 
   ('choux-creme', 'Choux à la crème',
@@ -88,7 +88,7 @@ values
    'Choux fourrés de crème pâtissière.',
    null,
    'chou', 'choux', 'choux-pyramide', 'rose',
-   null, null, false, -- À CONFIRMER : conservation
+   'refrigerated_48h', null, true,
    '{brownies,verrines-fruitees}', 70),
 
   ('verrines-fruitees', 'Verrines fruitées',
@@ -96,7 +96,7 @@ values
    'Deux couches de crème, deux couches de génoise et deux couches de marmelade ou coulis.',
    null,
    'verrine', 'verrines', 'verrine-couches', 'orange',
-   null, null, false, -- À CONFIRMER : conservation
+   'refrigerated_48h', null, true,
    '{choux-creme,moelleux-chocolat}', 80)
 on conflict (slug) do nothing;
 

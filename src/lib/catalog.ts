@@ -7,9 +7,9 @@ import type {
   CatalogProduct,
   CycleSummary,
   SlotSummary,
-  ZoneSummary,
 } from "@/lib/catalog-types";
 import { serverEnv } from "@/lib/env";
+import type { StorageRule } from "@/lib/storage";
 import { supabasePublic } from "@/lib/supabase/public";
 
 interface CycleRow {
@@ -37,7 +37,7 @@ interface ProductRow {
   unit_label_plural: string;
   staging: string;
   accent: Accent;
-  storage_rule: "refrigerated_48h" | "ambient_airtight_48h" | null;
+  storage_rule: StorageRule | null;
   storage_note: string | null;
   storage_confirmed: boolean;
   pairing_slugs: string[];
@@ -236,20 +236,6 @@ export async function getSlots(cycleId: string): Promise<SlotSummary[]> {
   }));
 }
 
-export async function getZones(): Promise<ZoneSummary[]> {
-  const { data, error } = await supabasePublic()
-    .from("delivery_zones")
-    .select("id, name, districts, fee_fcfa")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) throw error;
-  return (data as { id: string; name: string; districts: string[]; fee_fcfa: number | null }[]).map((z) => ({
-    id: z.id,
-    name: z.name,
-    districts: z.districts,
-    feeFcfa: z.fee_fcfa,
-  }));
-}
 
 /** Réglages publics (note d'Alima, message d'accueil…). Les valeurs nulles ne sont jamais affichées. */
 export const getPublicSettings = cache(async (): Promise<Record<string, unknown>> => {

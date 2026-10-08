@@ -6,7 +6,7 @@ export const ORDER_ERROR_MESSAGES: Record<string, string> = {
   SLOT_INVALID: "Ce créneau n'est plus proposé. Choisissez-en un autre.",
   SLOT_FULL: "Ce créneau vient d'être complet. Choisissez-en un autre.",
   ADDRESS_REQUIRED: "L'adresse de livraison est incomplète.",
-  ZONE_INVALID: "Cette zone de livraison n'est plus desservie. Choisissez votre quartier à nouveau.",
+  POSITION_REQUIRED: "Placez le repère de livraison sur la carte.",
   QUANTITY_INVALID: "Une quantité n'est pas valide.",
   ITEM_UNAVAILABLE: "Un article de votre boîte n'est plus proposé.",
   NOT_IN_CYCLE: "Un article de votre boîte ne fait pas partie de cette fournée.",

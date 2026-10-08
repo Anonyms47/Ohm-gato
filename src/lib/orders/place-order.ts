@@ -13,7 +13,7 @@ export type PlaceOrderResult =
       ok: true;
       reference: string;
       trackingToken: string;
-      status: "pending_payment" | "awaiting_validation";
+      status: "pending_payment";
       checkoutUrl: string | null;
     }
   | {
@@ -62,39 +62,17 @@ export async function placeOrder(
     };
   }
 
+  const provider = getProvider(data.paymentProvider);
+  if (!provider.isConfigured()) {
+    return {
+      ok: false,
+      code: "PAYMENT_UNAVAILABLE",
+      message: `Paiement ${provider.label} temporairement indisponible. Choisissez un autre moyen ou contactez-nous sur WhatsApp.`,
+      status: 503,
+    };
+  }
+
   const db = supabaseAdmin();
-
-  // Hors zone (quartier absent ou zone sur devis) : aucune demande de paiement avant validation.
-  let requiresValidation = false;
-  if (data.fulfillment === "delivery" && data.delivery) {
-    if (data.delivery.zoneId === null) requiresValidation = true;
-    else {
-      const { data: zone, error: zoneError } = await db
-        .from("delivery_zones")
-        .select("fee_fcfa")
-        .eq("id", data.delivery.zoneId)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (zoneError) throw zoneError;
-      requiresValidation = zone !== null && zone.fee_fcfa === null;
-    }
-  }
-
-  if (!requiresValidation) {
-    const provider = data.paymentProvider ? getProvider(data.paymentProvider) : null;
-    if (!provider) {
-      return { ok: false, code: "PAYMENT_REQUIRED", message: "Choisissez un moyen de paiement.", status: 422 };
-    }
-    if (!provider.isConfigured()) {
-      return {
-        ok: false,
-        code: "PAYMENT_UNAVAILABLE",
-        message: `Paiement ${provider.label} temporairement indisponible. Choisissez un autre moyen ou contactez-nous sur WhatsApp.`,
-        status: 503,
-      };
-    }
-  }
-
   const { token, hash } = generateTrackingToken(data.idempotencyKey);
   const delivery = data.fulfillment === "delivery" ? data.delivery : null;
 
@@ -109,10 +87,9 @@ export async function placeOrder(
       notes: data.notes ?? null,
       customer: { name: data.contact.name, phone: data.contact.phone, email: data.contact.email ?? null },
       delivery: delivery && {
-        zone_id: delivery.zoneId,
         address_line: delivery.addressLine,
         district: delivery.district,
-        landmark: delivery.landmark ?? null,
+        landmark: delivery.landmark,
         floor_door: delivery.floorDoor ?? null,
         recipient_name: delivery.recipientName,
         recipient_phone: delivery.recipientPhone,
@@ -135,16 +112,10 @@ export async function placeOrder(
 
   const result = placed as { order_id: string; reference: string; status: string; replayed: boolean };
 
-  if (result.status === "awaiting_validation") {
-    return { ok: true, reference: result.reference, trackingToken: token, status: "awaiting_validation", checkoutUrl: null };
-  }
   if (result.status !== "pending_payment") {
     return { ok: false, code: "ORDER_NOT_PAYABLE", message: orderErrorMessage("ORDER_NOT_PAYABLE"), status: 409 };
   }
 
-  if (!data.paymentProvider) {
-    return { ok: false, code: "PAYMENT_REQUIRED", message: "Choisissez un moyen de paiement.", status: 422 };
-  }
   try {
     const checkoutUrl = await startPayment(result.order_id, data.paymentProvider, token);
     return { ok: true, reference: result.reference, trackingToken: token, status: "pending_payment", checkoutUrl };

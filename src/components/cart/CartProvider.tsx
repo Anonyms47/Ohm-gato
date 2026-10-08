@@ -88,6 +88,7 @@ export function CartProvider({ catalog, children }: { catalog: Catalog; children
       if (firstVisitOfSession) setResumePending(true);
     }
     setHydrated(true);
+    document.documentElement.dataset.hydrated = "true"; // repère pour les tests de bout en bout
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const onStorage = (event: StorageEvent) => {

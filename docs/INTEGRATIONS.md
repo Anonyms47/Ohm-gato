@@ -26,7 +26,7 @@ Pour Wave, à valider avec le compte réel : format exact de l'en-tête `Wave-Si
 - Carte : Leaflet, tuiles OpenStreetMap par défaut (`NEXT_PUBLIC_MAP_TILE_URL`, `NEXT_PUBLIC_MAP_ATTRIBUTION`). Pour la production, utiliser un fournisseur de tuiles avec clé (MapTiler, Stadia…) : la politique d'usage des tuiles OSM publiques ne convient pas à un site commercial à fort trafic.
 - La position n'est demandée qu'après un clic sur « Utiliser ma position ». La saisie manuelle reste toujours possible.
 - **À faire** : recherche d'adresse (géocodage). Fournisseur à choisir ; Nominatim public ne convient pas en production.
-- **À faire** : rattachement automatique d'un repère à une zone (polygones dans `delivery_zones.polygon`). Aujourd'hui, la zone vient du quartier choisi.
+- La position exacte est obligatoire pour une livraison ; elle est enregistrée avec la commande (`orders.latitude`, `orders.longitude`). Les frais de livraison se règlent au livreur : la table `delivery_zones` n'intervient plus dans le prix.
 
 ## Polices
 
