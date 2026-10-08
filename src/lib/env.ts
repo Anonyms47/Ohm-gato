@@ -43,6 +43,8 @@ const schema = z.object({
   /** Modèle « authentification » approuvé par Meta (paramètre unique : le code). */
   WHATSAPP_OTP_TEMPLATE: z.string().min(1).optional(),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().min(2).default("fr"),
+  /** Recherche d'adresse (API compatible Nominatim). */
+  GEOCODER_URL: z.url().default("https://nominatim.openstreetmap.org"),
 });
 
 export type ServerEnv = z.infer<typeof schema>;

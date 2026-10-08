@@ -9,6 +9,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Recherche d'un quartier ou d'un lieu dans la région de Dakar sur la carte de livraison : la carte se centre, le client touche l'endroit exact.
 - Paiement par lien marchand Wave : commande confirmée au choix de Wave, montant et référence affichés au client, paiement enregistré par OHMEGATO (« Paiement Wave reçu ») ou commande annulée avec retour du stock.
 - Nos fournées (journal du four), Sur-mesure & Événements (carnet conversationnel, échanges, propositions, paiement après accord), Notre histoire (Oumy Gâteau → OHMEGATO → Ω).
 - Connexion sans mot de passe par code temporaire (téléphone, e-mail), espace « Mon carnet » complet (commandes, recomposition, adresses et positions, préférés, alertes, consentements, sessions, export, suppression).

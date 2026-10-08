@@ -26,10 +26,13 @@ export default function AddressMap({
   position,
   onChange,
   label,
+  focus,
 }: {
   position: { lat: number; lng: number } | null;
   onChange: (position: { lat: number; lng: number }) => void;
   label: string;
+  /** Lieu trouvé par la recherche : la carte s'y centre, sans poser le repère. */
+  focus?: { lat: number; lng: number } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -42,8 +45,8 @@ export default function AddressMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, {
-      center: position ? [position.lat, position.lng] : DAKAR,
-      zoom: position ? 17 : 13,
+      center: position ? [position.lat, position.lng] : focus ? [focus.lat, focus.lng] : DAKAR,
+      zoom: position || focus ? 17 : 13,
       keyboard: true,
       scrollWheelZoom: false,
     });
@@ -82,6 +85,10 @@ export default function AddressMap({
       markerRef.current.setLatLng(latLng);
     }
   }, [position]);
+
+  useEffect(() => {
+    if (focus) mapRef.current?.setView([focus.lat, focus.lng], 17, { animate: false });
+  }, [focus]);
 
   return (
     <div className="flex flex-col gap-2">

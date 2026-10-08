@@ -91,6 +91,31 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await expect(page.getByText(/boîte hermétique à température ambiante et à consommer sous 2 jours/)).toBeVisible();
   });
 
+  test("livraison : recherche d'un quartier, carte centrée, repère posé par le client", async ({ page }) => {
+    // Service de recherche simulé : aucun appel réel à OpenStreetMap pendant les tests.
+    await page.route("**/api/adresse", (route) =>
+      route.fulfill({ json: { ok: true, places: [{ label: "Mermoz, Dakar", lat: 14.7089, lng: -17.4767 }] } }),
+    );
+    await addToBox(page, "muffins-pepites", "Box de 6");
+    await page.goto("/commande");
+    await page.getByLabel("Nom").fill("Awa Diop");
+    await page.getByLabel(/Téléphone/).fill(testPhone());
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await page.getByRole("radio", { name: /^Livraison dans Dakar/ }).check();
+
+    const search = page.getByLabel("Chercher un quartier ou un lieu");
+    await search.fill("Mermoz");
+    await search.press("Enter"); // lance la recherche sans envoyer le bon de fournée
+    await expect(page.getByText("Placez le repère de livraison sur la carte.")).toHaveCount(0);
+    await page.getByRole("list", { name: "Lieux trouvés" }).getByRole("button", { name: "Mermoz, Dakar" }).click();
+    await expect(page.getByText("Carte centrée sur « Mermoz, Dakar ». Touchez maintenant l'endroit exact de livraison.")).toBeVisible();
+    // Le résultat ne pose jamais le repère à la place du client.
+    await expect(page.getByText("Repère placé.")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Placer le repère au centre de la carte" }).click();
+    await expect(page.getByText("Repère placé.")).toBeVisible();
+  });
+
   test("validation : messages précis, valeurs conservées, résumé des erreurs", async ({ page }) => {
     await addToBox(page, "cookies", "Unité");
     await page.goto("/commande");
@@ -187,6 +212,13 @@ test.describe("Webhooks", () => {
   test("création de commande refusée sans origine (CSRF)", async ({ request }) => {
     const response = await request.post("/api/orders", { headers: { "Content-Type": "application/json" }, data: {} });
     expect(response.status()).toBe(403);
+  });
+
+  test("recherche d'adresse : origine contrôlée et saisie validée", async ({ request, baseURL }) => {
+    const json = { "Content-Type": "application/json" };
+    expect((await request.post("/api/adresse", { headers: json, data: { q: "Mermoz" } })).status()).toBe(403);
+    const tooShort = await request.post("/api/adresse", { headers: { ...json, Origin: new URL(baseURL!).origin }, data: { q: "ab" } });
+    expect(tooShort.status()).toBe(400);
   });
 });
 

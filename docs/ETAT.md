@@ -31,4 +31,4 @@
 - Wave : le lien marchand est branché (vérification manuelle par OHMEGATO) ; Wave Checkout (API) non vérifié ; Orange Money non implémenté (contrat marchand requis).
 - Logos officiels Wave et Orange Money à fournir pour les boutons de paiement (couleurs officielles déjà appliquées).
 - Les alertes (nouvelle fournée) sont enregistrées ; leur envoi attend un canal de messagerie.
-- Recherche d'adresse (géocodage) non faite : le client pose le repère sur la carte.
+- Recherche d'adresse : service public OpenStreetMap, non vérifié depuis l'environnement de développement (réseau fermé) ; à tester sur le site en ligne.
