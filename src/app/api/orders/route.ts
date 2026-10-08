@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clientIp, isSameOriginJson, jsonError } from "@/lib/http";
+import { rememberOwnership } from "@/lib/orders/owner-cookie";
 import { placeOrder } from "@/lib/orders/place-order";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -21,5 +22,7 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return jsonError(result.status, result.code, result.message, result.fieldErrors ? { fieldErrors: result.fieldErrors } : undefined);
   }
-  return NextResponse.json(result, { status: 201 });
+  const response = NextResponse.json(result, { status: 201 });
+  await rememberOwnership(response, "commandes", result.reference);
+  return response;
 }

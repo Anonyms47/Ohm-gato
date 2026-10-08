@@ -101,6 +101,21 @@
     mix-blend-mode: multiply;
   }
 
+  /* Ticket de caisse : bord inférieur festonné. */
+  .ohm-ticket {
+    position: relative;
+    background: var(--ohm-blanc-casse);
+    margin-bottom: 8px;
+  }
+  .ohm-ticket::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -8px;
+    height: 8px;
+    background: radial-gradient(circle at 8px 0, var(--ohm-blanc-casse) 7px, transparent 7.5px) 0 0 / 16px 8px repeat-x;
+  }
+
   .ohm-tampon-pose {
     animation: ohm-tampon 420ms var(--ohm-courbe) both;
   }
@@ -135,5 +150,24 @@
 /* Un produit entre légèrement dans la composition. */
 @keyframes ohm-entree {
   from { opacity: 0; transform: translateY(14px) rotate(-1deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Carnet de connexion : la couverture s'ouvre comme une page, puis disparaît. */
+@keyframes ohm-carnet {
+  0% { transform: rotateY(0deg); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: rotateY(-110deg); opacity: 0; visibility: hidden; }
+}
+
+/* Changement d'étape du carnet sur-mesure. */
+@keyframes ohm-page {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Affiche de la fournée : le produit vedette se pose sur son cercle. */
+@keyframes ohm-affiche {
+  from { opacity: 0; transform: scale(0.92) rotate(-3deg); }
   to { opacity: 1; transform: none; }
 }

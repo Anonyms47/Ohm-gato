@@ -11,6 +11,9 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
 | **Allergènes confirmés** recette par recette (gluten, œufs, lait, soja, fruits à coque, chocolat) | Seul le message « Une allergie ? Écrivez-nous » est affiché |
 | **Conditions de vente et politique de remboursement** (rédigées avec Alima) | Pas de page de conditions ; à publier avant la mise en ligne |
+| **Compte WhatsApp Business (Cloud API)** : jeton, identifiant du numéro, modèle « authentification » approuvé | Connexion par téléphone impossible en production (l'e-mail reste possible) |
+| **SMTP** pour les e-mails de connexion (adresse d'expéditeur) | Codes par e-mail limités par Supabase |
+| **Logos officiels Wave et Orange Money** (kits marchands) | Boutons de paiement aux couleurs officielles, sans logo |
 
 ## Pour compléter l'expérience
 

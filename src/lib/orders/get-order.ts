@@ -25,8 +25,10 @@ export interface OrderView {
   reservationExpiresAt: string | null;
   paidAt: string | null;
   createdAt: string;
-  cycleNumber: number;
-  slot: { startsAt: string; endsAt: string };
+  cycleNumber: number | null;
+  slot: { startsAt: string; endsAt: string } | null;
+  isCustom: boolean;
+  userId: string | null;
   items: {
     productName: string;
     variantLabel: string;
@@ -61,8 +63,10 @@ interface OrderRow {
   reservation_expires_at: string | null;
   paid_at: string | null;
   created_at: string;
-  production_cycles: { number: number };
-  delivery_slots: { starts_at: string; ends_at: string };
+  production_cycles: { number: number } | null;
+  delivery_slots: { starts_at: string; ends_at: string } | null;
+  custom_request_id: string | null;
+  user_id: string | null;
   order_items: {
     product_name: string;
     variant_label: string;
@@ -91,7 +95,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     .select(
       `id, reference, status, payment_status, fulfillment, customer_name, customer_phone,
        address_line, district, landmark, latitude, longitude, pickup_code,
-       subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at,
+       subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
        production_cycles(number), delivery_slots(starts_at, ends_at),
        order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
          products(name, storage_rule, storage_note, storage_confirmed)),
@@ -125,8 +129,10 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     reservationExpiresAt: data.reservation_expires_at,
     paidAt: data.paid_at,
     createdAt: data.created_at,
-    cycleNumber: data.production_cycles.number,
-    slot: { startsAt: data.delivery_slots.starts_at, endsAt: data.delivery_slots.ends_at },
+    cycleNumber: data.production_cycles?.number ?? null,
+    slot: data.delivery_slots ? { startsAt: data.delivery_slots.starts_at, endsAt: data.delivery_slots.ends_at } : null,
+    isCustom: data.custom_request_id !== null,
+    userId: data.user_id,
     items: data.order_items.map((i) => ({
       productName: i.product_name,
       variantLabel: i.variant_label,

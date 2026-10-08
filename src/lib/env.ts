@@ -21,6 +21,20 @@ const schema = z.object({
   ORANGE_MONEY_CLIENT_SECRET: z.string().min(1).optional(),
   ORANGE_MONEY_MERCHANT_CODE: z.string().min(1).optional(),
   ORANGE_MONEY_WEBHOOK_SECRET: z.string().min(1).optional(),
+  /**
+   * Codes de connexion affichés à l'écran au lieu d'être envoyés (développement et tests).
+   * Interdit en production.
+   */
+  OTP_TEST_MODE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  /** WhatsApp Cloud API (Meta) — remise des codes de connexion. À RENSEIGNER. */
+  WHATSAPP_ACCESS_TOKEN: z.string().min(1).optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().min(1).optional(),
+  /** Modèle « authentification » approuvé par Meta (paramètre unique : le code). */
+  WHATSAPP_OTP_TEMPLATE: z.string().min(1).optional(),
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().min(2).default("fr"),
 });
 
 export type ServerEnv = z.infer<typeof schema>;
@@ -36,6 +50,9 @@ export function serverEnv(): ServerEnv {
   }
   if (parsed.data.APP_ENV === "production" && parsed.data.PAYMENT_TEST_MODE) {
     throw new Error("PAYMENT_TEST_MODE est interdit en production.");
+  }
+  if (parsed.data.APP_ENV === "production" && parsed.data.OTP_TEST_MODE) {
+    throw new Error("OTP_TEST_MODE est interdit en production.");
   }
   cached = parsed.data;
   return cached;

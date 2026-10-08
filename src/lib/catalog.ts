@@ -91,16 +91,40 @@ export const getCurrentCycle = cache(async (): Promise<CycleSummary | null> => {
   );
 });
 
-export const getArchivedCycles = cache(async (): Promise<CycleSummary[]> => {
+/** Fournées programmées après la fournée mise en avant (la prochaine en premier). */
+export const getUpcomingCycles = cache(async (excludeId: string | null): Promise<CycleSummary[]> => {
   const { data, error } = await supabasePublic()
     .from("production_cycles")
     .select(CYCLE_SELECT)
-    .eq("status", "done")
-    .order("opens_at", { ascending: false })
-    .limit(24)
+    .eq("status", "scheduled")
+    .gt("opens_at", new Date().toISOString())
+    .order("opens_at", { ascending: true })
+    .limit(4)
     .returns<CycleRow[]>();
   if (error) throw error;
-  return (data ?? []).map((row) => toCycle(row, Date.now()));
+  return (data ?? []).filter((row) => row.id !== excludeId).map((row) => toCycle(row, Date.now()));
+});
+
+export interface ArchivedCycle extends CycleSummary {
+  productNames: string[];
+}
+
+/** Archives du journal : fournées terminées ou annulées, avec ce qui était au programme. */
+export const getArchivedCycles = cache(async (): Promise<ArchivedCycle[]> => {
+  const { data, error } = await supabasePublic()
+    .from("production_cycles")
+    .select(`${CYCLE_SELECT}, cycle_products(sort_order, products(name))`)
+    .in("status", ["done", "cancelled"])
+    .order("opens_at", { ascending: false })
+    .limit(24)
+    .returns<(CycleRow & { cycle_products: { sort_order: number; products: { name: string } | null }[] })[]>();
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    ...toCycle(row, Date.now()),
+    productNames: [...row.cycle_products]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .flatMap((cp) => (cp.products ? [cp.products.name] : [])),
+  }));
 });
 
 /** Chemin local (« /products/… », livré avec le site) ou objet du bucket Supabase « products ». */
