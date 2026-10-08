@@ -17,6 +17,7 @@ export function isMobile(page: Page): boolean {
 /** Ouvre la fiche produit et ajoute un format à Ma boîte. */
 export async function addToBox(page: Page, slug: string, format: string, options: { flavor?: string; quantity?: number } = {}) {
   await page.goto(`/carte/${slug}`);
+  await waitForHydration(page);
   const form = page.locator("form").filter({ has: page.getByRole("radio", { name: new RegExp(format) }) }).first();
   await form.getByText(format, { exact: false }).first().click();
   if (options.flavor) {
@@ -36,6 +37,7 @@ export function testPhone(): string {
 /** Remplit les étapes 1 à 4 du bon de fournée pour un retrait. */
 export async function fillPickupCheckout(page: Page) {
   await page.goto("/commande");
+  await waitForHydration(page);
   await page.getByLabel("Nom").fill("Awa Diop");
   await page.getByLabel(/Téléphone/).fill(testPhone());
   await page.getByRole("button", { name: "Continuer" }).click();
@@ -57,4 +59,9 @@ export async function payWithTestProvider(page: Page) {
   await page.getByRole("button", { name: "Tout est bon, payer" }).click();
   await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
   await expect(page).toHaveURL(/\/paiement-test\//);
+}
+
+/** Attend que la page soit interactive (React hydraté) avant d'interagir. */
+export async function waitForHydration(page: Page) {
+  await page.locator("html[data-hydrated='true']").waitFor({ state: "attached" });
 }

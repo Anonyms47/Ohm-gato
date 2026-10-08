@@ -11,7 +11,8 @@ import { Button, type ButtonState } from "@/components/ui/Button";
 import { ErrorSummary, Field, TextArea, TextInput } from "@/components/ui/Field";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
 import { brand } from "@/config/brand";
-import type { SlotSummary, ZoneSummary } from "@/lib/catalog-types";
+import type { SlotSummary } from "@/lib/catalog-types";
+import { DELIVERY_FEE_NOTICE, DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { cn } from "@/lib/cn";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
@@ -19,6 +20,8 @@ import { formatSenegalPhone, normalizeSenegalPhone } from "@/lib/phone";
 import {
   checkoutFormSchema,
   emptyCheckoutForm,
+  fieldIssue,
+  stepIssues,
   type CheckoutFormOutput,
   type CheckoutFormValues,
 } from "@/lib/validation/checkout-form";
@@ -48,6 +51,8 @@ const STEP_FIELDS: Partial<Record<StepId, FieldPath<CheckoutFormValues>[]>> = {
     "delivery.district",
     "delivery.addressLine",
     "delivery.landmark",
+    "delivery.latitude",
+    "delivery.longitude",
     "delivery.floorDoor",
     "delivery.recipientName",
     "delivery.recipientPhone",
@@ -74,11 +79,9 @@ function newKey() {
 
 export function CheckoutFlow({
   slots,
-  zones,
   paymentMethods,
 }: {
   slots: SlotSummary[];
-  zones: ZoneSummary[];
   paymentMethods: PaymentMethodView[];
 }) {
   const { resolved, catalog, hydrated, cart } = useCart();
@@ -92,7 +95,7 @@ export function CheckoutFlow({
     defaultValues: emptyCheckoutForm,
     shouldFocusError: false,
   });
-  const { register, watch, trigger, getValues, setValue, formState, reset, handleSubmit } = methods;
+  const { register, watch, getValues, setValue, formState, reset, handleSubmit } = methods;
   const [step, setStep] = useState<StepId>("coordonnees");
   const [summaryErrors, setSummaryErrors] = useState<{ field: string; message: string }[]>([]);
   const [payState, setPayState] = useState<{ provider: PaymentMethodView["id"] | null; state: ButtonState; message?: string }>({
@@ -113,11 +116,14 @@ export function CheckoutFlow({
   }, [reset]);
   // Une erreur affichée disparaît dès que le champ est corrigé.
   useEffect(() => {
-    const subscription = watch((_, { name }) => {
-      if (name && methods.getFieldState(name).error) void trigger(name);
+    const subscription = watch((values, { name }) => {
+      if (!name || !methods.getFieldState(name).error) return;
+      const message = fieldIssue(name, values as CheckoutFormValues);
+      if (message) methods.setError(name, { type: "manual", message });
+      else methods.clearErrors(name);
     });
     return () => subscription.unsubscribe();
-  }, [watch, trigger, methods]);
+  }, [watch, methods]);
   useEffect(() => {
     const subscription = watch((values) => {
       try {
@@ -130,12 +136,9 @@ export function CheckoutFlow({
   }, [watch]);
 
   const fulfillment = watch("fulfillment");
-  const zoneId = watch("delivery.zoneId");
   const slotId = watch("slotId");
-  const zone = zones.find((z) => z.id === zoneId) ?? null;
-  const deliveryFee = fulfillment === "pickup" ? 0 : zone ? zone.feeFcfa : null;
-  const needsValidation = fulfillment === "delivery" && deliveryFee === null;
-  const total = resolved.subtotal + (deliveryFee ?? 0);
+  // Seuls les produits sont payés en ligne : la livraison se règle au livreur.
+  const total = resolved.subtotal;
   const slot = slots.find((s) => s.id === slotId) ?? null;
 
   const slotOptions = slots
@@ -157,26 +160,20 @@ export function CheckoutFlow({
     requestAnimationFrame(() => headingRefs.current[target]?.focus());
   };
 
-  const continueFrom = async (current: StepId) => {
-    const fields = (STEP_FIELDS[current] ?? []).filter(
-      (f) => fulfillment === "delivery" || !f.startsWith("delivery."),
-    );
-    const valid = fields.length === 0 || (await trigger(fields));
-    if (!valid) {
-      // Résumé des erreurs : mêmes règles que la validation, limitées aux champs de l'étape.
-      const parsed = checkoutFormSchema.safeParse(getValues());
-      const collected: { field: string; message: string }[] = [];
-      if (!parsed.success) {
-        for (const issue of parsed.error.issues) {
-          const field = issue.path.join(".");
-          if (fields.includes(field as FieldPath<CheckoutFormValues>) && !collected.some((c) => c.field === field)) {
-            collected.push({ field, message: issue.message });
-          }
+  const continueFrom = (current: StepId) => {
+    if (current === "coordonnees" || current === "reception" || current === "creneau" || current === "notes") {
+      const fields = STEP_FIELDS[current] ?? [];
+      methods.clearErrors(fields);
+      const issues = stepIssues(current, getValues());
+      if (issues.length > 0) {
+        for (const issue of issues) {
+          methods.setError(issue.field as FieldPath<CheckoutFormValues>, { type: "manual", message: issue.message });
         }
+        // Un message par problème (latitude et longitude partagent le même).
+        setSummaryErrors(issues.filter((issue, index) => issues.findIndex((i) => i.message === issue.message) === index));
+        requestAnimationFrame(() => summaryRef.current?.focus());
+        return;
       }
-      setSummaryErrors(collected);
-      requestAnimationFrame(() => summaryRef.current?.focus());
-      return;
     }
     if (current === "coordonnees") {
       // Le destinataire est pré-rempli avec les coordonnées du client.
@@ -187,7 +184,7 @@ export function CheckoutFlow({
     if (next) goTo(next.id);
   };
 
-  const pay = (provider: PaymentMethodView["id"] | null) =>
+  const pay = (provider: PaymentMethodView["id"]) =>
     handleSubmit(
       async (values) => {
         setPayState({ provider, state: "loading" });
@@ -365,7 +362,7 @@ export function CheckoutFlow({
                           <div className="grid gap-3 sm:grid-cols-2">
                             {(
                               [
-                                { value: "delivery", title: "Livraison dans Dakar", text: "En général le lendemain matin. Tarif selon le quartier." },
+                                { value: "delivery", title: "Livraison dans Dakar", text: "En général le lendemain matin. Frais à régler au livreur selon votre position." },
                                 { value: "pickup", title: "Retrait", text: `${brand.pickupAddress}. Gratuit.` },
                               ] as const
                             ).map((option) => (
@@ -390,7 +387,7 @@ export function CheckoutFlow({
                             <p className="mt-2 font-bold text-erreur">{formState.errors.fulfillment.message}</p>
                           )}
                         </fieldset>
-                        {fulfillment === "delivery" && <DeliveryFields zones={zones} />}
+                        {fulfillment === "delivery" && <DeliveryFields />}
                       </>
                     )}
 
@@ -427,25 +424,19 @@ export function CheckoutFlow({
                               total: l.total,
                             }))}
                             subtotal={resolved.subtotal}
-                            deliveryFee={deliveryFee}
                             fulfillment={fulfillment === "pickup" ? "pickup" : "delivery"}
                             total={total}
                             slotLabel={slot ? formatSlot(slot.startsAt, slot.endsAt) : ""}
                             cycleNumber={cycle.number}
                           />
                         </TicketPrinter>
-                        {needsValidation && (
-                          <p className="rounded-[10px] border-2 border-orange-encre p-3 font-bold text-orange-encre">
-                            Votre quartier n&apos;est pas dans nos zones habituelles : l&apos;équipe vous confirmera le tarif de livraison avant tout
-                            paiement.
-                          </p>
-                        )}
+                        {fulfillment === "delivery" && <DeliveryFeeNotice />}
                         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                           <Button variant="secondary" onClick={() => goTo("coordonnees")}>
                             Modifier
                           </Button>
                           <Button onClick={() => continueFrom("verification")}>
-                            {needsValidation ? "Tout est bon, envoyer ma demande" : "Tout est bon, payer"}
+                            Tout est bon, payer
                           </Button>
                         </div>
                       </>
@@ -453,9 +444,9 @@ export function CheckoutFlow({
 
                     {s.id === "paiement" && (
                       <PaymentChoices
-                        methods={needsValidation ? [] : paymentMethods}
+                        methods={paymentMethods}
                         total={total}
-                        needsValidation={needsValidation}
+                        delivery={fulfillment === "delivery"}
                         payState={payState}
                         onPay={pay}
                       />
@@ -480,7 +471,6 @@ export function CheckoutFlow({
 function OrderTicket({
   lines,
   subtotal,
-  deliveryFee,
   fulfillment,
   total,
   slotLabel,
@@ -488,7 +478,6 @@ function OrderTicket({
 }: {
   lines: { key: string; name: string; detail: string; quantity: number; total: number }[];
   subtotal: number;
-  deliveryFee: number | null;
   fulfillment: "delivery" | "pickup";
   total: number;
   slotLabel: string;
@@ -514,15 +503,18 @@ function OrderTicket({
           <dt>Sous-total</dt>
           <dd className="tabular-nums">{formatFcfa(subtotal)}</dd>
         </div>
-        <div className="flex justify-between">
-          <dt>{fulfillment === "pickup" ? "Retrait" : "Livraison"}</dt>
-          <dd className="tabular-nums">{deliveryFee === null ? "À confirmer" : formatFcfa(deliveryFee)}</dd>
-        </div>
+        {fulfillment === "pickup" && (
+          <div className="flex justify-between">
+            <dt>Retrait</dt>
+            <dd>Gratuit</dd>
+          </div>
+        )}
         <div className="flex justify-between border-t-2 border-chocolat pt-2 text-[1.15rem] font-bold">
-          <dt>Total</dt>
+          <dt>Total à payer</dt>
           <dd className="tabular-nums">{formatFcfa(total)}</dd>
         </div>
       </dl>
+      {fulfillment === "delivery" && <p className="mt-2 font-bold">{DELIVERY_FEE_NOTICE}</p>}
       <p className="mt-3">{slotLabel}</p>
       <p className="ohm-tampon absolute right-0 top-12 text-[1rem] text-rose-encre">À vérifier</p>
       <p className="mt-4 text-center font-bold">Ceci n&apos;est pas encore une confirmation.</p>
@@ -533,34 +525,16 @@ function OrderTicket({
 function PaymentChoices({
   methods,
   total,
-  needsValidation,
+  delivery,
   payState,
   onPay,
 }: {
   methods: PaymentMethodView[];
   total: number;
-  needsValidation: boolean;
+  delivery: boolean;
   payState: { provider: PaymentMethodView["id"] | null; state: ButtonState; message?: string };
-  onPay: (provider: PaymentMethodView["id"] | null) => void;
+  onPay: (provider: PaymentMethodView["id"]) => void;
 }) {
-  if (needsValidation) {
-    return (
-      <div className="flex flex-col gap-4">
-        <p>
-          Nous enregistrons votre demande sans paiement. L&apos;équipe vous recontacte sur WhatsApp avec le tarif de livraison, puis vous envoie le lien de
-          paiement.
-        </p>
-        <Button state={payState.state} loadingLabel="Envoi de la demande…" onClick={() => onPay(null)} className="self-start">
-          Envoyer ma demande
-        </Button>
-        {payState.state === "error" && payState.message && (
-          <p role="alert" className="font-bold text-erreur">
-            {payState.message}
-          </p>
-        )}
-      </div>
-    );
-  }
   const busy = payState.state === "loading" || payState.state === "success";
   return (
     <div className="flex flex-col gap-4">
@@ -568,6 +542,7 @@ function PaymentChoices({
         Montant à régler : <strong className="tabular-nums">{formatFcfa(total)}</strong>. Le paiement est intégral ; vous serez redirigé vers votre
         application de paiement.
       </p>
+      {delivery && <DeliveryFeeNotice />}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {methods.map((method) => (
           <div key={method.id} className="flex flex-col gap-1 sm:min-w-56">

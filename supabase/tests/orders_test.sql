@@ -2,7 +2,7 @@
 -- Lancer : npx supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(33);
+select plan(35);
 
 -- ---------------------------------------------------------------------------
 -- Préparation
@@ -24,9 +24,7 @@ select
      where p.slug = 'moelleux-pommes' and v.label = 'Part') as pommes_part,
   (select id from public.products where slug = 'cookies') as cookies_id,
   (select id from public.flavors where slug = 'fraise') as fraise,
-  (select id from public.flavors where slug = 'orange') as orange,
-  (select id from public.delivery_zones where fee_fcfa = 1000) as zone_a,
-  (select id from public.delivery_zones where fee_fcfa is null) as zone_quote;
+  (select id from public.flavors where slug = 'orange') as orange;
 grant select on ids to service_role, anon, authenticated;
 
 create or replace function pg_temp.order_payload(p_key uuid, p_items jsonb, p_fulfillment text default 'pickup', p_extra jsonb default '{}')
@@ -109,24 +107,26 @@ select throws_ok(
   'P0001', 'SLOT_INVALID', 'créneau de retrait refusé pour une livraison');
 
 -- ---------------------------------------------------------------------------
--- Livraison : frais de zone et zone sur devis
+-- Livraison : frais réglés au livreur, jamais inclus ; position obligatoire
 -- ---------------------------------------------------------------------------
 create temp table o_delivery as
 select public.place_order(pg_temp.order_payload(gen_random_uuid(),
   jsonb_build_array(jsonb_build_object('variant_id', (select cookie_unit from ids), 'quantity', 1)), 'delivery',
   jsonb_build_object('delivery', jsonb_build_object(
-    'zone_id', (select zone_a from ids), 'address_line', 'Villa 12', 'recipient_name', 'Awa',
+    'address_line', 'Villa 12', 'district', 'Mermoz', 'recipient_name', 'Awa',
     'recipient_phone', '+221770000002', 'latitude', 14.7445, 'longitude', -17.4710)))) as r;
-select is((select (r ->> 'total_fcfa')::int from o_delivery), 800 + 1000, 'frais de livraison de la zone ajoutés');
+select is((select (r ->> 'total_fcfa')::int from o_delivery), 800, 'livraison : seuls les produits sont payés');
+select is((select delivery_fee_fcfa from public.orders where id = (select (r ->> 'order_id')::uuid from o_delivery)), null,
+  'livraison : aucun frais enregistré dans la commande');
+select is((select r ->> 'status' from o_delivery), 'pending_payment', 'livraison : paiement direct des produits');
+select is(pg_temp.cookie_stock(), array[60, 16, 0], 'livraison : stock réservé');
 
-create temp table o_quote as
-select public.place_order(pg_temp.order_payload(gen_random_uuid(),
-  jsonb_build_array(jsonb_build_object('variant_id', (select cookie_unit from ids), 'quantity', 1)), 'delivery',
-  jsonb_build_object('delivery', jsonb_build_object(
-    'zone_id', (select zone_quote from ids), 'address_line', 'Rufisque', 'recipient_name', 'Awa',
-    'recipient_phone', '+221770000002')))) as r;
-select is((select r ->> 'status' from o_quote), 'awaiting_validation', 'zone sur devis : validation avant paiement');
-select is(pg_temp.cookie_stock(), array[60, 16, 0], 'zone sur devis : aucun stock réservé');
+select throws_ok(
+  format('select public.place_order(%L::jsonb)', pg_temp.order_payload(gen_random_uuid(),
+    jsonb_build_array(jsonb_build_object('variant_id', (select cookie_unit from ids), 'quantity', 1)), 'delivery',
+    jsonb_build_object('delivery', jsonb_build_object(
+      'address_line', 'Villa 12', 'recipient_name', 'Awa', 'recipient_phone', '+221770000002')))),
+  'P0001', 'POSITION_REQUIRED', 'livraison sans position exacte refusée');
 
 -- ---------------------------------------------------------------------------
 -- Paiement : confirmation, webhooks répétés

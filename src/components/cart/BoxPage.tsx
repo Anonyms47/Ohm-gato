@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/components/cart/CartProvider";
 import { CartLines } from "@/components/cart/CartLines";
+import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { ButtonLink } from "@/components/ui/Button";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
@@ -44,7 +45,9 @@ export function BoxPage() {
         <span className="font-bold">Sous-total</span>
         <span className="font-display text-[2rem] tabular-nums">{formatFcfa(resolved.subtotal)}</span>
       </div>
-      <p className="-mt-4 text-encre-douce">La livraison s&apos;ajoute selon votre quartier ; le retrait est gratuit.</p>
+      <p className="-mt-4 text-encre-douce">
+        {DELIVERY_FEE_NOTICE} Le retrait est gratuit.
+      </p>
       {resolved.hasIssues && (
         <p role="alert" className="font-bold text-erreur">
           Corrigez les articles signalés avant de passer commande.

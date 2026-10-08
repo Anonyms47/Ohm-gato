@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { addToBox, chooseFirstSlot, fillPickupCheckout, isMobile, localEnv, payWithTestProvider, testPhone } from "./helpers";
+import { addToBox, chooseFirstSlot, fillPickupCheckout, isMobile, localEnv, payWithTestProvider, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Parcours complet : fournée → produit → Ma boîte → commande → paiement → suivi", () => {
   test("retrait payé : confirmation serveur, tampon PAYÉE et code de retrait", async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
   });
 
-  test("livraison : quartier, repère manuel et frais de zone", async ({ page }) => {
+  test("livraison : position obligatoire, frais réglés au livreur, position transmise", async ({ page }) => {
     await addToBox(page, "muffins-pepites", "Box de 6");
     await page.goto("/commande");
     await page.getByLabel("Nom").fill("Moussa Ndiaye");
@@ -58,18 +58,37 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("radio", { name: /^Livraison dans Dakar/ }).check();
 
-    await page.locator('[id="delivery.district"]').click();
-    await page.getByPlaceholder("Rechercher un quartier…").fill("Mermoz");
-    await page.getByRole("option", { name: /Mermoz/ }).click();
+    const notice = "Frais de livraison non compris, à régler directement au livreur selon votre position.";
+    await expect(page.getByText(notice).first()).toBeVisible();
     await page.getByLabel("Adresse").fill("Villa 24, rue MZ-12");
+    await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
+    await page.getByLabel("Point de repère").fill("En face de la pharmacie");
+
+    // Sans repère sur la carte, l'étape est refusée.
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Placez le repère de livraison sur la carte." })).toBeVisible();
+
+    await page.getByRole("button", { name: "Placer le repère au centre de la carte" }).click();
+    await expect(page.getByText("Repère placé.")).toBeVisible();
     await page.getByRole("button", { name: "Continuer" }).click();
 
     await chooseFirstSlot(page, "Créneau de livraison");
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
-    // Frais de la zone TEST B (1 500 FCFA) ajoutés au total.
-    await expect(page.getByText(/4 000 FCFA/).first()).toBeVisible();
+    // Seuls les produits sont payés : 2 500 FCFA, sans frais de livraison.
+    await expect(page.getByText(/Total à payer/)).toBeVisible();
+    await expect(page.getByText(/2\u202f500\u00a0FCFA/).first()).toBeVisible();
+    await expect(page.getByText(notice).first()).toBeVisible();
+
+    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
+    await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
+    await expect(page.getByText(notice).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Envoyer ma position sur WhatsApp" })).toHaveAttribute("href", /maps\.google\.com/);
+    await expect(page.getByRole("heading", { name: "Conservation" })).toBeVisible();
+    await expect(page.getByText(/boîte hermétique à température ambiante et à consommer sous 2 jours/)).toBeVisible();
   });
 
   test("validation : messages précis, valeurs conservées, résumé des erreurs", async ({ page }) => {
@@ -98,6 +117,7 @@ test.describe("Stock, fournée et disponibilités", () => {
 
   test("parfum absent de la fournée : désactivé avec sa raison", async ({ page }) => {
     await page.goto("/carte/verrines-fruitees");
+    await waitForHydration(page);
     await page.getByLabel("Parfum").click();
     const orange = page.getByRole("option", { name: /Orange/ });
     await expect(orange).toHaveAttribute("aria-disabled", "true");
@@ -110,11 +130,13 @@ test.describe("Stock, fournée et disponibilités", () => {
     await expect(page.getByRole("button", { name: /^Ajouter ·/ })).toHaveCount(0);
   });
 
-  test("informations non confirmées jamais affichées (conservation du cake)", async ({ page }) => {
+  test("conservation : règle d'Alima sur chaque fiche", async ({ page }) => {
     await page.goto("/carte/cake-orange");
-    await expect(page.getByRole("heading", { name: "Conservation" })).toHaveCount(0);
+    await expect(page.getByText("Peut être conservé jusqu'à une semaine, correctement emballé et gardé dans un endroit frais.")).toBeVisible();
+    await page.goto("/carte/choux-creme");
+    await expect(page.getByText("À conserver au réfrigérateur et à consommer sous 2 jours.")).toBeVisible();
     await page.goto("/carte/cookies");
-    await expect(page.getByRole("heading", { name: "Conservation" })).toBeVisible();
+    await expect(page.getByText(/boîte hermétique à température ambiante et à consommer sous 2 jours\. Peuvent être légèrement réchauffés/)).toBeVisible();
   });
 });
 

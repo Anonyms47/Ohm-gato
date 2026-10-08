@@ -24,9 +24,9 @@
 
 1. Pages éditoriales : Nos Fournées (journal du four, archives), Sur-mesure (carnet en 8 étapes et statuts), Notre Histoire.
 2. Connexion sans mot de passe (OTP téléphone via un fournisseur SMS ou WhatsApp, e-mail en complément), suivi invité par référence + téléphone + code, espace « Mon carnet ».
-3. Administration `/admin` : fournées, produits, stocks, commandes, zones, créneaux, demandes, journal des actions, confirmations.
+3. Administration `/admin` : fournées, produits, stocks, commandes (avec la position de livraison), créneaux, demandes, journal des actions, confirmations.
 4. Animations restantes : couverture de fournée en table gourmande, carnet de connexion.
-5. Recherche d'adresse et polygones de zones.
+5. Recherche d'adresse sur la carte.
 
 ## Limites connues
 

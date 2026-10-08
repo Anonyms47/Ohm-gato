@@ -50,6 +50,7 @@ export default async function SuiviPage({
           slot: order.slot,
           items: order.items,
           history: order.history,
+          storage: order.storage,
         }}
       />
     </div>

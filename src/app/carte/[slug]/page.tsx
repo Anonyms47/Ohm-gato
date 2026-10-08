@@ -10,11 +10,7 @@ import { brand } from "@/config/brand";
 import { getCatalog } from "@/lib/catalog";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { formatFcfa } from "@/lib/money";
-
-const storageText: Record<NonNullable<CatalogProduct["storage"]>["rule"], string> = {
-  refrigerated_48h: "À conserver au réfrigérateur, 48 heures maximum.",
-  ambient_airtight_48h: "À conserver à température ambiante dans une boîte hermétique, 48 heures maximum.",
-};
+import { storageAdvice } from "@/lib/storage";
 
 async function findProduct(slug: string) {
   const catalog = await getCatalog();
@@ -131,8 +127,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <h2 id="conservation" className="font-display text-[1.6rem]">
                 Conservation
               </h2>
-              <p className="mt-2">{storageText[product.storage.rule]}</p>
-              {product.storage.note && <p className="mt-1">{product.storage.note}</p>}
+              <p className="mt-2">{storageAdvice(product.storage.rule, product.storage.note)}</p>
             </section>
           )}
 

@@ -51,6 +51,8 @@ export default function AddressMap({
     map.on("click", (event: L.LeafletMouseEvent) => onChangeRef.current({ lat: event.latlng.lat, lng: event.latlng.lng }));
     mapRef.current = map;
     return () => {
+      map.stop(); // une animation en cours ne doit pas survivre à la carte
+      map.off();
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -75,7 +77,7 @@ export default function AddressMap({
           const { lat, lng } = (event.target as L.Marker).getLatLng();
           onChangeRef.current({ lat, lng });
         });
-      map.setView(latLng, Math.max(map.getZoom(), 16));
+      map.setView(latLng, Math.max(map.getZoom(), 16), { animate: false });
     } else {
       markerRef.current.setLatLng(latLng);
     }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandHeading } from "@/components/brand/BrandHeading";
+import { DELIVERY_FEE_NOTICE, DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { useCart } from "@/components/cart/CartProvider";
 import { forgetPendingOrder, readPendingOrders } from "@/components/order/pending-orders";
 import { Button, type ButtonState } from "@/components/ui/Button";
@@ -41,6 +42,7 @@ export interface TrackerOrder {
   slot: { startsAt: string; endsAt: string };
   items: { productName: string; variantLabel: string; flavorName: string | null; quantity: number; lineTotalFcfa: number }[];
   history: { status: OrderStatus; createdAt: string }[];
+  storage: { productName: string; advice: string }[];
 }
 
 const STAMP_KEY = "ohmegato.tampons";
@@ -209,10 +211,7 @@ export function OrderTracker({
           </div>
         )}
         {order.status === "awaiting_validation" && (
-          <p className="text-[1.1rem]">
-            Nous vérifions la livraison vers {order.district ?? "votre quartier"}. L&apos;équipe vous écrit sur WhatsApp avec le tarif, puis vous envoie
-            le lien de paiement. Rien n&apos;est débité d&apos;ici là.
-          </p>
+          <p className="text-[1.1rem]">L&apos;équipe vérifie votre commande et vous écrit sur WhatsApp. Rien n&apos;est débité d&apos;ici là.</p>
         )}
         {(order.status === "cancelled" || order.status === "expired") && (
           <p className="text-[1.1rem]">
@@ -252,12 +251,14 @@ export function OrderTracker({
             <dt>Sous-total</dt>
             <dd className="tabular-nums">{formatFcfa(order.subtotalFcfa)}</dd>
           </div>
-          <div className="flex justify-between">
-            <dt>{order.fulfillment === "pickup" ? "Retrait" : "Livraison"}</dt>
-            <dd className="tabular-nums">{order.deliveryFeeFcfa === null ? "À confirmer" : formatFcfa(order.deliveryFeeFcfa)}</dd>
-          </div>
+          {order.fulfillment === "pickup" && (
+            <div className="flex justify-between">
+              <dt>Retrait</dt>
+              <dd>Gratuit</dd>
+            </div>
+          )}
           <div className="flex justify-between border-t-2 border-chocolat pt-2 text-[1.15rem] font-bold">
-            <dt>Total</dt>
+            <dt>{paid ? "Total payé" : "Total à payer"}</dt>
             <dd className="tabular-nums">{formatFcfa(order.totalFcfa)}</dd>
           </div>
           <div className="flex justify-between">
@@ -288,6 +289,7 @@ export function OrderTracker({
             </p>
           )}
         </div>
+        {order.fulfillment === "delivery" && <p className="mt-3 font-bold">{DELIVERY_FEE_NOTICE}</p>}
         {order.pickupCode && (
           <p className="mt-4 rounded-[10px] border-2 border-chocolat p-3 text-center">
             Code de retrait
@@ -324,6 +326,49 @@ export function OrderTracker({
               );
             })}
           </ol>
+        </section>
+      )}
+
+      {order.fulfillment === "delivery" && paid && order.latitude !== null && order.longitude !== null && (
+        <section aria-labelledby="position" className="flex flex-col gap-3">
+          <h2 id="position" className="font-display text-[1.8rem]">
+            Votre position
+          </h2>
+          <p>
+            Votre repère est enregistré avec la commande. Pour aider le livreur, envoyez-le aussi à OHMEGATO sur WhatsApp ; les frais de livraison vous
+            seront indiqués selon cette position.
+          </p>
+          <DeliveryFeeNotice />
+          <a
+            href={`${brand.whatsappUrl}?text=${encodeURIComponent(
+              [
+                `Bonjour OHMEGATO, voici la position de livraison de ma commande ${order.reference}.`,
+                [order.addressLine, order.district].filter(Boolean).join(", "),
+                order.landmark ? `Repère : ${order.landmark}` : "",
+                `https://maps.google.com/?q=${order.latitude},${order.longitude}`,
+              ]
+                .filter(Boolean)
+                .join("\n"),
+            )}`}
+            className="inline-flex min-h-12 w-fit items-center rounded-[10px] bg-chocolat px-5 font-bold text-creme shadow-[0_3px_0_var(--ohm-cacao)]"
+          >
+            Envoyer ma position sur WhatsApp
+          </a>
+        </section>
+      )}
+
+      {order.storage.length > 0 && (
+        <section aria-labelledby="conservation">
+          <h2 id="conservation" className="font-display text-[1.8rem]">
+            Conservation
+          </h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {order.storage.map((item) => (
+              <li key={item.productName}>
+                <strong>{item.productName}</strong> : {item.advice}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

@@ -2,6 +2,7 @@ import "server-only";
 import type { Fulfillment, OrderStatus, PaymentStatus } from "@/lib/order-status";
 import { hashTrackingToken, isWellFormedToken } from "@/lib/orders/tracking";
 import type { ProviderId } from "@/lib/payments/types";
+import { storageAdvice, type StorageRule } from "@/lib/storage";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export interface OrderView {
@@ -36,6 +37,8 @@ export interface OrderView {
   }[];
   history: { status: OrderStatus; createdAt: string }[];
   lastPaymentProvider: ProviderId | null;
+  /** Conseils de conservation des produits commandés (règles confirmées uniquement). */
+  storage: { productName: string; advice: string }[];
 }
 
 interface OrderRow {
@@ -67,6 +70,7 @@ interface OrderRow {
     quantity: number;
     unit_price_fcfa: number;
     line_total_fcfa: number;
+    products: { name: string; storage_rule: StorageRule | null; storage_note: string | null; storage_confirmed: boolean } | null;
   }[];
   order_status_history: { status: OrderStatus; created_at: string }[];
   payments: { provider: ProviderId; created_at: string }[];
@@ -89,7 +93,8 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
        address_line, district, landmark, latitude, longitude, pickup_code,
        subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at,
        production_cycles(number), delivery_slots(starts_at, ends_at),
-       order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa),
+       order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
+         products(name, storage_rule, storage_note, storage_confirmed)),
        order_status_history(status, created_at),
        payments(provider, created_at)`,
     )
@@ -134,6 +139,16 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
       .map((h) => ({ status: h.status, createdAt: h.created_at })),
     lastPaymentProvider: lastPayment?.provider ?? null,
+    storage: Array.from(
+      new Map(
+        data.order_items.flatMap((i) =>
+          i.products?.storage_confirmed && i.products.storage_rule
+            ? [[i.products.name, storageAdvice(i.products.storage_rule, i.products.storage_note)] as const]
+            : [],
+        ),
+      ),
+      ([productName, advice]) => ({ productName, advice }),
+    ),
   };
 }
 

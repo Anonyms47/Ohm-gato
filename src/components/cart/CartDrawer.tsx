@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Drawer } from "vaul";
 import { useCart } from "@/components/cart/CartProvider";
+import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { CartLines } from "@/components/cart/CartLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { useIsSmallScreen } from "@/components/ui/select/shared";
@@ -56,7 +57,9 @@ export function CartDrawer() {
                 <span className="font-bold">Sous-total</span>
                 <span className="font-display text-[1.6rem] tabular-nums">{formatFcfa(resolved.subtotal)}</span>
               </div>
-              <p className="mt-1 text-[0.95rem] text-encre-douce">Livraison calculée à l&apos;étape suivante selon votre quartier.</p>
+              <p className="mt-1 text-[0.95rem] text-encre-douce">
+                {DELIVERY_FEE_NOTICE} Retrait gratuit.
+              </p>
               <div className="mt-4 flex flex-col gap-2" onClick={() => setDrawerOpen(false)}>
                 <ButtonLink href="/commande" className="w-full">
                   Remplir le bon de fournée
