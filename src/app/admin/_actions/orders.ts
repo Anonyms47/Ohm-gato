@@ -24,6 +24,19 @@ export async function setOrderStatus(orderId: string, status: string, note: stri
   return { ok: true, message: "Statut mis à jour." };
 }
 
+/** Paiement constaté par OHMEGATO dans son application Wave (lien marchand, sans notification). */
+export async function recordPayment(orderId: string, reference: string): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const { error } = await supabaseAdmin().rpc("admin_record_payment", {
+    p_order_id: orderId,
+    p_reference: reference.trim().slice(0, 80),
+    p_actor: admin.id,
+  });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  refresh(orderId);
+  return { ok: true, message: "Paiement enregistré : la commande est payée." };
+}
+
 /** Commande confiée au livreur : son nom et son numéro restent avec la commande. */
 export async function handToCourier(orderId: string, courierName: string, courierPhone: string): Promise<AdminState> {
   const admin = await requireAdmin();

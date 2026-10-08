@@ -448,16 +448,22 @@ export async function listActiveReservations(cycleId: string) {
 export async function dashboard() {
   const today = startOfDakarDay();
   const cycle = await activeCycle();
-  const [todayOrders, toPrepare, attention, pendingPayments, paidToday, requests, inventory] = await Promise.all([
+  const [todayOrders, toPrepare, attention, toVerify, pendingPayments, paidToday, requests, inventory] = await Promise.all([
     db().from("orders").select("id, payment_status", { count: "exact" }).gte("created_at", today),
     db().from("orders").select("id, reference, status, fulfillment, customer_name, delivery_slots(starts_at)").in("status", ["confirmed", "preparing", "finishing", "ready"]).order("created_at").limit(50),
     db().from("orders").select("id, reference, customer_name").eq("status", "needs_attention"),
+    db()
+      .from("orders")
+      .select("id, reference, customer_name, total_fcfa")
+      .eq("payment_status", "pending")
+      .not("status", "in", "(pending_payment,cancelled,expired,refunded)")
+      .order("created_at"),
     db().from("orders").select("id", { count: "exact", head: true }).eq("status", "pending_payment").eq("payment_status", "pending"),
     db().from("payments").select("amount_fcfa").eq("status", "paid").gte("paid_at", today),
     db().from("custom_requests").select("id, status"),
     cycle ? db().from("inventory_overview").select("*").eq("cycle_id", cycle.id) : Promise.resolve({ data: [], error: null }),
   ]);
-  for (const r of [todayOrders, toPrepare, attention, pendingPayments, paidToday, requests, inventory]) if (r.error) throw r.error;
+  for (const r of [todayOrders, toPrepare, attention, toVerify, pendingPayments, paidToday, requests, inventory]) if (r.error) throw r.error;
   const prepare = (toPrepare.data ?? []) as unknown as { id: string; reference: string; status: OrderStatus; fulfillment: Fulfillment; customer_name: string; delivery_slots: { starts_at: string } | null }[];
   const inv = (inventory.data ?? []) as { product_id: string; product_name: string; unit_label_plural: string; total_units: number; reserved_units: number; sold_units: number; available_units: number }[];
   const reqs = (requests.data ?? []) as { status: string }[];
@@ -468,6 +474,8 @@ export async function dashboard() {
     revenueTodayFcfa: ((paidToday.data ?? []) as { amount_fcfa: number }[]).reduce((s, p) => s + p.amount_fcfa, 0),
     pendingPayments: pendingPayments.count ?? 0,
     attention: (attention.data ?? []) as { id: string; reference: string; customer_name: string }[],
+    /** Commandes confirmées par le lien Wave dont le paiement n'est pas encore constaté. */
+    toVerify: (toVerify.data ?? []) as { id: string; reference: string; customer_name: string; total_fcfa: number }[],
     toPrepare: prepare,
     deliveries: prepare.filter((o) => o.fulfillment === "delivery").length,
     pickups: prepare.filter((o) => o.fulfillment === "pickup").length,

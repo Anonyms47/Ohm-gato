@@ -33,6 +33,23 @@ export default async function AdminDashboard() {
         </section>
       )}
 
+      {d.toVerify.length > 0 && (
+        <section className="rounded-[12px] border-2 border-wave-encre bg-blanc-casse p-4">
+          <h2 className="font-bold">Paiements Wave à vérifier ({d.toVerify.length})</h2>
+          <p className="text-encre-douce">Commandes confirmées : vérifiez la réception dans l&apos;application Wave, puis enregistrez-la ou annulez la commande.</p>
+          <ul className="mt-2">
+            {d.toVerify.map((o) => (
+              <li key={o.id}>
+                <Link href={`/admin/commandes/${o.id}`} className="font-bold underline underline-offset-4">
+                  {o.reference}
+                </Link>{" "}
+                — {o.customer_name} · {formatFcfa(o.total_fcfa)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Commandes du jour" value={d.todayCount} hint={`${d.todayPaid} payée${d.todayPaid > 1 ? "s" : ""}`} />
         <StatCard label="Encaissé aujourd'hui (produits)" value={formatFcfa(d.revenueTodayFcfa)} />

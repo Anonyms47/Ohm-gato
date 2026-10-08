@@ -28,7 +28,7 @@ import {
 import { rememberPendingOrder } from "@/components/order/pending-orders";
 
 export interface PaymentMethodView {
-  id: "wave" | "orange_money" | "test";
+  id: "wave" | "wave_link" | "orange_money" | "test";
   label: string;
   available: boolean;
 }
@@ -552,7 +552,7 @@ function PaymentChoices({
         {methods.map((method) => (
           <div key={method.id} className="flex flex-col gap-1 sm:min-w-56">
             <Button
-              variant={method.id === "wave" ? "wave" : method.id === "orange_money" ? "orange-money" : "primary"}
+              variant={method.id === "wave" || method.id === "wave_link" ? "wave" : method.id === "orange_money" ? "orange-money" : "primary"}
               state={payState.provider === method.id ? payState.state : "idle"}
               loadingLabel={`Ouverture de ${method.label}…`}
               disabled={!method.available || (busy && payState.provider !== method.id)}

@@ -72,12 +72,15 @@ export function OrderTracker({
   returningFromPayment,
   paymentMethods,
   pickupAddress,
+  waveLink = null,
 }: {
   token: string;
   order: TrackerOrder;
   returningFromPayment: boolean;
-  paymentMethods: { id: "wave" | "orange_money" | "test"; label: string; available: boolean }[];
+  paymentMethods: { id: "wave" | "wave_link" | "orange_money" | "test"; label: string; available: boolean }[];
   pickupAddress: string;
+  /** Lien marchand Wave à payer (commande confirmée, paiement à vérifier par OHMEGATO). */
+  waveLink?: string | null;
 }) {
   const router = useRouter();
   const { clear, hydrated } = useCart();
@@ -85,11 +88,14 @@ export function OrderTracker({
   const [resume, setResume] = useState<{ provider: string | null; state: ButtonState; message?: string }>({ provider: null, state: "idle" });
   const paid = order.paymentStatus === "paid";
   const waiting = isAwaitingPayment(order.status, order.paymentStatus);
+  // Commande confirmée par le lien Wave, paiement pas encore constaté par OHMEGATO.
+  const awaitingWave = waveLink !== null && order.paymentStatus === "pending" && !waiting && !["cancelled", "expired", "refunded"].includes(order.status);
+  const polling = waiting || awaitingWave;
   const lastStatus = useRef(`${order.status}/${order.paymentStatus}`);
 
   // Interrogation du vrai statut tant que le paiement est en attente (jamais de succès supposé).
   useEffect(() => {
-    if (!waiting) return;
+    if (!polling) return;
     let stopped = false;
     let delay = 3000;
     let timer: number;
@@ -124,23 +130,25 @@ export function OrderTracker({
       stopped = true;
       window.clearTimeout(timer);
     };
-  }, [waiting, token, router]);
+  }, [polling, token, router]);
 
   // Paiement confirmé par le serveur : tampon « PAYÉE » (une seule fois) et boîte vidée sur cet appareil.
   // On attend que Ma boîte soit relue depuis le navigateur, sinon cette relecture la remplirait à nouveau.
+  const confirmed = paid || awaitingWave;
   useEffect(() => {
-    if (!paid || !hydrated) return;
+    if (!confirmed || !hydrated) return;
     const fromThisDevice = readPendingOrders().some((o) => o.reference === order.reference);
     if (fromThisDevice) {
       clear();
       forgetPendingOrder(order.reference);
     }
+    if (!paid) return;
     if (!stampAlreadyShown(order.reference)) {
       markStampShown(order.reference);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- animation déclenchée par la confirmation serveur
       setAnimateStamp(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     }
-  }, [paid, hydrated, order.reference, clear]);
+  }, [confirmed, paid, hydrated, order.reference, clear]);
 
   const resumePayment = async (provider: string) => {
     setResume({ provider, state: "loading" });
@@ -194,7 +202,7 @@ export function OrderTracker({
                 {paymentMethods.map((m) => (
                   <Button
                     key={m.id}
-                    variant={m.id === "wave" ? "wave" : m.id === "orange_money" ? "orange-money" : "secondary"}
+                    variant={m.id === "wave" || m.id === "wave_link" ? "wave" : m.id === "orange_money" ? "orange-money" : "secondary"}
                     disabled={!m.available}
                     state={resume.provider === m.id ? resume.state : "idle"}
                     loadingLabel="Ouverture du paiement…"
@@ -210,6 +218,26 @@ export function OrderTracker({
                 </p>
               )}
             </div>
+          </div>
+        )}
+        {awaitingWave && waveLink && (
+          <div className="flex flex-col gap-3 rounded-[12px] border-2 border-wave-encre bg-blanc-casse p-4" data-testid="paiement-wave">
+            <p className="text-[1.1rem]">
+              Votre commande est confirmée. Réglez <strong className="tabular-nums">{formatFcfa(order.totalFcfa)}</strong> avec Wave en indiquant la
+              référence <strong>{order.reference}</strong>.
+            </p>
+            <a
+              href={waveLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-14 w-fit items-center rounded-[12px] bg-wave px-6 font-bold text-wave-encre shadow-[0_3px_0_var(--ohm-wave-encre)]"
+            >
+              Payer {formatFcfa(order.totalFcfa)} avec Wave
+            </a>
+            <p className="text-encre-douce">
+              OHMEGATO vérifie la réception du paiement : cette page affichera « Payée » dès que c&apos;est fait. Sans paiement, la commande pourra
+              être annulée.
+            </p>
           </div>
         )}
         {order.status === "awaiting_validation" && (

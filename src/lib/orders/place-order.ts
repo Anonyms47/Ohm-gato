@@ -142,6 +142,15 @@ export async function startPayment(orderId: string, providerId: ProviderId, trac
   const { data: payment, error } = await db.rpc("create_payment", { p_order_id: orderId, p_provider: providerId });
   if (error) throw error;
   const row = payment as { id: string; amount_fcfa: number; checkout_url: string | null };
+
+  // Lien marchand Wave : la commande est confirmée dès ce choix (décision d'OHMEGATO),
+  // le paiement reste à vérifier par l'équipe. Le client voit le montant et le lien sur son suivi.
+  if (providerId === "wave_link") {
+    const { error: confirmError } = await db.rpc("confirm_order_awaiting_wave", { p_order_id: orderId, p_payment_id: row.id });
+    if (confirmError) throw confirmError;
+    return `/suivi/${trackingToken}?retour=wave`;
+  }
+
   if (row.checkout_url) return row.checkout_url;
 
   const { data: order, error: orderError } = await db.from("orders").select("reference").eq("id", orderId).single();

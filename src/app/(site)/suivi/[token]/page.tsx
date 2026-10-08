@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getOrderByToken } from "@/lib/orders/get-order";
 import { ownedReferences } from "@/lib/orders/owner-cookie";
 import { paymentMethods } from "@/lib/payments";
+import { waveLinkFor } from "@/lib/payments/wave-link";
 
 export const metadata: Metadata = {
   title: "Suivi de commande",
@@ -35,6 +36,7 @@ export default async function SuiviPage({
         returningFromPayment={retour === "paiement"}
         paymentMethods={paymentMethods()}
         pickupAddress={brand.pickupAddress}
+        waveLink={order.lastPaymentProvider === "wave_link" ? waveLinkFor(order.totalFcfa) : null}
         order={{
           reference: order.reference,
           status: order.status,
