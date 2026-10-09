@@ -92,7 +92,7 @@ export async function login(page: Page, phone: string, next = "/compte") {
   await page.getByRole("button", { name: "Recevoir mon code" }).click();
   const codeText = await page.getByTestId("code-test").textContent();
   const code = /(\d{6})/.exec(codeText ?? "")![1]!;
-  await page.getByLabel("Code à 6 chiffres").fill(code);
+  await page.getByLabel("Code reçu").fill(code);
   await page.getByRole("button", { name: "Ouvrir mon carnet" }).click();
   await expect(page.getByText("Carnet retrouvé").first()).toBeAttached();
 }

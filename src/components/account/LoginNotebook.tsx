@@ -108,8 +108,8 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
   const onCodeSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (busy) return;
-    if (!/^\d{6}$/.test(code.replace(/\s/g, ""))) {
-      setError({ code: "CODE_INVALID", message: "Le code compte 6 chiffres." });
+    if (!/^\d{6,8}$/.test(code.replace(/\s/g, ""))) {
+      setError({ code: "CODE_INVALID", message: "Saisissez le code reçu (6 à 8 chiffres)." });
       return;
     }
     setBusy(true);
@@ -261,7 +261,7 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
                 </p>
               )}
               <Field
-                label="Code à 6 chiffres"
+                label="Code reçu"
                 hint="Valable 10 minutes, utilisable une seule fois."
                 error={
                   error
@@ -280,10 +280,10 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     pattern="[0-9]*"
-                    maxLength={6}
+                    maxLength={8}
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="text-center font-display text-[1.8rem] tracking-[0.5em] tabular-nums"
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                    className="text-center font-display text-[1.8rem] tracking-[0.3em] tabular-nums"
                   />
                 )}
               </Field>
