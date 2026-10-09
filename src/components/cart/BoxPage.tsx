@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BoxAllergens } from "@/components/cart/BoxAllergens";
 import { useCart } from "@/components/cart/CartProvider";
 import { CartLines } from "@/components/cart/CartLines";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
@@ -48,6 +49,7 @@ export function BoxPage() {
       <p className="-mt-4 text-encre-douce">
         {DELIVERY_FEE_NOTICE} Le retrait est gratuit.
       </p>
+      <BoxAllergens />
       {resolved.hasIssues && (
         <p role="alert" className="font-bold text-erreur">
           Corrigez les articles signalés avant de passer commande.

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { AllergensEditor, FlavorsEditor, ImagesEditor, ProductForm, VariantsEditor } from "@/components/admin/ProductEditors";
-import { listAllergens, listFlavors, listProducts } from "@/lib/admin/data";
+import { AllergenEditor } from "@/components/admin/AllergenEditor";
+import { FlavorsEditor, ImagesEditor, ProductForm, VariantsEditor } from "@/components/admin/ProductEditors";
+import { getWorkshopTraces, listAllergens, listFlavors, listProducts } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
 import { serverEnv } from "@/lib/env";
 
@@ -19,7 +20,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export default async function ProduitAdmin({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const [products, flavors, allergens] = await Promise.all([listProducts(), listFlavors(), listAllergens()]);
+  const [products, flavors, allergens, workshop] = await Promise.all([listProducts(), listFlavors(), listAllergens(), getWorkshopTraces()]);
   const product = products.find((p) => p.id === id);
   if (!product) notFound();
   const base = `${serverEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/products/`;
@@ -35,7 +36,7 @@ export default async function ProduitAdmin({ params }: { params: Promise<{ id: s
         <FlavorsEditor product={product} flavors={flavors} />
       </Section>
       <Section title="Allergènes">
-        <AllergensEditor product={product} allergens={allergens} />
+        <AllergenEditor product={product} allergens={allergens} flavors={flavors} workshopTraces={workshop.traces} />
       </Section>
       <Section title="Photos">
         <ImagesEditor product={product} imageUrl={imageUrl} />

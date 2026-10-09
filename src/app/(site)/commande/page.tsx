@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrandHeading } from "@/components/brand/BrandHeading";
+import { BoxAllergens } from "@/components/cart/BoxAllergens";
 import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
 import { getMyAddresses } from "@/lib/account/data";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -25,6 +26,7 @@ export default async function CommandePage() {
       </BrandHeading>
       <p className="mt-2 text-encre-douce">Six étapes courtes. Rien n&apos;est débité avant la dernière.</p>
       <CheckoutFlow slots={slots} paymentMethods={paymentMethods()} member={member} />
+      <BoxAllergens className="mt-10" />
     </div>
   );
 }

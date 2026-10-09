@@ -25,16 +25,19 @@ insert into public.flavors (slug, name) values
   ('mangue', 'Mangue')
 on conflict (slug) do nothing;
 
--- Liste d'allergènes gérés. Aucune association produit n'est créée ici :
--- elles doivent être confirmées recette par recette (product_allergens.confirmed).
-insert into public.allergens (slug, name) values
-  ('gluten', 'Gluten'),
-  ('oeufs', 'Œufs'),
-  ('lait', 'Lait'),
-  ('soja', 'Soja'),
-  ('fruits-a-coque', 'Fruits à coque'),
-  ('chocolat', 'Chocolat')
-on conflict (slug) do nothing;
+-- Allergènes gérés (le chocolat n'en fait pas partie : c'est une information de recette).
+-- Les statuts produit par produit sont dans seed/allergens.sql.
+insert into public.allergens (slug, name, sentence_label, no_added_text, sort_order, is_active) values
+  ('gluten', 'Gluten (blé)', 'gluten', 'Préparé sans gluten ajouté, mais non garanti sans gluten ni sans traces de gluten.', 1, true),
+  ('oeufs', 'Œufs', 'œufs', 'Préparé sans œufs ajoutés, mais non garanti sans traces d’œufs.', 2, true),
+  ('lait', 'Lait et produits laitiers', 'lait', 'Préparé sans lait ajouté, mais non garanti sans lactose ni sans traces de lait.', 3, true),
+  ('soja', 'Soja', 'soja', 'Préparé sans soja ajouté, mais non garanti sans traces de soja.', 4, true),
+  ('arachides', 'Arachides', 'arachides', 'Préparé sans arachides ajoutées, mais non garanti sans traces d’arachides.', 5, true),
+  ('fruits-a-coque', 'Fruits à coque', 'fruits à coque', 'Préparé sans fruits à coque ajoutés, mais non garanti sans traces de fruits à coque.', 6, true),
+  ('sesame', 'Sésame', 'sésame', 'Préparé sans sésame ajouté, mais non garanti sans traces de sésame.', 7, true)
+on conflict (slug) do update set
+  name = excluded.name, sentence_label = excluded.sentence_label, no_added_text = excluded.no_added_text,
+  sort_order = excluded.sort_order, is_active = excluded.is_active;
 
 insert into public.products
   (slug, name, short_description, description, tips, unit_label, unit_label_plural, staging, accent,

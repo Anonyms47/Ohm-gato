@@ -9,7 +9,7 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | Identifiants marchands **Wave** (clé API Checkout + secret de webhook) | Le lien marchand Wave fonctionne déjà, avec vérification manuelle par Alima ; l'API rendrait la confirmation automatique |
 | Contrat et documentation API **Orange Money** (identifiants, code marchand, format des notifications) | Bouton Orange Money désactivé |
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
-| **Allergènes confirmés** recette par recette (gluten, œufs, lait, soja, fruits à coque, chocolat) | Seul le message « Une allergie ? Écrivez-nous » est affiché |
+| **Validation des allergènes** dans /admin → Produits : gluten, œufs, lait (déduits des recettes, à confirmer) ; soja, arachides, fruits à coque, sésame (« à vérifier » sur les emballages et dans l'atelier) | Les allergènes déduits des recettes sont affichés ; les « à vérifier » ne le sont jamais ; aucune trace n'est mentionnée |
 | **Conditions de vente et politique de remboursement** (rédigées avec Alima) | Pas de page de conditions ; à publier avant la mise en ligne |
 | **Compte WhatsApp Business (Cloud API)** : jeton, identifiant du numéro, modèle « authentification » approuvé | Connexion par téléphone impossible en production (l'e-mail reste possible) |
 | **SMTP** pour les e-mails de connexion (adresse d'expéditeur) | Codes par e-mail limités par Supabase |

@@ -9,6 +9,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Allergènes : statut par produit ou par parfum (contient, peut contenir des traces, sans ajout direct, à vérifier, non concerné), informations de recette séparées (chocolat, fruits, cannelle), traces d'atelier activables après confirmation, indicateur interne jamais visible des clients, aperçu exact dans /admin ; avertissement allergies sur les fiches, Ma boîte, le bon de fournée et le sur-mesure ; huit produits préremplis.
 - Recherche d'un quartier ou d'un lieu dans la région de Dakar sur la carte de livraison : la carte se centre, le client touche l'endroit exact.
 - Paiement par lien marchand Wave : commande confirmée au choix de Wave, montant et référence affichés au client, paiement enregistré par OHMEGATO (« Paiement Wave reçu ») ou commande annulée avec retour du stock.
 - Nos fournées (journal du four), Sur-mesure & Événements (carnet conversationnel, échanges, propositions, paiement après accord), Notre histoire (Oumy Gâteau → OHMEGATO → Ω).

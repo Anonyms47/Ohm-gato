@@ -1,4 +1,5 @@
 /** Types du catalogue partagés serveur / navigateur. */
+import type { AllergenDef, ProductAllergenInfo, WorkshopTraces } from "@/lib/allergens";
 import type { AvailabilityState } from "@/lib/availability";
 import type { StorageRule } from "@/lib/storage";
 
@@ -40,8 +41,8 @@ export interface CatalogProduct {
   accent: Accent;
   /** null tant que la conservation n'est pas confirmée : rien n'est affiché. */
   storage: { rule: StorageRule; note: string | null } | null;
-  /** Allergènes confirmés uniquement. */
-  allergens: { slug: string; name: string }[];
+  /** Allergènes (statuts) et informations de recette, par produit ou par parfum. */
+  allergenInfo: ProductAllergenInfo;
   pairingSlugs: string[];
   images: CatalogImage[];
   variants: CatalogVariant[];
@@ -79,4 +80,6 @@ export interface SlotSummary {
 export interface Catalog {
   cycle: CycleSummary | null;
   products: CatalogProduct[];
+  allergenDefs: AllergenDef[];
+  workshopTraces: WorkshopTraces;
 }

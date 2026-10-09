@@ -6,10 +6,13 @@ import { FavoriteButton } from "@/components/account/FavoriteButton";
 import { AddToBox } from "@/components/catalog/AddToBox";
 import { getMyFavorites } from "@/lib/account/data";
 import { getCurrentUser } from "@/lib/auth/session";
+import { AllergenSummaryText } from "@/components/catalog/AllergenSummaryText";
+import { AllergyNotice } from "@/components/catalog/AllergyNotice";
 import { AvailabilityBadge } from "@/components/catalog/AvailabilityBadge";
 import { ProductStaging } from "@/components/catalog/ProductStaging";
 import { ProductVisual } from "@/components/catalog/ProductVisual";
 import { brand } from "@/config/brand";
+import { flavorsWithOwnInfo, summarizeAllergens } from "@/lib/allergens";
 import { getCatalog } from "@/lib/catalog";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { formatFcfa } from "@/lib/money";
@@ -40,6 +43,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { product, catalog } = found;
   const user = await getCurrentUser();
   const favorites = user ? await getMyFavorites(user.id) : [];
+  const perFlavor = product.flavors.length > 0 && flavorsWithOwnInfo(product.allergenInfo).size > 0;
   const pairings = product.pairingSlugs
     .map((s) => catalog.products.find((p) => p.slug === s))
     .filter((p): p is CatalogProduct => Boolean(p))
@@ -137,20 +141,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </section>
           )}
 
-          <section aria-labelledby="allergenes">
+          <section aria-labelledby="allergenes" data-testid="allergenes">
             <h2 id="allergenes" className="font-display text-[1.6rem]">
               Allergènes
             </h2>
-            {product.allergens.length > 0 ? (
-              <p className="mt-2">Contient : {product.allergens.map((a) => a.name).join(", ")}.</p>
-            ) : null}
-            <p className="mt-2">
-              Une allergie ou une intolérance ?{" "}
-              <a href={brand.whatsappUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-                Écrivez-nous sur WhatsApp
-              </a>{" "}
-              avant de commander.
-            </p>
+            {perFlavor ? (
+              <dl className="mt-2 flex flex-col gap-3">
+                {product.flavors.map((f) => (
+                  <div key={f.id}>
+                    <dt className="font-bold">Parfum {f.name.toLocaleLowerCase("fr")}</dt>
+                    <dd>
+                      <AllergenSummaryText summary={summarizeAllergens(product.allergenInfo, catalog.allergenDefs, [f.id], catalog.workshopTraces)} />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <div className="mt-2">
+                <AllergenSummaryText summary={summarizeAllergens(product.allergenInfo, catalog.allergenDefs, [], catalog.workshopTraces)} />
+              </div>
+            )}
+            <AllergyNotice className="mt-4" />
           </section>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
+import { AllergyNotice } from "@/components/catalog/AllergyNotice";
 import { CustomRequestFlow } from "@/components/custom/CustomRequestFlow";
 import { getMyAddresses } from "@/lib/account/data";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -25,6 +26,7 @@ export default async function SurMesurePage() {
           Racontez-nous votre événement, une question à la fois. Nous étudions chaque demande et revenons vers vous avec une proposition et un
           prix. Comptez 2 à 4 jours selon la quantité.
         </p>
+        <AllergyNotice className="mt-4 max-w-prose" />
         <div className="mt-8">
           <CustomRequestFlow
             memberArea={Boolean(user)}

@@ -29,6 +29,7 @@ const LABELS: Record<string, string> = {
   "customer.note.add": "Note client ajoutée",
   "customer.note.delete": "Note client supprimée",
   "settings.update": "Réglage modifié",
+  "settings.workshop_traces": "Traces d’atelier modifiées",
   "story.media.add": "Média ajouté",
   "story.media.remove": "Média retiré",
   "role.grant": "Rôle attribué",
