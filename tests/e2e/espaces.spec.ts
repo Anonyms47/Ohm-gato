@@ -41,10 +41,10 @@ test.describe("Retrouvons votre carnet — connexion par code", () => {
     await expect(page.getByText(/Code envoyé à/)).toBeVisible();
     await expect(page.getByRole("button", { name: /Renvoyer le code \(dans/ })).toBeDisabled();
     const code = /(\d{6})/.exec((await page.getByTestId("code-test").textContent()) ?? "")![1]!;
-    await page.getByLabel("Code à 6 chiffres").fill(code === "000000" ? "111111" : "000000");
+    await page.getByLabel("Code reçu").fill(code === "000000" ? "111111" : "000000");
     await page.getByRole("button", { name: "Ouvrir mon carnet" }).click();
     await expect(page.getByText(/Ce code ne correspond pas\. Encore 4 essais\./)).toBeVisible();
-    await page.getByLabel("Code à 6 chiffres").fill(code);
+    await page.getByLabel("Code reçu").fill(code);
     await page.getByRole("button", { name: "Ouvrir mon carnet" }).click();
     await expect(page.getByText("Votre carnet est ouvert.")).toBeVisible();
     await page.getByLabel(/Comment vous appeler/).fill("Awa Diop");
@@ -65,13 +65,13 @@ test.describe("Retrouvons votre carnet — connexion par code", () => {
     const old = new Date(Date.now() - 11 * 60 * 1000).toISOString();
     const rows = (await db("otp_requests?select=id&order=created_at.desc&limit=1")) as { id: string }[];
     await db(`otp_requests?id=eq.${rows[0]!.id}`, { method: "PATCH", body: JSON.stringify({ created_at: old }) });
-    await page.getByLabel("Code à 6 chiffres").fill("123456");
+    await page.getByLabel("Code reçu").fill("123456");
     await page.getByRole("button", { name: "Ouvrir mon carnet" }).click();
     await expect(page.getByText("Ce code a expiré. Demandez-en un nouveau.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Recevoir un nouveau code" })).toBeVisible();
 
     await db(`otp_requests?id=eq.${rows[0]!.id}`, { method: "PATCH", body: JSON.stringify({ created_at: new Date().toISOString(), failed_attempts: 4 }) });
-    await page.getByLabel("Code à 6 chiffres").fill("999999");
+    await page.getByLabel("Code reçu").fill("999999");
     await page.getByRole("button", { name: "Recevoir un nouveau code" }).isVisible();
     await page.evaluate(() => (document.querySelector("form") as HTMLFormElement).requestSubmit());
     await expect(page.getByText(/Trop de codes incorrects|Ce code ne correspond pas/)).toBeVisible();

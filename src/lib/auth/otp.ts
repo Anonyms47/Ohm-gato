@@ -149,7 +149,8 @@ export async function verifyLoginCode(channel: Channel, raw: string, code: strin
   if (!request || request.consumed_at) return { ok: false, code: "NO_CODE" };
   if (request.failed_attempts >= OTP_MAX_ATTEMPTS) return { ok: false, code: "TOO_MANY_ATTEMPTS" };
   if (Date.now() - Date.parse(request.created_at) > OTP_TTL_SECONDS * 1000) return { ok: false, code: "CODE_EXPIRED" };
-  if (!/^\d{6}$/.test(code)) return registerFailure(request.id);
+  // Longueur réglée dans Supabase (Email OTP Length) : 6 à 8 chiffres acceptés.
+  if (!/^\d{6,8}$/.test(code)) return registerFailure(request.id);
 
   const db = await supabaseServer();
   const { data, error } =
