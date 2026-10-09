@@ -260,7 +260,7 @@ test.describe("Administration d'Alima", () => {
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("radio", { name: /^Livraison dans Dakar/ }).check();
     await page.getByLabel("Adresse").fill("Villa 12, rue 10");
-    await page.getByLabel("Quartier").fill("Mermoz");
+    await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
     await page.getByLabel("Point de repère").fill("En face de la pharmacie");
     await page.getByLabel("Qui réceptionne ?").fill("Ibrahima Fall");
     await page.getByLabel("Son numéro").fill(testPhone());

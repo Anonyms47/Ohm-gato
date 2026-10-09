@@ -2,11 +2,19 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { TextInput } from "@/components/ui/Field";
 
 const AddressMap = dynamic(() => import("@/components/checkout/AddressMap"), {
   ssr: false,
   loading: () => <p className="text-encre-douce">Chargement de la carte…</p>,
 });
+
+type Place = { label: string; lat: number; lng: number };
+type SearchState =
+  | { kind: "idle" }
+  | { kind: "searching" }
+  | { kind: "results"; places: Place[] }
+  | { kind: "error"; message: string };
 
 type GeoState = "idle" | "locating" | "denied" | "unavailable" | "outside";
 
@@ -34,6 +42,9 @@ export function PositionPicker({
   legend?: string;
 }) {
   const [geo, setGeo] = useState<GeoState>("idle");
+  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState<SearchState>({ kind: "idle" });
+  const [focus, setFocus] = useState<Place | null>(null);
   const errorId = `${id}-erreur`;
 
   const locate = () => {
@@ -57,6 +68,34 @@ export function PositionPicker({
     );
   };
 
+  const runSearch = async () => {
+    const q = query.trim();
+    if (q.length < 3) {
+      setSearch({ kind: "error", message: "Saisissez au moins 3 caractères (quartier, rue, lieu connu)." });
+      return;
+    }
+    setSearch({ kind: "searching" });
+    try {
+      const response = await fetch("/api/adresse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q }),
+      });
+      const body = (await response.json().catch(() => null)) as { places?: Place[]; message?: string } | null;
+      if (!response.ok || !body?.places) {
+        setSearch({ kind: "error", message: body?.message ?? "Recherche indisponible. Placez le repère directement sur la carte." });
+        return;
+      }
+      setSearch(
+        body.places.length
+          ? { kind: "results", places: body.places }
+          : { kind: "error", message: "Aucun lieu trouvé dans la région de Dakar. Essayez un quartier ou un lieu connu proche." },
+      );
+    } catch {
+      setSearch({ kind: "error", message: "Recherche indisponible. Placez le repère directement sur la carte." });
+    }
+  };
+
   return (
     <fieldset
       id={id}
@@ -66,9 +105,68 @@ export function PositionPicker({
     >
       <legend className="px-1 font-bold">{legend}</legend>
       <p className="text-encre-douce">
-        Touchez la carte à l&apos;endroit exact de livraison, ou utilisez votre position. Elle est transmise à OHMEGATO pour organiser la
+        Cherchez votre quartier puis touchez la carte à l&apos;endroit exact de livraison, ou utilisez votre position. Elle est transmise à OHMEGATO pour organiser la
         livraison.
       </p>
+      <div className="flex flex-col gap-2">
+        <label htmlFor={`${id}-recherche`} className="font-bold">
+          Chercher un quartier ou un lieu
+        </label>
+        <div className="flex gap-2">
+          <TextInput
+            id={`${id}-recherche`}
+            type="search"
+            value={query}
+            maxLength={120}
+            autoComplete="off"
+            placeholder="Ex. Sacré-Cœur 3, Mermoz, Cité Keur Gorgui…"
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault(); // ne pas envoyer le bon de fournée
+                void runSearch();
+              }
+            }}
+            className="min-w-0 flex-1"
+          />
+          <button
+            type="button"
+            onClick={() => void runSearch()}
+            disabled={search.kind === "searching"}
+            className="min-h-12 shrink-0 rounded-[10px] border-2 border-chocolat px-4 font-bold disabled:opacity-60"
+          >
+            {search.kind === "searching" ? "Recherche…" : "Chercher"}
+          </button>
+        </div>
+        {search.kind === "error" && (
+          <p role="status" className="font-bold text-orange-encre">
+            {search.message}
+          </p>
+        )}
+        {search.kind === "results" && (
+          <ul aria-label="Lieux trouvés" className="flex flex-col gap-1">
+            {search.places.map((place) => (
+              <li key={`${place.lat},${place.lng}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFocus(place);
+                    setSearch({ kind: "idle" });
+                  }}
+                  className="min-h-11 w-full rounded-[10px] border-2 border-chocolat/20 px-3 py-2 text-left hover:border-chocolat"
+                >
+                  {place.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {focus && !position && (
+          <p role="status" className="font-bold">
+            Carte centrée sur « {focus.label} ». Touchez maintenant l&apos;endroit exact de livraison.
+          </p>
+        )}
+      </div>
       <button
         type="button"
         onClick={locate}
@@ -82,7 +180,7 @@ export function PositionPicker({
           {geoMessage[geo]}
         </p>
       )}
-      <AddressMap position={position} onChange={onChange} label="Carte de Dakar : touchez l'endroit de livraison pour poser le repère" />
+      <AddressMap position={position} onChange={onChange} focus={focus} label="Carte de Dakar : touchez l'endroit de livraison pour poser le repère" />
       {position ? (
         <p role="status" className="font-bold text-succes">
           Repère placé. Vous pouvez le déplacer pour l&apos;ajuster.

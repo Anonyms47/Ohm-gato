@@ -36,7 +36,7 @@ Pour Wave, à valider avec le compte réel : format exact de l'en-tête `Wave-Si
 
 - Carte : Leaflet, tuiles OpenStreetMap par défaut (`NEXT_PUBLIC_MAP_TILE_URL`, `NEXT_PUBLIC_MAP_ATTRIBUTION`). Pour la production, utiliser un fournisseur de tuiles avec clé (MapTiler, Stadia…) : la politique d'usage des tuiles OSM publiques ne convient pas à un site commercial à fort trafic.
 - La position n'est demandée qu'après un clic sur « Utiliser ma position ». La saisie manuelle reste toujours possible.
-- **À faire** : recherche d'adresse (géocodage). Fournisseur à choisir ; Nominatim public ne convient pas en production.
+- Recherche d'adresse : route serveur `/api/adresse` → API Nominatim (`GEOCODER_URL`, par défaut le service public d'OpenStreetMap). Conforme à sa politique d'usage pour un faible volume : recherche uniquement sur demande (jamais en saisie automatique), limitée à la région de Dakar, 1 requête/s au total et 20 par visiteur sur 10 min, résultats mis en cache, User-Agent identifiant le site, attribution OSM sur la carte. Le résultat centre la carte ; le client pose lui-même le repère exact. Si le trafic grandit, pointer `GEOCODER_URL` vers une instance Nominatim dédiée ou un fournisseur compatible.
 - La position exacte est obligatoire pour une livraison ; elle est enregistrée avec la commande (`orders.latitude`, `orders.longitude`). Les frais de livraison se règlent au livreur : la table `delivery_zones` n'intervient plus dans le prix.
 
 ## Polices
