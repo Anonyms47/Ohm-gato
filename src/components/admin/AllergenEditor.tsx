@@ -13,13 +13,15 @@ import {
   ALLERGY_NOTICE,
   allergenStatusLabels,
   allergenVerificationLabels,
+  confirmationMethodLabels,
   summarizeAllergens,
+  type Provenance,
   type AllergenStatus,
   type AllergenVerification,
   type WorkshopTraces,
 } from "@/lib/allergens";
 
-interface StatusRow {
+interface StatusRow extends Provenance {
   key: string;
   flavorId: string | null;
   allergenId: string;
@@ -29,7 +31,7 @@ interface StatusRow {
   verifiedAt: string | null;
 }
 
-interface NoteRow {
+interface NoteRow extends Provenance {
   key: string;
   flavorId: string | null;
   label: string;
@@ -58,11 +60,30 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-
 let counter = 0;
 const newKey = () => `n${++counter}`;
 
-function Validation({ verifiedAt, onValidate }: { verifiedAt: string | null; onValidate: () => void }) {
+const noProvenance: Provenance = { confirmationSource: null, confirmedBy: null, confirmationMethod: null };
+/** Validation faite par Alima depuis l'administration. */
+const validatedNow = (): Partial<StatusRow & NoteRow> => ({
+  verifiedAt: new Date().toISOString(),
+  verification: "confirmed_by_alima",
+  confirmationSource: "founder_confirmation",
+  confirmedBy: "Alima",
+  confirmationMethod: "admin_edit",
+});
+/** Changer l'indicateur efface la provenance d'une confirmation qui ne s'applique plus. */
+const withVerification = (v: AllergenVerification): Partial<StatusRow & NoteRow> =>
+  v === "confirmed_by_alima" ? { verification: v } : { verification: v, ...noProvenance };
+
+function Validation({ row, onValidate }: { row: Provenance & { verification: AllergenVerification; verifiedAt: string | null }; onValidate: () => void }) {
+  const confirmed = row.verification === "confirmed_by_alima" && row.verifiedAt;
+  const label = confirmed
+    ? `Confirmé par ${row.confirmedBy ?? "Alima"} le ${dateFormat.format(new Date(row.verifiedAt!))}${row.confirmationMethod ? ` · ${confirmationMethodLabels[row.confirmationMethod]}` : ""}`
+    : row.verifiedAt
+      ? `Dernière validation : ${dateFormat.format(new Date(row.verifiedAt))}`
+      : "Jamais validé par Alima";
   return (
     <div className="flex flex-wrap items-center gap-3 text-[0.95rem]">
-      <span className="text-encre-douce">
-        {verifiedAt ? `Dernière validation : ${dateFormat.format(new Date(verifiedAt))}` : "Jamais validé par Alima"}
+      <span className={confirmed ? "font-bold text-succes" : "text-encre-douce"} data-testid="provenance">
+        {label}
       </span>
       <button type="button" onClick={onValidate} className="min-h-11 font-bold underline decoration-caramel decoration-2 underline-offset-4">
         Valider aujourd&apos;hui
@@ -100,7 +121,6 @@ export function AllergenEditor({
 
   const updateRow = (key: string, patch: Partial<StatusRow>) => setRows((all) => all.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const updateNote = (key: string, patch: Partial<NoteRow>) => setNotes((all) => all.map((n) => (n.key === key ? { ...n, ...patch } : n)));
-  const today = () => new Date().toISOString();
 
   const info = {
     entries: rows.map((r) => ({ allergenId: r.allergenId, flavorId: r.flavorId, status: r.status })),
@@ -115,8 +135,26 @@ export function AllergenEditor({
     setBusy(true);
     setState(
       await saveAllergenInfo(product.id, {
-        statuses: rows.map(({ flavorId, allergenId, status, note, verification, verifiedAt }) => ({ flavorId, allergenId, status, note, verification, verifiedAt })),
-        recipeNotes: notes.map(({ flavorId, label, verification, verifiedAt }) => ({ flavorId, label, verification, verifiedAt })),
+        statuses: rows.map((r) => ({
+          flavorId: r.flavorId,
+          allergenId: r.allergenId,
+          status: r.status,
+          note: r.note,
+          verification: r.verification,
+          verifiedAt: r.verifiedAt,
+          confirmationSource: r.confirmationSource,
+          confirmedBy: r.confirmedBy,
+          confirmationMethod: r.confirmationMethod,
+        })),
+        recipeNotes: notes.map((n) => ({
+          flavorId: n.flavorId,
+          label: n.label,
+          verification: n.verification,
+          verifiedAt: n.verifiedAt,
+          confirmationSource: n.confirmationSource,
+          confirmedBy: n.confirmedBy,
+          confirmationMethod: n.confirmationMethod,
+        })),
       }),
     );
     setBusy(false);
@@ -156,14 +194,14 @@ export function AllergenEditor({
                     <OhmegatoSelect
                       label="Indicateur interne"
                       value={r.verification}
-                      onValueChange={(v) => updateRow(r.key, { verification: v as AllergenVerification })}
+                      onValueChange={(v) => updateRow(r.key, withVerification(v as AllergenVerification))}
                       options={verificationOptions}
                     />
                   </div>
                   <Field label="Précision (interne)" optional>
                     {({ id }) => <TextInput id={id} value={r.note} maxLength={300} onChange={(e) => updateRow(r.key, { note: e.target.value })} />}
                   </Field>
-                  <Validation verifiedAt={r.verifiedAt} onValidate={() => updateRow(r.key, { verifiedAt: today(), verification: "confirmed_by_alima" })} />
+                  <Validation row={r} onValidate={() => updateRow(r.key, validatedNow())} />
                 </li>
               ))}
             </ul>
@@ -183,7 +221,7 @@ export function AllergenEditor({
                     if (!pick) return;
                     setRows((all) => [
                       ...all,
-                      { key: newKey(), flavorId: scope.id, allergenId: pick, status: "not_confirmed", note: "", verification: "deduced_from_recipe", verifiedAt: null },
+                      { key: newKey(), flavorId: scope.id, allergenId: pick, status: "not_confirmed", note: "", verification: "deduced_from_recipe", verifiedAt: null, ...noProvenance },
                     ]);
                     setAdding((all) => ({ ...all, [scopeKey(scope.id)]: "" }));
                   }}
@@ -205,12 +243,12 @@ export function AllergenEditor({
                     <OhmegatoSelect
                       label="Indicateur interne"
                       value={n.verification}
-                      onValueChange={(v) => updateNote(n.key, { verification: v as AllergenVerification })}
+                      onValueChange={(v) => updateNote(n.key, withVerification(v as AllergenVerification))}
                       options={verificationOptions}
                     />
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Validation verifiedAt={n.verifiedAt} onValidate={() => updateNote(n.key, { verifiedAt: today(), verification: "confirmed_by_alima" })} />
+                    <Validation row={n} onValidate={() => updateNote(n.key, validatedNow())} />
                     <button type="button" onClick={() => setNotes((all) => all.filter((x) => x.key !== n.key))} className="min-h-11 font-bold text-erreur underline">
                       Retirer
                     </button>
@@ -221,7 +259,7 @@ export function AllergenEditor({
             <Button
               variant="secondary"
               className="self-start"
-              onClick={() => setNotes((all) => [...all, { key: newKey(), flavorId: scope.id, label: "", verification: "deduced_from_recipe", verifiedAt: null }])}
+              onClick={() => setNotes((all) => [...all, { key: newKey(), flavorId: scope.id, label: "", verification: "deduced_from_recipe", verifiedAt: null, ...noProvenance }])}
             >
               Ajouter une information de recette
             </Button>

@@ -1,4 +1,4 @@
--- OHMEGATO — documents légaux, version 1.0 publiée le 10 octobre 2026.
+-- OHMEGATO — documents légaux publiés (en vigueur le 10 octobre 2026).
 -- Généré par scripts/build-legal-seed.mjs depuis content/legal/*.md. Valable en production (rejouable sans doublon).
 
 insert into public.legal_documents (slug, title, description, sort_order) values
@@ -409,7 +409,7 @@ Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10
 where not exists (select 1 from public.legal_document_versions where document_slug = 'mentions-legales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'allergenes-conservation', '1.0', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
+select 'allergenes-conservation', '1.1', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
 
 Pour chaque produit, nous séparons trois informations :
 
@@ -417,18 +417,20 @@ Pour chaque produit, nous séparons trois informations :
 - **les informations de recette** : chocolat, fruits, cannelle… qui ne sont pas des allergènes réglementaires mais peuvent compter pour vous ;
 - **la conservation** : comment garder le produit après l'avoir reçu.
 
-Une mention « sans ajout direct » ne signifie pas « sans allergène » : par exemple, préparé sans lait ajouté ne veut pas dire garanti sans lactose ni sans traces de lait. Les informations encore à vérifier ne sont pas affichées comme des certitudes.
+Une mention « sans ajout direct » ne signifie pas « sans allergène » : par exemple, un produit préparé sans ajout direct de lait peut contenir du lait ou des traces de lait provenant d'autres ingrédients, comme le chocolat. Les informations encore à vérifier ne sont pas affichées comme des certitudes.
 
-> Les produits sont préparés dans un environnement artisanal. Si vous présentez une allergie sévère, contactez OHMEGATO avant de commander afin de vérifier si la commande peut être acceptée en toute sécurité.
+Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par Alima, fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
+
+> Les produits sont préparés dans un environnement artisanal. En cas d'allergie sévère, contactez OHMEGATO avant de commander afin que la faisabilité de votre commande puisse être vérifiée.
 
 ## Conserver vos pâtisseries
 
-Quelques règles simples :
+- **Avec une sauce, une crème ou des fruits sensibles** (moelleux au chocolat, moelleux aux pommes, verrines, choux à la crème) : au réfrigérateur, 2 jours maximum.
+- **Sans sauce, sans crème sensible et sans fruits** (muffins, brownies, cookies) : à température ambiante, dans une boîte ou un emballage hermétique, 2 jours maximum.
+- **Cake à l'orange** : jusqu'à 7 jours, correctement emballé et conservé dans un endroit frais.
+- **Par forte chaleur à Dakar**, la réfrigération est recommandée lorsque c'est pertinent, notamment pour le cake à l'orange.
 
-- placez rapidement au frais les produits qui contiennent de la crème, une sauce ou des fruits sensibles ;
-- ne consommez pas un produit dont l'odeur, la texture ou l'aspect vous paraît anormal ;
-- respectez la chaîne du froid ;
-- par forte chaleur, réduisez le temps passé à température ambiante.
+Respectez la chaîne du froid pour les produits contenant de la crème, une sauce ou des fruits. Ne consommez pas un produit présentant une odeur, une texture ou un aspect anormal.
 
-Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-10-10', timestamptz '2026-10-10 14:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'allergenes-conservation');

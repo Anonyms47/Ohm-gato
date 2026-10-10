@@ -27,7 +27,9 @@
 
 **Sécurité** : RLS forcée partout (vérifiée avec deux comptes dans `supabase/tests/accounts_admin_test.sql`), rôles jamais accordés depuis le navigateur, actions admin réservées au serveur, limitation de débit (codes, commandes, demandes, messages), contrôle d'origine, validation Zod, fichiers contrôlés par leurs octets, liens de suivi opaques ; sur un lien ouvert ailleurs que sur le navigateur d'origine, les informations personnelles ne s'affichent qu'après connexion par code avec le numéro de la commande.
 
-**Tests** : unitaires (Vitest), 102 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
+**Allergènes** : informations confirmées par Alima le 10 octobre 2026 (provenance interne, historique des valeurs, filtre « Confirmé par Alima / Déduit de la recette / À vérifier sur l'emballage / Non renseigné » et compteur dans /admin/produits).
+
+**Tests** : unitaires (Vitest), 108 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
 
 ## Limites connues
 

@@ -9,7 +9,7 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | Identifiants marchands **Wave** (clé API Checkout + secret de webhook) | Le lien marchand Wave fonctionne déjà, avec vérification manuelle par Alima ; l'API rendrait la confirmation automatique |
 | Contrat et documentation API **Orange Money** (identifiants, code marchand, format des notifications) | Bouton Orange Money désactivé |
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
-| **Validation des allergènes** dans /admin → Produits : gluten, œufs, lait (déduits des recettes, à confirmer) ; soja, arachides, fruits à coque, sésame (« à vérifier » sur les emballages et dans l'atelier) | Les allergènes déduits des recettes sont affichés ; les « à vérifier » ne le sont jamais ; aucune trace n'est mentionnée |
+| **Allergènes restant à valider** dans /admin → Produits (filtre « Vérification des allergènes ») : gluten et œufs pour les huit produits, lait des muffins, des deux moelleux et des verrines (déduits des recettes, non cités par Alima) ; soja, arachides, fruits à coque, sésame (33 informations « à vérifier » sur les étiquettes des ingrédients, chocolats, décorations et dans l'atelier) | Les allergènes déduits des recettes sont affichés par prudence ; les « à vérifier » ne le sont jamais ; aucune trace n'est mentionnée |
 | **Délai de remboursement** et **durées de conservation des données** (à valider) | Non affichés sur les pages légales tant qu'ils ne sont pas saisis dans /admin → Documents et règles |
 | **Compte WhatsApp Business (Cloud API)** : jeton, identifiant du numéro, modèle « authentification » approuvé | Connexion par téléphone impossible en production (l'e-mail reste possible) |
 | **SMTP** pour les e-mails de connexion (adresse d'expéditeur) | Codes par e-mail limités par Supabase |
@@ -29,6 +29,8 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | Témoignages réels (avec accord écrit des clients) | Aucun avis n'est affiché sans cela |
 
 ## Règles confirmées par Alima
+
+- **Confirmations du 10 octobre 2026 (vocaux)**, enregistrées avec la source « founder_confirmation », validé par Alima, méthode « voice_confirmation » : descriptions des huit produits, conservation, informations de recette, lait du cake (yaourt), des choux (crème pâtissière) et des cookies (chocolat au lait), brownies préparés sans ajout direct de lait. Le nombre de tranches d'une barre entière de cake reste à confirmer ; les verrines chocolat ou vanille ne sont pas encore produites.
 
 - **Livraison** : les frais ne sont jamais payés sur le site, ni inclus dans le total ou le chiffre d'affaires. Le client paie uniquement les produits ; le site affiche avant et après paiement « Frais de livraison non compris, à régler directement au livreur selon votre position. » Le client fournit l'adresse écrite, le quartier, un point de repère, le contact du destinataire et sa position exacte sur la carte, enregistrée avec la commande et envoyable à OHMEGATO sur WhatsApp depuis la page de suivi.
 - **Retrait** : Rue GY-69, Cité Sonatel 2, Sud Foire, gratuit.

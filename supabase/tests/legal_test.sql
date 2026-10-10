@@ -44,7 +44,7 @@ select is((select content_hash from public.legal_document_versions where documen
   encode(sha256(convert_to('Nouveau texte', 'UTF8')), 'hex'), 'l''empreinte du texte est calculée automatiquement');
 
 set local role anon;
-select is((select count(*)::int from public.legal_document_versions where version = '1.1'), 0, 'un brouillon n''est jamais visible du public');
+select is((select count(*)::int from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.1'), 0, 'un brouillon n''est jamais visible du public');
 reset role;
 set local role service_role;
 

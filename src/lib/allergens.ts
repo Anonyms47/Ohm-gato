@@ -24,8 +24,25 @@ export const allergenVerificationLabels: Record<AllergenVerification, string> = 
   packaging_check_needed: "Vérification d’emballage nécessaire",
 };
 
+/** Provenance d'une validation (interne, jamais affichée aux clients). */
+export type ConfirmationSource = "founder_confirmation" | "recipe" | "packaging_label";
+export type ConfirmationMethod = "voice_confirmation" | "written_confirmation" | "packaging_label" | "admin_edit";
+
+export interface Provenance {
+  confirmationSource: ConfirmationSource | null;
+  confirmedBy: string | null;
+  confirmationMethod: ConfirmationMethod | null;
+}
+
+export const confirmationMethodLabels: Record<ConfirmationMethod, string> = {
+  voice_confirmation: "confirmation vocale",
+  written_confirmation: "confirmation écrite",
+  packaging_label: "étiquette d’emballage",
+  admin_edit: "validation dans l’administration",
+};
+
 export const ALLERGY_NOTICE =
-  "Vous avez une allergie ou une intolérance ? Contactez OHMEGATO avant de commander afin de vérifier la composition du produit et les risques éventuels liés à sa préparation.";
+  "Les produits sont préparés dans un environnement artisanal. En cas d’allergie sévère, contactez OHMEGATO avant de commander afin que la faisabilité de votre commande puisse être vérifiée.";
 
 export interface AllergenDef {
   id: string;

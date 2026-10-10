@@ -1,7 +1,7 @@
 -- Allergènes : matrice préremplie, statuts conservateurs, indicateur interne jamais lisible côté client.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(18);
 
 create temp table s as
 select p.slug as product, f.slug as flavor, a.slug as allergen, x.status::text as status, x.verification::text as verification
@@ -22,7 +22,20 @@ select is((select label from public.product_recipe_notes n join public.products 
   where p.slug = 'verrines-fruitees' and f.slug = 'mangue'), 'de la mangue', 'verrine mangue : information de recette');
 select is((select value ->> 'enabled' from public.site_settings where key = 'allergens.workshop_traces'), 'false', 'traces d''atelier désactivées par défaut');
 
+-- Confirmation d'Alima (10 octobre 2026) : seulement ce qu'elle a dit, le reste à vérifier.
+select is((select s.confirmation_source || '/' || s.confirmed_by || '/' || s.confirmation_method
+  from public.product_allergen_statuses s join public.products p on p.id = s.product_id join public.allergens a on a.id = s.allergen_id
+  where p.slug = 'cake-orange' and a.slug = 'lait'), 'founder_confirmation/Alima/voice_confirmation', 'cake : lait confirmé par Alima (yaourt)');
+select is((select s.status::text from public.product_allergen_statuses s join public.products p on p.id = s.product_id join public.allergens a on a.id = s.allergen_id
+  where p.slug = 'brownies' and a.slug = 'lait'), 'no_added', 'brownies : sans ajout direct de lait, jamais « ne contient pas »');
+select is((select count(*)::int from public.product_allergen_statuses where status = 'not_confirmed' and verification = 'packaging_check_needed'), 33,
+  'les 33 informations dépendant des emballages restent à vérifier');
+select is((select count(*)::int from public.product_allergen_statuses s join public.allergens a on a.id = s.allergen_id
+  where a.slug in ('gluten', 'oeufs') and s.verification = 'confirmed_by_alima'), 0, 'gluten et œufs, non cités par Alima, ne sont pas confirmés');
+
 set local role anon;
+select throws_ok($$ select confirmation_source from public.product_allergen_statuses $$, '42501', null, 'la provenance reste privée');
+select throws_ok($$ select * from public.product_allergen_history $$, '42501', null, 'l''historique reste privé');
 select lives_ok($$ select product_id, flavor_id, allergen_id, status from public.product_allergen_statuses $$, 'le client lit les statuts');
 select throws_ok($$ select verification from public.product_allergen_statuses $$, '42501', null, 'l''indicateur interne reste privé');
 select throws_ok($$ select verification from public.product_recipe_notes $$, '42501', null, 'idem pour les informations de recette');
