@@ -1,4 +1,4 @@
-// Génère supabase/seed/legal.sql (version 1.0 publiée des documents) depuis content/legal/*.md.
+// Génère supabase/seed/legal.sql (version publiée en cours des documents) depuis content/legal/*.md.
 // Usage : node scripts/build-legal-seed.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
@@ -12,8 +12,13 @@ const documents = [
   ["allergenes-conservation", "Allergènes et conservation", "Allergènes, informations de recette et conseils de conservation de chaque pâtisserie OHMEGATO.", 70],
 ];
 
+// Version publiée de chaque texte de content/legal (les autres restent en 1.0 du 10 octobre 2026).
+const versions = {
+  "allergenes-conservation": { version: "1.1", publishedAt: "2026-10-10 14:00:00+00" },
+};
+
 const q = (s) => `'${s.replaceAll("'", "''")}'`;
-let sql = `-- OHMEGATO — documents légaux, version 1.0 publiée le 10 octobre 2026.
+let sql = `-- OHMEGATO — documents légaux publiés (en vigueur le 10 octobre 2026).
 -- Généré par scripts/build-legal-seed.mjs depuis content/legal/*.md. Valable en production (rejouable sans doublon).
 
 insert into public.legal_documents (slug, title, description, sort_order) values
@@ -23,9 +28,10 @@ on conflict (slug) do nothing;
 for (const [slug, title] of documents) {
   const content = readFileSync(`content/legal/${slug}.md`, "utf8").trim();
   if (content.includes("$md$")) throw new Error(`${slug} contient $md$`);
+  const { version, publishedAt } = versions[slug] ?? { version: "1.0", publishedAt: "2026-10-10 08:00:00+00" };
   sql += `
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select ${q(slug)}, '1.0', 'published', ${q(title)}, $md$${content}$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+select ${q(slug)}, '${version}', 'published', ${q(title)}, $md$${content}$md$, date '2026-10-10', timestamptz '${publishedAt}'
 where not exists (select 1 from public.legal_document_versions where document_slug = ${q(slug)});
 `;
 }

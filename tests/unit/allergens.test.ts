@@ -4,7 +4,7 @@ import { summarizeAllergens, summaryLines, type AllergenDef, type ProductAllerge
 const defs: AllergenDef[] = [
   { id: "gluten", slug: "gluten", sentenceLabel: "gluten", noAddedText: "", sortOrder: 1 },
   { id: "oeufs", slug: "oeufs", sentenceLabel: "œufs", noAddedText: "", sortOrder: 2 },
-  { id: "lait", slug: "lait", sentenceLabel: "lait", noAddedText: "Préparé sans lait ajouté, mais non garanti sans lactose ni sans traces de lait.", sortOrder: 3 },
+  { id: "lait", slug: "lait", sentenceLabel: "lait", noAddedText: "Préparé sans ajout direct de lait. D’autres ingrédients, comme le chocolat, peuvent contenir du lait ou des traces de lait.", sortOrder: 3 },
   { id: "soja", slug: "soja", sentenceLabel: "soja", noAddedText: "", sortOrder: 4 },
   { id: "sesame", slug: "sesame", sentenceLabel: "sésame", noAddedText: "", sortOrder: 7 },
 ];
@@ -31,12 +31,13 @@ describe("allergènes : affichage client", () => {
     expect(lines).toEqual(["Allergènes : gluten, œufs et lait.", "Contient du chocolat noir et du chocolat au lait."]);
   });
 
-  it("brownies : sans lait ajouté n'est jamais « sans lait » ni « sans lactose »", () => {
+  it("brownies : « sans ajout direct de lait », jamais « sans lait » ni « sans lactose »", () => {
     const summary = summarizeAllergens({ entries: base("no_added"), recipeNotes: [{ flavorId: null, label: "du chocolat", sortOrder: 1 }] }, defs);
+    expect(summaryLines(summary).join(" ")).not.toMatch(/sans lactose|sans produits laitiers|ne contient pas/i);
     expect(summaryLines(summary)).toEqual([
       "Allergènes : gluten et œufs.",
       "Contient du chocolat.",
-      "Préparé sans lait ajouté, mais non garanti sans lactose ni sans traces de lait.",
+      "Préparé sans ajout direct de lait. D’autres ingrédients, comme le chocolat, peuvent contenir du lait ou des traces de lait.",
     ]);
   });
 

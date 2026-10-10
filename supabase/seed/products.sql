@@ -30,7 +30,7 @@ on conflict (slug) do nothing;
 insert into public.allergens (slug, name, sentence_label, no_added_text, sort_order, is_active) values
   ('gluten', 'Gluten (blé)', 'gluten', 'Préparé sans gluten ajouté, mais non garanti sans gluten ni sans traces de gluten.', 1, true),
   ('oeufs', 'Œufs', 'œufs', 'Préparé sans œufs ajoutés, mais non garanti sans traces d’œufs.', 2, true),
-  ('lait', 'Lait et produits laitiers', 'lait', 'Préparé sans lait ajouté, mais non garanti sans lactose ni sans traces de lait.', 3, true),
+  ('lait', 'Lait et produits laitiers', 'lait', 'Préparé sans ajout direct de lait. D’autres ingrédients, comme le chocolat, peuvent contenir du lait ou des traces de lait.', 3, true),
   ('soja', 'Soja', 'soja', 'Préparé sans soja ajouté, mais non garanti sans traces de soja.', 4, true),
   ('arachides', 'Arachides', 'arachides', 'Préparé sans arachides ajoutées, mais non garanti sans traces d’arachides.', 5, true),
   ('fruits-a-coque', 'Fruits à coque', 'fruits à coque', 'Préparé sans fruits à coque ajoutés, mais non garanti sans traces de fruits à coque.', 6, true),

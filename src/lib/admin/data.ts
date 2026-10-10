@@ -2,7 +2,7 @@ import "server-only";
 import type { CycleSummary } from "@/lib/catalog-types";
 import type { Fulfillment, OrderStatus, PaymentStatus } from "@/lib/order-status";
 import type { ProviderId } from "@/lib/payments/types";
-import type { AllergenDef, AllergenStatus, AllergenVerification, WorkshopTraces } from "@/lib/allergens";
+import type { AllergenDef, AllergenStatus, AllergenVerification, ConfirmationMethod, ConfirmationSource, Provenance, WorkshopTraces } from "@/lib/allergens";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -79,7 +79,7 @@ export async function activeCycle(): Promise<AdminCycle | null> {
   return [...cycles].filter((c) => order.includes(c.status)).sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || b.number - a.number)[0] ?? null;
 }
 
-export interface AdminAllergenStatus {
+export interface AdminAllergenStatus extends Provenance {
   id: string;
   flavorId: string | null;
   allergenId: string;
@@ -89,7 +89,7 @@ export interface AdminAllergenStatus {
   verifiedAt: string | null;
 }
 
-export interface AdminRecipeNote {
+export interface AdminRecipeNote extends Provenance {
   id: string;
   flavorId: string | null;
   label: string;
@@ -121,6 +121,13 @@ export interface AdminProduct {
   images: { id: string; path: string; alt: string; width: number; height: number; role: string; sortOrder: number }[];
 }
 
+type ProvenanceRow = { confirmation_source: ConfirmationSource | null; confirmed_by: string | null; confirmation_method: ConfirmationMethod | null };
+const provenance = (r: ProvenanceRow): Provenance => ({
+  confirmationSource: r.confirmation_source,
+  confirmedBy: r.confirmed_by,
+  confirmationMethod: r.confirmation_method,
+});
+
 export async function listProducts(): Promise<AdminProduct[]> {
   const { data, error } = await db()
     .from("products")
@@ -129,8 +136,8 @@ export async function listProducts(): Promise<AdminProduct[]> {
        storage_rule, storage_note, storage_confirmed, sort_order, is_active,
        product_variants(id, label, units_consumed, price_fcfa, sort_order, is_active),
        product_flavors(flavor_id, sort_order),
-       product_allergen_statuses(id, flavor_id, allergen_id, status, note, verification, verified_at),
-       product_recipe_notes(id, flavor_id, label, sort_order, verification, verified_at),
+       product_allergen_statuses(id, flavor_id, allergen_id, status, note, verification, verified_at, confirmation_source, confirmed_by, confirmation_method),
+       product_recipe_notes(id, flavor_id, label, sort_order, verification, verified_at, confirmation_source, confirmed_by, confirmation_method),
        product_images(id, storage_path, alt, width, height, role, sort_order)`,
     )
     .order("sort_order");
@@ -157,13 +164,13 @@ export async function listProducts(): Promise<AdminProduct[]> {
       .map((v) => ({ id: v.id, label: v.label, unitsConsumed: v.units_consumed, priceFcfa: v.price_fcfa, sortOrder: v.sort_order, isActive: v.is_active })),
     flavorIds: [...(p.product_flavors as { flavor_id: string; sort_order: number }[])].sort((a, b) => a.sort_order - b.sort_order).map((f) => f.flavor_id),
     allergenStatuses: (
-      p.product_allergen_statuses as { id: string; flavor_id: string | null; allergen_id: string; status: AllergenStatus; note: string | null; verification: AllergenVerification; verified_at: string | null }[]
-    ).map((a) => ({ id: a.id, flavorId: a.flavor_id, allergenId: a.allergen_id, status: a.status, note: a.note ?? "", verification: a.verification, verifiedAt: a.verified_at })),
+      p.product_allergen_statuses as ({ id: string; flavor_id: string | null; allergen_id: string; status: AllergenStatus; note: string | null; verification: AllergenVerification; verified_at: string | null } & ProvenanceRow)[]
+    ).map((a) => ({ id: a.id, flavorId: a.flavor_id, allergenId: a.allergen_id, status: a.status, note: a.note ?? "", verification: a.verification, verifiedAt: a.verified_at, ...provenance(a) })),
     recipeNotes: [
-      ...(p.product_recipe_notes as { id: string; flavor_id: string | null; label: string; sort_order: number; verification: AllergenVerification; verified_at: string | null }[]),
+      ...(p.product_recipe_notes as ({ id: string; flavor_id: string | null; label: string; sort_order: number; verification: AllergenVerification; verified_at: string | null } & ProvenanceRow)[]),
     ]
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((n) => ({ id: n.id, flavorId: n.flavor_id, label: n.label, verification: n.verification, verifiedAt: n.verified_at })),
+      .map((n) => ({ id: n.id, flavorId: n.flavor_id, label: n.label, verification: n.verification, verifiedAt: n.verified_at, ...provenance(n) })),
     images: [...(p.product_images as { id: string; storage_path: string; alt: string; width: number; height: number; role: string; sort_order: number }[])]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((i) => ({ id: i.id, path: i.storage_path, alt: i.alt, width: i.width, height: i.height, role: i.role, sortOrder: i.sort_order })),

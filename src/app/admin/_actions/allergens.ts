@@ -9,6 +9,11 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 const statusSchema = z.enum(["contains", "may_contain", "no_added", "not_confirmed", "not_applicable"]);
 const verificationSchema = z.enum(["confirmed_by_alima", "deduced_from_recipe", "packaging_check_needed"]);
 const uuid = z.uuid();
+const provenanceSchema = {
+  confirmationSource: z.enum(["founder_confirmation", "recipe", "packaging_label"]).nullable().default(null),
+  confirmedBy: z.string().trim().min(1).max(80).nullable().default(null),
+  confirmationMethod: z.enum(["voice_confirmation", "written_confirmation", "packaging_label", "admin_edit"]).nullable().default(null),
+};
 
 const payloadSchema = z.object({
   statuses: z
@@ -20,6 +25,7 @@ const payloadSchema = z.object({
         note: z.string().trim().max(300),
         verification: verificationSchema,
         verifiedAt: z.iso.datetime({ offset: true }).nullable(),
+        ...provenanceSchema,
       }),
     )
     .max(200),
@@ -30,12 +36,23 @@ const payloadSchema = z.object({
         label: z.string().trim().min(2).max(80),
         verification: verificationSchema,
         verifiedAt: z.iso.datetime({ offset: true }).nullable(),
+        ...provenanceSchema,
       }),
     )
     .max(60),
 });
 
 export type AllergenPayload = z.input<typeof payloadSchema>;
+
+/** Une confirmation n'a de provenance que si l'indicateur est « confirmé par Alima ». */
+function provenanceColumns(r: { verification: string; confirmationSource: string | null; confirmedBy: string | null; confirmationMethod: string | null }) {
+  const confirmed = r.verification === "confirmed_by_alima";
+  return {
+    confirmation_source: confirmed ? r.confirmationSource : null,
+    confirmed_by: confirmed ? r.confirmedBy : null,
+    confirmation_method: confirmed ? r.confirmationMethod : null,
+  };
+}
 
 /** Remplace les allergènes et informations de recette d'un produit (tous parfums compris). */
 export async function saveAllergenInfo(productId: string, input: AllergenPayload): Promise<AdminState> {
@@ -66,6 +83,7 @@ export async function saveAllergenInfo(productId: string, input: AllergenPayload
     note: s.note || null,
     verification: s.verification,
     verified_at: s.verifiedAt,
+    ...provenanceColumns(s),
   }));
   const noteRows = recipeNotes.map((n, index) => ({
     product_id: productId,
@@ -74,17 +92,29 @@ export async function saveAllergenInfo(productId: string, input: AllergenPayload
     sort_order: index + 1,
     verification: n.verification,
     verified_at: n.verifiedAt,
+    ...provenanceColumns(n),
   }));
   const failed = { ok: false as const, message: "Enregistrement impossible : les informations précédentes ont été conservées." };
 
   // Copie de sécurité : en cas d'échec d'écriture, les valeurs précédentes sont remises.
-  const statusCols = "product_id, flavor_id, allergen_id, status, note, verification, verified_at";
-  const noteCols = "product_id, flavor_id, label, sort_order, verification, verified_at";
+  const provenanceCols = "confirmation_source, confirmed_by, confirmation_method";
+  const statusCols = `product_id, flavor_id, allergen_id, status, note, verification, verified_at, ${provenanceCols}`;
+  const noteCols = `product_id, flavor_id, label, sort_order, verification, verified_at, ${provenanceCols}`;
   const [oldStatuses, oldNotes] = await Promise.all([
     db.from("product_allergen_statuses").select(statusCols).eq("product_id", productId),
     db.from("product_recipe_notes").select(`id, ${noteCols}`).eq("product_id", productId),
   ]);
   if (oldStatuses.error || oldNotes.error) return failed;
+
+  // Historique : les valeurs remplacées sont conservées, jamais perdues.
+  const { error: historyError } = await db.from("product_allergen_history").insert({
+    product_id: productId,
+    reason: "Modification dans l’administration",
+    statuses: oldStatuses.data,
+    recipe_notes: oldNotes.data,
+    recorded_by: admin.id,
+  });
+  if (historyError) return failed;
 
   const replaceStatuses = async (rows: Record<string, unknown>[]) => {
     const removed = await db.from("product_allergen_statuses").delete().eq("product_id", productId);
