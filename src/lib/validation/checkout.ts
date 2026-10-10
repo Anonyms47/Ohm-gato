@@ -74,6 +74,15 @@ export const placeOrderSchema = z
     notes: trimmed(500).optional(),
     lines: cartLinesSchema,
     paymentProvider: paymentProviderSchema,
+    /** Versions des conditions générales et de la politique d'annulation acceptées (case cochée). */
+    acceptance: z.object(
+      {
+        accepted: z.literal(true, { message: "Acceptez les conditions générales pour continuer." }),
+        termsVersionId: z.uuid(),
+        cancellationVersionId: z.uuid(),
+      },
+      { message: "Acceptez les conditions générales pour continuer." },
+    ),
   })
   .superRefine((value, ctx) => {
     if (value.fulfillment === "delivery" && !value.delivery) {

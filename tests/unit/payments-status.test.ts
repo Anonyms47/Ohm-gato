@@ -53,6 +53,11 @@ describe("commande : le navigateur n'envoie jamais de prix", () => {
     delivery: null,
     lines: [{ variantId: "33333333-3333-4333-8333-333333333333", flavorId: null, quantity: 2 }],
     paymentProvider: "wave",
+    acceptance: {
+      accepted: true,
+      termsVersionId: "44444444-4444-4444-8444-444444444444",
+      cancellationVersionId: "55555555-5555-4555-8555-555555555555",
+    },
   };
   it("normalise le téléphone et ignore tout champ de prix", () => {
     const parsed = placeOrderSchema.parse({ ...valid, total: 1, lines: [{ ...valid.lines[0], price: 1 }] });
@@ -62,6 +67,11 @@ describe("commande : le navigateur n'envoie jamais de prix", () => {
   });
   it("exige une adresse pour une livraison", () => {
     expect(placeOrderSchema.safeParse({ ...valid, fulfillment: "delivery" }).success).toBe(false);
+  });
+  it("exige l'acceptation des conditions générales", () => {
+    const { acceptance, ...withoutAcceptance } = valid;
+    expect(placeOrderSchema.safeParse(withoutAcceptance).success).toBe(false);
+    expect(placeOrderSchema.safeParse({ ...valid, acceptance: { ...acceptance, accepted: false } }).success).toBe(false);
   });
   it("refuse les quantités hors limites", () => {
     expect(placeOrderSchema.safeParse({ ...valid, lines: [{ ...valid.lines[0], quantity: 0 }] }).success).toBe(false);

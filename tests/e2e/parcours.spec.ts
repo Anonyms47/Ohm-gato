@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { addToBox, chooseFirstSlot, fillPickupCheckout, isMobile, localEnv, payWithTestProvider, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, chooseFirstSlot, fillPickupCheckout, isMobile, localEnv, payWithTestProvider, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Parcours complet : fournée → produit → Ma boîte → commande → paiement → suivi", () => {
   test("retrait payé : confirmation serveur, tampon PAYÉE et code de retrait", async ({ page }) => {
@@ -81,7 +81,7 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await expect(page.getByText(/2\u202f500\u00a0FCFA/).first()).toBeVisible();
     await expect(page.getByText(notice).first()).toBeVisible();
 
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await acceptTermsAndContinue(page);
     await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
     await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");

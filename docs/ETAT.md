@@ -12,6 +12,8 @@
 - **Retrouvons votre carnet** (`/connexion`) : code temporaire par téléphone (e-mail en complément), sans mot de passe ; création de compte au premier code, commandes invitées retrouvées, code incorrect / expiré / renvoi / trop de tentatives / échec d'envoi, tampon « Carnet retrouvé ».
 - **Mon carnet** (`/compte`) : commande active en priorité, tickets, détail, recomposition au prix et stock actuels, boîte et brouillons, demandes et propositions, paiements, adresses et positions, préférés, alertes, consentements, sessions (fermeture), export JSON, suppression du compte. Barre mobile Accueil / Commandes / Ma boîte / Profil.
 
+**Pages légales** (version 1.0 publiée le 10 octobre 2026, rédigées dans `content/legal/`, stockées et versionnées en base) : `/conditions-generales`, `/livraison-retrait`, `/annulation-remboursement`, `/confidentialite`, `/cookies`, `/mentions-legales`, `/allergenes-conservation`. Rendu sans HTML brut (markdown restreint, liens filtrés). Acceptation obligatoire au bon de fournée, preuve enregistrée par commande dans `order_acceptances` (sans IP) ; une commande garde la version acceptée. Délais de remboursement et durées de conservation affichés seulement une fois renseignés dans l'administration.
+
 **Administration** (`/admin`, interface séparée, rôle vérifié côté serveur à chaque page et action, journal d'audit)
 - Tableau de bord : commandes du jour, à préparer, paiements, fournée active, stock faible, sur-mesure, livraisons, retraits.
 - Fournées : création, dates, message d'accueil, produit vedette, programmer / ouvrir / clôturer / préparation / livraison / terminer / annuler, produits, formats, parfums, stock, créneaux.
@@ -19,12 +21,13 @@
 - Commandes : recherche, filtres, détail, position sur la carte, statut avec historique, WhatsApp, reçu imprimable.
 - Positions de livraison : carte, fiche de chaque arrêt, itinéraire, copie et partage au livreur, « confiée au livreur », « livraison terminée ».
 - Stock : disponible / réservé / vendu, ajustements avec raison, historique, réservations en cours.
+- Documents et règles : brouillon, aperçu, publication, historique, reprise d'une version, commandes par version, coordonnées publiques, délais, identité légale privée (alerte tant qu'elle est incomplète) ; remboursements enregistrés sur la fiche commande (date, montant, motif, moyen, administrateur).
 - Réglages : traces d'atelier, activables seulement après les trois vérifications d'Alima (ingrédients, emballages, ustensiles).
 - Sur-mesure, clients (historique, adresses, consentements, notes internes), réglages éditoriaux, rôles, journal d'audit.
 
 **Sécurité** : RLS forcée partout (vérifiée avec deux comptes dans `supabase/tests/accounts_admin_test.sql`), rôles jamais accordés depuis le navigateur, actions admin réservées au serveur, limitation de débit (codes, commandes, demandes, messages), contrôle d'origine, validation Zod, fichiers contrôlés par leurs octets, liens de suivi opaques ; sur un lien ouvert ailleurs que sur le navigateur d'origine, les informations personnelles ne s'affichent qu'après connexion par code avec le numéro de la commande.
 
-**Tests** : 47 unitaires, 67 pgTAP, parcours Playwright (téléphone, tablette, ordinateur).
+**Tests** : unitaires (Vitest), 102 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
 
 ## Limites connues
 

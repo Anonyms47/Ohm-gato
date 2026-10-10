@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addToBox, db, e164, fillPickupCheckout, freshIp, grantAdmin, isMobile, login, payWithTestProvider, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, db, e164, fillPickupCheckout, freshIp, grantAdmin, isMobile, login, payWithTestProvider, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Nos fournées — le journal du four", () => {
   test("fournée, dates, produits et ajout direct à Ma boîte", async ({ page }) => {
@@ -147,7 +147,7 @@ test.describe("Mon carnet OHMEGATO", () => {
     await page.getByRole("button", { name: "Garder en préféré" }).click();
     await expect(page.getByRole("button", { name: /est dans vos préférés/ })).toBeVisible();
     await page.goto("/compte/profil#preferes");
-    await expect(page.getByRole("link", { name: "Cookies" })).toBeVisible();
+    await expect(page.locator("#preferes").getByRole("link", { name: "Cookies" })).toBeVisible();
 
     await waitForHydration(page);
     await page.getByRole("button", { name: "Supprimer mon compte" }).click();
@@ -349,7 +349,7 @@ test.describe("Paiement par lien Wave", () => {
     await addToBox(page, "cake-orange", "4 tranches");
     await fillPickupCheckout(page);
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await acceptTermsAndContinue(page);
     await page.getByRole("button", { name: "Payer avec Wave" }).click();
     await expect(page).toHaveURL(/\/suivi\/[A-Za-z0-9_-]{43}\?retour=wave/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Commande confirmée");

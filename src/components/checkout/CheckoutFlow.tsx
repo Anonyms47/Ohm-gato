@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, type FieldPath, type Resolver } from "react-hook-form";
 import { useCart } from "@/components/cart/CartProvider";
 import { DeliveryFields, type SavedAddress } from "@/components/checkout/DeliveryFields";
@@ -77,13 +77,26 @@ function newKey() {
   return crypto.randomUUID();
 }
 
+/** Versions en vigueur des documents acceptés à la commande (preuve enregistrée côté serveur). */
+export interface CheckoutAcceptanceView {
+  termsVersionId: string;
+  termsVersion: string;
+  cancellationVersionId: string;
+  cancellationVersion: string;
+}
+
+export const ACCEPTANCE_LABEL = "J'ai lu et j'accepte les Conditions générales ainsi que la politique d'annulation et de remboursement.";
+const ACCEPTANCE_ERROR = "Cochez la case pour accepter les conditions générales et la politique d'annulation avant de payer.";
+
 export function CheckoutFlow({
   slots,
   paymentMethods,
+  acceptance,
   member = null,
 }: {
   slots: SlotSummary[];
   paymentMethods: PaymentMethodView[];
+  acceptance: CheckoutAcceptanceView | null;
   /** Membre connecté : coordonnées pré-remplies et carnet d'adresses proposé. */
   member?: { contact: { name: string; phone: string; email: string }; addresses: SavedAddress[] } | null;
 }) {
@@ -105,6 +118,10 @@ export function CheckoutFlow({
     provider: null,
     state: "idle",
   });
+  // Jamais pré-cochée ni conservée dans le brouillon : l'acceptation se donne à chaque commande.
+  const [accepted, setAccepted] = useState(false);
+  const [acceptanceError, setAcceptanceError] = useState(false);
+  const acceptanceRef = useRef<HTMLInputElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const headingRefs = useRef<Partial<Record<StepId, HTMLHeadingElement | null>>>({});
 
@@ -185,6 +202,11 @@ export function CheckoutFlow({
       if (!getValues("delivery.recipientName")) setValue("delivery.recipientName", getValues("contact.name"));
       if (!getValues("delivery.recipientPhone")) setValue("delivery.recipientPhone", getValues("contact.phone"));
     }
+    if (current === "verification" && !accepted) {
+      setAcceptanceError(true);
+      requestAnimationFrame(() => acceptanceRef.current?.focus());
+      return;
+    }
     const next = STEPS[STEPS.findIndex((s) => s.id === current) + 1];
     if (next) goTo(next.id);
   };
@@ -192,6 +214,10 @@ export function CheckoutFlow({
   const pay = (provider: PaymentMethodView["id"]) =>
     handleSubmit(
       async (values) => {
+        if (!accepted || !acceptance) {
+          setPayState({ provider, state: "error", message: ACCEPTANCE_ERROR });
+          return;
+        }
         setPayState({ provider, state: "loading" });
         try {
           const response = await fetch("/api/orders", {
@@ -207,6 +233,11 @@ export function CheckoutFlow({
               notes: values.notes || undefined,
               lines: cart.lines,
               paymentProvider: provider,
+              acceptance: {
+                accepted: true,
+                termsVersionId: acceptance.termsVersionId,
+                cancellationVersionId: acceptance.cancellationVersionId,
+              },
             }),
           });
           const result = (await response.json()) as
@@ -436,12 +467,35 @@ export function CheckoutFlow({
                           />
                         </TicketPrinter>
                         {fulfillment === "delivery" && <DeliveryFeeNotice />}
-                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                        {acceptance ? (
+                          <CheckoutAcceptance
+                            ref={acceptanceRef}
+                            checked={accepted}
+                            error={acceptanceError}
+                            delivery={fulfillment === "delivery"}
+                            onChange={(value) => {
+                              setAccepted(value);
+                              if (value) setAcceptanceError(false);
+                            }}
+                          />
+                        ) : (
+                          <p role="alert" className="font-bold text-erreur">
+                            Les conditions générales sont momentanément indisponibles : la commande ne peut pas être finalisée. Écrivez-nous sur{" "}
+                            <a href={brand.whatsappUrl} className="underline decoration-caramel decoration-2 underline-offset-4">
+                              WhatsApp
+                            </a>
+                            .
+                          </p>
+                        )}
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <Button variant="secondary" onClick={() => goTo("coordonnees")}>
                             Modifier
                           </Button>
-                          <Button onClick={() => continueFrom("verification")}>
+                          <Button onClick={() => continueFrom("verification")} disabled={!acceptance} className="flex-col py-2">
                             Tout est bon, payer
+                            {fulfillment === "delivery" && (
+                              <span className="text-[0.9rem] font-normal">Livraison à régler séparément au livreur</span>
+                            )}
                           </Button>
                         </div>
                       </>
@@ -472,6 +526,63 @@ export function CheckoutFlow({
     </FormProvider>
   );
 }
+
+const legalLinkClass = "font-bold underline decoration-caramel decoration-2 underline-offset-4";
+
+/**
+ * Dernière étape avant le paiement : case obligatoire, jamais pré-cochée. Les liens s'ouvrent
+ * dans un nouvel onglet pour que le bon de fournée en cours reste intact.
+ */
+const CheckoutAcceptance = forwardRef<
+  HTMLInputElement,
+  { checked: boolean; error: boolean; delivery: boolean; onChange: (checked: boolean) => void }
+>(function CheckoutAcceptance({ checked, error, delivery, onChange }, ref) {
+  return (
+    <div className="flex flex-col gap-3 rounded-[12px] border-2 border-chocolat/25 bg-creme p-4" data-testid="acceptation">
+      <div className="flex items-start gap-3">
+        <input
+          ref={ref}
+          id="acceptation-conditions"
+          type="checkbox"
+          required
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          aria-invalid={error || undefined}
+          aria-describedby={error ? "acceptation-erreur" : undefined}
+          className="mt-1 size-5 shrink-0 accent-chocolat"
+        />
+        <label htmlFor="acceptation-conditions" className="cursor-pointer">
+          J&apos;ai lu et j&apos;accepte les{" "}
+          <a href="/conditions-generales" target="_blank" rel="noopener" className={legalLinkClass}>
+            Conditions générales<span className="sr-only"> (nouvel onglet)</span>
+          </a>{" "}
+          ainsi que la{" "}
+          <a href="/annulation-remboursement" target="_blank" rel="noopener" className={legalLinkClass}>
+            politique d&apos;annulation et de remboursement<span className="sr-only"> (nouvel onglet)</span>
+          </a>
+          .
+        </label>
+      </div>
+      {error && (
+        <p id="acceptation-erreur" className="font-bold text-erreur">
+          {ACCEPTANCE_ERROR}
+        </p>
+      )}
+      <p className="text-encre-douce">
+        Les informations saisies sont utilisées pour traiter votre commande conformément à notre{" "}
+        <a href="/confidentialite" target="_blank" rel="noopener" className={legalLinkClass}>
+          Politique de confidentialité<span className="sr-only"> (nouvel onglet)</span>
+        </a>
+        .
+      </p>
+      {delivery && (
+        <p className="font-bold" data-testid="rappel-livraison">
+          Les frais de livraison ne sont pas inclus dans ce paiement. Ils seront réglés séparément au livreur.
+        </p>
+      )}
+    </div>
+  );
+});
 
 function OrderTicket({
   lines,

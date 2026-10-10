@@ -5,6 +5,7 @@
 export const brand = {
   name: "OHMEGATO",
   city: "Dakar",
+  email: "contact@ohmegato.com",
   phoneDisplay: "+221 78 010 30 50",
   phoneE164: "+221780103050",
   whatsappUrl: "https://wa.me/221780103050",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StatCard } from "@/components/admin/AdminUi";
 import { dashboard } from "@/lib/admin/data";
+import { IDENTITY_ALERT, getLegalSettings, missingIdentityFields } from "@/lib/admin/legal";
 import { requireAdmin } from "@/lib/auth/session";
 import { cyclePhase, cyclePhaseLabel } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
@@ -9,13 +10,23 @@ import { statusHeadline } from "@/lib/order-status";
 
 export default async function AdminDashboard() {
   await requireAdmin();
-  const d = await dashboard();
+  const [d, legal] = await Promise.all([dashboard(), getLegalSettings()]);
+  const identityMissing = missingIdentityFields(legal.identity).length > 0;
   return (
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Tableau de bord</h1>
         <p className="text-encre-douce">Chiffres des produits uniquement : les frais de livraison sont réglés au livreur et n&apos;en font jamais partie.</p>
       </header>
+
+      {identityMissing && (
+        <section className="rounded-[12px] border-2 border-caramel-encre bg-blanc-casse p-4" data-testid="alerte-identite">
+          <p className="font-bold">{IDENTITY_ALERT}</p>
+          <Link href="/admin/documents" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+            Documents et règles
+          </Link>
+        </section>
+      )}
 
       {d.attention.length > 0 && (
         <section className="rounded-[12px] border-2 border-erreur bg-blanc-casse p-4">

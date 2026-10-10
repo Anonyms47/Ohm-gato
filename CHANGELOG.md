@@ -9,6 +9,10 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Pages légales et commerciales versionnées (v1.0 du 10 octobre 2026) : Conditions générales, Livraison et retrait, Annulation et remboursement, Confidentialité, Cookies, Mentions légales, Allergènes et conservation ; sommaire, ancres sous l'en-tête, impression propre, métadonnées et URL canoniques, sitemap et robots.
+- Bon de fournée : case obligatoire non cochée « J'ai lu et j'accepte les Conditions générales ainsi que la politique d'annulation et de remboursement. », liens ouverts dans un nouvel onglet, note de confidentialité, rappel « Livraison à régler séparément au livreur ». Preuve d'acceptation enregistrée par commande (versions, empreintes, date, canal ; sans adresse IP), incluse dans l'export du compte.
+- Administration « Documents et règles » : brouillon, aperçu public exact, publication d'une nouvelle version, historique, reprise d'une ancienne version, commandes par version, coordonnées publiques, délai de remboursement, durées de conservation, identité légale privée avec alerte tant qu'elle est incomplète ; remboursements enregistrés sur la fiche commande.
+- Pied de page en trois groupes (Commander, OHMEGATO, Informations), accordéons accessibles sur téléphone ; page « Suivre ma commande ».
 - Allergènes : statut par produit ou par parfum (contient, peut contenir des traces, sans ajout direct, à vérifier, non concerné), informations de recette séparées (chocolat, fruits, cannelle), traces d'atelier activables après confirmation, indicateur interne jamais visible des clients, aperçu exact dans /admin ; avertissement allergies sur les fiches, Ma boîte, le bon de fournée et le sur-mesure ; huit produits préremplis.
 - Recherche d'un quartier ou d'un lieu dans la région de Dakar sur la carte de livraison : la carte se centre, le client touche l'endroit exact.
 - Paiement par lien marchand Wave : commande confirmée au choix de Wave, montant et référence affichés au client, paiement enregistré par OHMEGATO (« Paiement Wave reçu ») ou commande annulée avec retour du stock.

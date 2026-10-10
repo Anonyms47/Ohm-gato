@@ -6,7 +6,9 @@ import { PositionLinks } from "@/components/admin/PositionLinks";
 import { RecordPayment } from "@/components/admin/RecordPayment";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { brand } from "@/config/brand";
+import { RefundForm } from "@/components/admin/LegalEditors";
 import { getOrderDetail } from "@/lib/admin/data";
+import { orderAcceptance, orderRefunds } from "@/lib/admin/legal";
 import { requireAdmin } from "@/lib/auth/session";
 import { formatShortDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
@@ -22,6 +24,8 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const order = await getOrderDetail(id);
   if (!order) notFound();
+  const [acceptance, refunds] = await Promise.all([orderAcceptance(order.id), orderRefunds(order.id)]);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Dakar" }).format(new Date());
   const whatsapp = `https://wa.me/${order.customerPhone.replace(/^\+/, "")}?text=${encodeURIComponent(`Bonjour ${order.customerName}, c'est OHMEGATO au sujet de votre commande ${order.reference}.`)}`;
   return (
     <div className="flex flex-col gap-8">
@@ -169,6 +173,42 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+        <section aria-labelledby="conditions" className="rounded-[12px] bg-blanc-casse p-5" data-testid="acceptation-commande">
+          <h2 id="conditions" className="font-display text-[1.4rem]">
+            Conditions acceptées
+          </h2>
+          {acceptance ? (
+            <p className="mt-2">
+              {acceptance.terms ? `Conditions générales v${acceptance.terms.version}` : "Conditions générales"} ·{" "}
+              {acceptance.cancellation ? `Annulation et remboursement v${acceptance.cancellation.version}` : "Annulation et remboursement"} · le{" "}
+              {formatShortDay(acceptance.acceptedAt)} {formatTime(acceptance.acceptedAt)} · site web
+            </p>
+          ) : (
+            <p className="mt-2 text-encre-douce">Aucune acceptation enregistrée (commande antérieure aux conditions versionnées ou sur-mesure).</p>
+          )}
+        </section>
+        <section aria-labelledby="remboursements" className="flex flex-col gap-3 rounded-[12px] bg-blanc-casse p-5">
+          <h2 id="remboursements" className="font-display text-[1.4rem]">
+            Remboursements
+          </h2>
+          {refunds.length > 0 ? (
+            <ul className="flex flex-col gap-1">
+              {refunds.map((r) => (
+                <li key={r.id}>
+                  <span className="tabular-nums">{formatFcfa(r.amountFcfa)}</span> · {r.method} · {formatShortDay(r.refundedAt)} · {r.reason}
+                  {r.recordedBy ? ` · par ${r.recordedBy}` : ""}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-encre-douce">Aucun remboursement enregistré.</p>
+          )}
+          {order.paymentStatus === "paid" || order.paymentStatus === "refunded" ? (
+            <RefundForm orderId={order.id} today={today} />
+          ) : (
+            <p className="text-encre-douce">Un remboursement s&apos;enregistre une fois le paiement reçu.</p>
           )}
         </section>
         <section aria-labelledby="historique" className="rounded-[12px] bg-blanc-casse p-5">
