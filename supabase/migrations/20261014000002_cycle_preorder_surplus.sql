@@ -159,12 +159,7 @@ begin
 
   v_status := 'pending_payment';
 
-  -- Lignes : prix et unités relus en base
-  create temporary table if not exists _lines (
-    product_id uuid, variant_id uuid, flavor_id uuid, product_name text, variant_label text,
-    flavor_name text, units_per_item int, quantity int, unit_price int
-  );
-  truncate pg_temp._lines;
+  -- Lignes : prix et unités relus en base (accumulées dans v_lines, sans table temporaire)
 
   for v_item in select * from jsonb_array_elements(p -> 'items') loop
     v_qty := (v_item ->> 'quantity')::int;
@@ -205,10 +200,11 @@ begin
       perform public.raise_order_error('FLAVOR_UNAVAILABLE', jsonb_build_object('product', v_variant.slug));
     end if;
 
-    insert into _lines values (
-      v_variant.product_id, v_variant.id, v_flavor_id, v_variant.product_name, v_variant.label,
-      v_flavor_name, v_variant.units_consumed, v_qty, v_variant.price_fcfa
-    );
+    v_lines := v_lines || jsonb_build_array(jsonb_build_object(
+      'product_id', v_variant.product_id, 'variant_id', v_variant.id, 'flavor_id', v_flavor_id,
+      'product_name', v_variant.product_name, 'variant_label', v_variant.label, 'flavor_name', v_flavor_name,
+      'units_per_item', v_variant.units_consumed, 'quantity', v_qty, 'unit_price', v_variant.price_fcfa
+    ));
     v_subtotal := v_subtotal + v_variant.price_fcfa * v_qty;
   end loop;
 
@@ -216,7 +212,7 @@ begin
   if v_status = 'pending_payment' then
     for v_needed in
       select product_id, sum(units_per_item * quantity)::int as units, min(product_name) as product_name
-      from _lines group by product_id order by product_id
+      from jsonb_to_recordset(v_lines) as l(product_id uuid, variant_id uuid, flavor_id uuid, product_name text, variant_label text, flavor_name text, units_per_item int, quantity int, unit_price int) group by product_id order by product_id
     loop
       select * into v_inv from public.inventory_units
         where cycle_id = v_cycle.id and product_id = v_needed.product_id for update;
@@ -276,12 +272,12 @@ begin
   )
   select v_order_id, product_id, variant_id, flavor_id, product_name, variant_label, flavor_name,
          units_per_item, quantity, unit_price, unit_price * quantity
-  from _lines;
+  from jsonb_to_recordset(v_lines) as l(product_id uuid, variant_id uuid, flavor_id uuid, product_name text, variant_label text, flavor_name text, units_per_item int, quantity int, unit_price int);
 
   if v_status = 'pending_payment' then
     for v_needed in
       select product_id, sum(units_per_item * quantity)::int as units
-      from _lines group by product_id order by product_id
+      from jsonb_to_recordset(v_lines) as l(product_id uuid, variant_id uuid, flavor_id uuid, product_name text, variant_label text, flavor_name text, units_per_item int, quantity int, unit_price int) group by product_id order by product_id
     loop
       update public.inventory_units
         set reserved_units = reserved_units + v_needed.units
