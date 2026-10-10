@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CycleSummary } from "@/lib/catalog-types";
 import { customRequestEditable, customRequestOpen } from "@/lib/custom/status";
-import { cyclePhase, journalSteps } from "@/lib/cycle-status";
+import { cyclePhase, friseSteps } from "@/lib/cycle-status";
 import { sniffType } from "@/lib/file-type";
 import { storageAdvice, storageText } from "@/lib/storage";
 import { customRequestSchema, eventDateTime } from "@/lib/validation/custom-request";
@@ -17,9 +17,14 @@ function cycle(status: string, opensIn: number, closesIn: number): CycleSummary 
     opensAt: new Date(now + opensIn * hour).toISOString(),
     closesAt: new Date(now + closesIn * hour).toISOString(),
     productionDate: "2030-01-01",
+    productionDays: 3,
+    productionDates: [],
     fulfillmentDate: "2030-01-02",
     status,
+    surplusEndsAt: null,
+    surplusDeliveryAllowed: false,
     isOpen: false,
+    orderKind: null,
     featuredProductSlug: null,
     palette: "caramel",
   };
@@ -32,11 +37,11 @@ describe("journal du four", () => {
     expect(cyclePhase(cycle("open", 2, 24))).toBe("scheduled");
   });
 
-  it("marque les étapes passées, en cours et à venir", () => {
-    const states = journalSteps(cycle("preparing", -72, -24)).map((s) => s.state);
-    expect(states).toEqual(["done", "done", "current", "upcoming"]);
-    expect(journalSteps(cycle("cancelled", -72, -24)).every((s) => s.state === "cancelled")).toBe(true);
-    expect(journalSteps(cycle("done", -72, -24)).every((s) => s.state === "done")).toBe(true);
+  it("frise en quatre moments : passés, en cours et à venir", () => {
+    const states = (c: CycleSummary) => friseSteps(c, cyclePhase(c)).map((s) => s.state);
+    expect(states(cycle("preparing", -72, -24))).toEqual(["done", "current", "upcoming", "upcoming"]);
+    expect(states(cycle("cancelled", -72, -24)).every((s) => s === "cancelled")).toBe(true);
+    expect(states(cycle("done", -72, -24)).every((s) => s === "done")).toBe(true);
   });
 });
 

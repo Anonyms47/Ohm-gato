@@ -26,6 +26,7 @@ export interface OrderView {
   paidAt: string | null;
   createdAt: string;
   cycleNumber: number | null;
+  orderKind: "preorder" | "surplus";
   slot: { startsAt: string; endsAt: string } | null;
   isCustom: boolean;
   userId: string | null;
@@ -49,6 +50,7 @@ interface OrderRow {
   status: OrderStatus;
   payment_status: PaymentStatus;
   fulfillment: Fulfillment;
+  order_kind: "preorder" | "surplus";
   customer_name: string;
   customer_phone: string;
   address_line: string | null;
@@ -93,7 +95,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
   const { data, error } = await db
     .from("orders")
     .select(
-      `id, reference, status, payment_status, fulfillment, customer_name, customer_phone,
+      `id, reference, status, payment_status, fulfillment, order_kind, customer_name, customer_phone,
        address_line, district, landmark, latitude, longitude, pickup_code,
        subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
        production_cycles(number), delivery_slots(starts_at, ends_at),
@@ -130,6 +132,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     paidAt: data.paid_at,
     createdAt: data.created_at,
     cycleNumber: data.production_cycles?.number ?? null,
+    orderKind: data.order_kind,
     slot: data.delivery_slots ? { startsAt: data.delivery_slots.starts_at, endsAt: data.delivery_slots.ends_at } : null,
     isCustom: data.custom_request_id !== null,
     userId: data.user_id,

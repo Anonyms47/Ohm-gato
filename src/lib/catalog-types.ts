@@ -60,11 +60,24 @@ export interface CycleSummary {
   message: string | null;
   opensAt: string;
   closesAt: string;
+  /** Début de la période de production (semaine de la fournée). */
   productionDate: string;
+  /** Nombre de jours de production (null si non renseigné). */
+  productionDays: number | null;
+  /** Dates exactes de production, seulement si Alima les a saisies. */
+  productionDates: string[];
   fulfillmentDate: string;
   status: string;
-  /** Ouverte maintenant : statut « open » et dans la fenêtre de commande. */
+  /** Fin de la vente du surplus (null tant qu'aucun surplus n'est publié). */
+  surplusEndsAt: string | null;
+  /** Commandes tardives : livraison possible (sinon retrait uniquement). */
+  surplusDeliveryAllowed: boolean;
+  /** Commande possible maintenant : précommande ouverte ou surplus publié et disponible. */
   isOpen: boolean;
+  /** Type de commande accepté maintenant (null si aucune commande possible). */
+  orderKind: "preorder" | "surplus" | null;
+  /** Surplus entièrement vendu (fermeture automatique). */
+  surplusExhausted?: boolean;
   featuredProductSlug: string | null;
   palette: Accent;
 }

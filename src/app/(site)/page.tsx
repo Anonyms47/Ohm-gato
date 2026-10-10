@@ -8,6 +8,7 @@ import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
 import { getCatalog, getPublicSettings } from "@/lib/catalog";
 import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
+import { cyclePhaseLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 
@@ -18,10 +19,9 @@ function fromPrice(product: CatalogProduct) {
 
 function cycleLine(cycle: CycleSummary | null): string {
   if (!cycle) return "Prochaine fournée annoncée sur Instagram.";
-  if (cycle.isOpen) return `Commandes ouvertes jusqu'au ${formatDay(cycle.closesAt)}, ${formatTime(cycle.closesAt)}.`;
-  if (cycle.status === "scheduled" && Date.parse(cycle.opensAt) > Date.now())
-    return `Ouverture des commandes le ${formatDay(cycle.opensAt)}, ${formatTime(cycle.opensAt)}.`;
-  return "Les commandes de cette fournée sont closes. La prochaine est annoncée sur Instagram.";
+  const phase = phaseNow(cycle);
+  if (phase === "scheduled") return `Fournée annoncée : ${productionLabel(cycle)}`;
+  return phaseMessage(phase, cycle) ?? "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
 }
 
 export default async function FourneePage() {
@@ -31,6 +31,8 @@ export default async function FourneePage() {
     products.find((p) => p.slug === cycle?.featuredProductSlug) ?? inCycle[0] ?? products[0] ?? null;
   const manifesto = products.find((p) => p.slug === "moelleux-chocolat") ?? null;
   const alimaNote = typeof settings["home.alima_note"] === "string" ? (settings["home.alima_note"] as string) : null;
+  const phase = cycle ? phaseNow(cycle) : null;
+  const action = cycle && phase ? phaseAction(phase, cycle.number) : null;
 
   return (
     <>
@@ -39,11 +41,8 @@ export default async function FourneePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 pb-12 pt-8 sm:px-6 md:grid-cols-[1.05fr_1fr] md:pb-20 md:pt-14">
           <div className="relative z-10 flex flex-col gap-5 motion-safe:animate-[ohm-entree_520ms_var(--ohm-courbe)_both]">
             <p className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-chocolat bg-blanc-casse px-3 py-1 font-bold">
-              <span
-                aria-hidden
-                className={cycle?.isOpen ? "size-2.5 rounded-full bg-succes" : "size-2.5 rounded-full bg-encre-douce"}
-              />
-              {cycle?.isOpen ? "Fournée ouverte" : "Fournée fermée"}
+              <span aria-hidden className={cycle?.isOpen ? "size-2.5 rounded-full bg-succes" : "size-2.5 rounded-full bg-encre-douce"} />
+              {phase ? cyclePhaseLabel[phase] : "Fournée fermée"}
             </p>
             <BrandHeading as="h1" size="affiche" id="couverture">
               {cycle ? (
@@ -60,12 +59,16 @@ export default async function FourneePage() {
             <p className="text-[1.15rem] font-bold">{cycleLine(cycle)}</p>
             {cycle && (
               <p className="text-encre-douce">
-                Livraison ou retrait le {formatDay(cycle.fulfillmentDate)}.
+                {productionLabel(cycle)} Livraison ou retrait le {formatDay(cycle.fulfillmentDate)}.
               </p>
             )}
             <div className="flex flex-wrap items-center gap-3">
-              {cycle?.isOpen ? (
-                <ButtonLink href="/carte">Composer ma boîte</ButtonLink>
+              {action ? (
+                <ButtonLink href={action.href}>{action.label}</ButtonLink>
+              ) : cycle ? (
+                <ButtonLink href={`/fournees/${cycle.number}`} variant="secondary">
+                  Voir la fournée
+                </ButtonLink>
               ) : (
                 <ButtonLink href={brand.instagramUrl} variant="secondary">
                   Suivre les annonces sur Instagram
@@ -178,7 +181,7 @@ export default async function FourneePage() {
             <dl className="mt-4 divide-y-2 divide-dashed divide-chocolat/25">
               {cycle && (
                 <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
-                  <dt className="font-bold">Clôture des commandes</dt>
+                  <dt className="font-bold">Date limite de commande</dt>
                   <dd>
                     {formatDay(cycle.closesAt)}, {formatTime(cycle.closesAt)}
                   </dd>
@@ -187,7 +190,7 @@ export default async function FourneePage() {
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Livraison</dt>
                 <dd className="sm:text-right">
-                  Dans Dakar, en général le lendemain matin. Frais non compris, à régler directement au livreur selon votre position.
+                  Dans Dakar, le jour prévu de la fournée. Frais non compris, à régler directement au livreur selon votre position.
                 </dd>
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
@@ -196,7 +199,7 @@ export default async function FourneePage() {
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Paiement</dt>
-                <dd className="sm:text-right">Les produits, en intégralité à la commande, par Wave ou Orange Money.</dd>
+                <dd className="sm:text-right">Les produits uniquement, par lien marchand Wave ; le paiement est vérifié par OHMEGATO.</dd>
               </div>
               <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
                 <dt className="font-bold">Délais</dt>

@@ -38,6 +38,6 @@ export function formatSlot(startsAt: string, endsAt: string): string {
 }
 
 /** Les dates seules (AAAA-MM-JJ) sont interprétées à midi pour éviter les décalages. */
-function parseDate(value: string): Date {
+export function parseDate(value: string): Date {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00Z`) : new Date(value);
 }

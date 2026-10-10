@@ -42,6 +42,8 @@ export function productAvailability(input: {
   inCycle: boolean;
   stock: StockSnapshot | null;
   variants: VariantLike[];
+  /** Vente du surplus : jamais de « presque épuisé », seule la quantité réelle compte. */
+  surplus?: boolean;
 }): AvailabilityState {
   if (!input.inCycle) return "out_of_cycle";
   if (!input.cycleIsOpen) return "closed";
@@ -49,7 +51,7 @@ export function productAvailability(input: {
   const left = availableUnits(input.stock);
   const smallest = Math.min(...input.variants.map((v) => v.unitsConsumed));
   if (left < smallest) return "sold_out";
-  if (left <= Math.ceil(input.stock.totalUnits * LOW_STOCK_RATIO)) return "low";
+  if (!input.surplus && left <= Math.ceil(input.stock.totalUnits * LOW_STOCK_RATIO)) return "low";
   return "available";
 }
 

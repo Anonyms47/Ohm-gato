@@ -32,6 +32,12 @@ const config: NextConfig = {
         ]
       : [],
   },
+  async redirects() {
+    return [
+      { source: "/nos-fournees", destination: "/fournees", permanent: true },
+      { source: "/nos-fournees/:numero", destination: "/fournees/:numero", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

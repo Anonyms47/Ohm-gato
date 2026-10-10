@@ -14,6 +14,17 @@ const messages: Record<string, string> = {
   PRICE_REQUIRED: "Indiquez un prix total.",
   PAYMENT_NOT_FOUND: "Aucun paiement en attente pour cette commande.",
   ORDER_NOT_PAYABLE: "Cette commande est annulée ou expirée : le paiement ne peut plus être enregistré.",
+  CYCLE_STOCK_MISSING: "Indiquez la capacité de précommande de chaque produit proposé avant d'ouvrir les commandes.",
+  CYCLE_SLOTS_MISSING: "Ajoutez au moins un créneau de retrait ou de livraison (précommande) avant d'ouvrir les commandes.",
+  SURPLUS_SLOTS_MISSING: "Ajoutez au moins un créneau à venir pour les commandes tardives (surplus) avant de publier.",
+  PRODUCTION_NOT_ALLOWED: "La production se saisit après la clôture des précommandes.",
+  PRODUCTION_INVALID: "Quantités invalides : les pertes ne peuvent pas dépasser la production.",
+  PRODUCTION_BELOW_COMMITTED: "La production commercialisable ne peut pas être inférieure à ce qui est déjà vendu, réservé ou publié.",
+  PRODUCTION_MISSING: "Saisissez la production réelle de ce produit avant de publier son surplus.",
+  SURPLUS_EXCEEDS: "Quantité supérieure au surplus réellement disponible.",
+  SURPLUS_EMPTY: "Indiquez au moins une quantité de surplus à publier.",
+  SURPLUS_END_INVALID: "La dernière date de vente du surplus doit être dans le futur.",
+  SURPLUS_INVALID: "Quantités de surplus invalides.",
 };
 
 export function adminErrorMessage(error: { message: string; details?: string | null }): string {
@@ -21,6 +32,14 @@ export function adminErrorMessage(error: { message: string; details?: string | n
     try {
       const detail = JSON.parse(error.details) as { committed?: number };
       if (detail.committed !== undefined) return `Impossible : ${detail.committed} unités sont déjà réservées ou vendues.`;
+    } catch {
+      // message générique
+    }
+  }
+  if (error.message === "SURPLUS_EXCEEDS" && error.details) {
+    try {
+      const detail = JSON.parse(error.details) as { max?: number };
+      if (detail.max !== undefined) return `Quantité supérieure au surplus réellement disponible (au plus ${detail.max}).`;
     } catch {
       // message générique
     }

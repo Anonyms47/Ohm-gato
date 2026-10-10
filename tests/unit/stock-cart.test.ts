@@ -64,8 +64,9 @@ describe("Ma boîte", () => {
 
 describe("revalidation de Ma boîte", () => {
   const cycle: CycleSummary = {
-    id: "c12", number: 12, title: "", message: null, opensAt: "", closesAt: "", productionDate: "", fulfillmentDate: "",
-    status: "open", isOpen: true, featuredProductSlug: null, palette: "caramel",
+    id: "c12", number: 12, title: "", message: null, opensAt: "", closesAt: "", productionDate: "", productionDays: null, productionDates: [],
+    fulfillmentDate: "", status: "open", surplusEndsAt: null, surplusDeliveryAllowed: false, isOpen: true, orderKind: "preorder",
+    featuredProductSlug: null, palette: "caramel",
   };
   const cookies: CatalogProduct = {
     id: "cookies", slug: "cookies", name: "Cookies", shortDescription: "", description: "", tips: null, unitLabel: "cookie",

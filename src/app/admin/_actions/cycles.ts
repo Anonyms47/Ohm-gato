@@ -14,7 +14,8 @@ const cycleSchema = z
     message: z.string().trim().max(400).optional(),
     opensAt: z.string().min(1, "Date d'ouverture requise."),
     closesAt: z.string().min(1, "Date de clôture requise."),
-    productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date de préparation requise."),
+    productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Début de la période de production requis."),
+    productionDays: z.union([z.literal(""), z.coerce.number().int().min(1).max(7)]).optional(),
     fulfillmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date de livraison requise."),
     capacityUnits: z.union([z.literal(""), z.coerce.number().int().min(0)]).optional(),
     palette: z.enum(["caramel", "chocolate", "orange", "rose"]),
@@ -23,8 +24,20 @@ const cycleSchema = z
   .refine((v) => Date.parse(`${v.closesAt}Z`) > Date.parse(`${v.opensAt}Z`), { message: "La clôture doit suivre l'ouverture.", path: ["closesAt"] })
   .refine((v) => v.fulfillmentDate >= v.productionDate, { message: "La livraison ne peut pas précéder la préparation.", path: ["fulfillmentDate"] });
 
+const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
 function readCycle(form: FormData) {
   return cycleSchema.safeParse(Object.fromEntries(form.entries()));
+}
+
+/** Dates exactes de production (facultatives) : jamais inventées, seulement celles saisies. */
+function readProductionDates(form: FormData): string[] | null {
+  const dates = form
+    .getAll("productionDates")
+    .map((v) => String(v).trim())
+    .filter(Boolean);
+  if (dates.some((d) => !isoDate.test(d))) return null;
+  return [...new Set(dates)].sort().slice(0, 7);
 }
 
 /** Les champs date-heure du formulaire sont saisis à l'heure de Dakar (UTC+0). */
@@ -32,8 +45,10 @@ function toIso(local: string) {
   return new Date(`${local.length === 16 ? `${local}:00` : local}Z`).toISOString();
 }
 
-function row(data: z.infer<typeof cycleSchema>) {
+function row(data: z.infer<typeof cycleSchema>, productionDates: string[]) {
   return {
+    production_days: data.productionDays === "" || data.productionDays === undefined ? null : data.productionDays,
+    production_dates: productionDates,
     number: data.number,
     title: data.title,
     message: data.message || null,
@@ -51,8 +66,10 @@ export async function createCycle(_: AdminState, form: FormData): Promise<AdminS
   const admin = await requireAdmin();
   const parsed = readCycle(form);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
+  const dates = readProductionDates(form);
+  if (!dates) return { ok: false, message: "Une date de production est invalide." };
   const db = supabaseAdmin();
-  const { data, error } = await db.from("production_cycles").insert({ ...row(parsed.data), status: "draft" }).select("id").single();
+  const { data, error } = await db.from("production_cycles").insert({ ...row(parsed.data, dates), status: "draft" }).select("id").single();
   if (error) return { ok: false, message: error.code === "23505" ? "Ce numéro de fournée existe déjà." : "Création impossible." };
   await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.create", p_entity: "production_cycles", p_entity_id: data.id, p_details: { number: parsed.data.number } });
   redirect(`/admin/fournees/${data.id}`);
@@ -63,10 +80,14 @@ export async function updateCycle(_: AdminState, form: FormData): Promise<AdminS
   const id = String(form.get("id") ?? "");
   const parsed = readCycle(form);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
+  const dates = readProductionDates(form);
+  if (!dates) return { ok: false, message: "Une date de production est invalide." };
   const db = supabaseAdmin();
-  const { error } = await db.from("production_cycles").update(row(parsed.data)).eq("id", id);
+  const { data: before } = await db.from("production_cycles").select("opens_at, closes_at, production_date, fulfillment_date, production_dates").eq("id", id).maybeSingle();
+  const values = row(parsed.data, dates);
+  const { error } = await db.from("production_cycles").update(values).eq("id", id);
   if (error) return { ok: false, message: error.code === "23505" ? "Ce numéro de fournée existe déjà." : "Enregistrement impossible." };
-  await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.update", p_entity: "production_cycles", p_entity_id: id, p_details: row(parsed.data) });
+  await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.update", p_entity: "production_cycles", p_entity_id: id, p_details: { before, after: values } });
   revalidatePath("/admin/fournees");
   revalidatePath("/", "layout");
   return { ok: true, message: "Fournée enregistrée." };
@@ -137,6 +158,7 @@ export async function saveCycleProducts(cycleId: string, payload: unknown, reaso
 const slotSchema = z.object({
   cycleId: z.uuid(),
   kind: z.enum(["delivery", "pickup", "both"]),
+  phase: z.enum(["preorder", "surplus"]).default("preorder"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date requise."),
   start: z.string().regex(/^\d{2}:\d{2}$/, "Heure de début requise."),
   end: z.string().regex(/^\d{2}:\d{2}$/, "Heure de fin requise."),
@@ -155,6 +177,7 @@ export async function addSlot(_: AdminState, form: FormData): Promise<AdminState
     .insert({
       cycle_id: s.cycleId,
       kind: s.kind,
+      phase: s.phase,
       starts_at: `${s.date}T${s.start}:00Z`,
       ends_at: `${s.date}T${s.end}:00Z`,
       capacity_orders: s.capacity === "" || s.capacity === undefined ? null : s.capacity,
@@ -203,4 +226,81 @@ export async function setStock(cycleId: string, productId: string, total: number
   revalidatePath("/admin", "layout");
   revalidatePath("/", "layout");
   return { ok: true, message: "Stock ajusté." };
+}
+
+const units = z.number().int().min(0).max(100000);
+
+/** Quantité supplémentaire décidée par Alima, en plus de la demande confirmée. */
+export async function planExtra(cycleId: string, productId: string, extra: number): Promise<AdminState> {
+  const admin = await requireAdmin();
+  if (!z.uuid().safeParse(cycleId).success || !z.uuid().safeParse(productId).success || !units.safeParse(extra).success) {
+    return { ok: false, message: "Quantité invalide." };
+  }
+  const { error } = await supabaseAdmin().rpc("admin_plan_extra", { p_cycle_id: cycleId, p_product_id: productId, p_extra: extra, p_actor: admin.id });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  revalidatePath(`/admin/fournees/${cycleId}`);
+  return { ok: true, message: "Quantité supplémentaire enregistrée." };
+}
+
+const productionSchema = z.object({
+  produced: units,
+  lost: units,
+  note: z.string().trim().max(500),
+});
+
+/** Production réelle, pertes et note interne (jamais visibles des clients). */
+export async function recordProduction(cycleId: string, productId: string, input: z.input<typeof productionSchema>): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const parsed = productionSchema.safeParse(input);
+  if (!parsed.success || !z.uuid().safeParse(cycleId).success || !z.uuid().safeParse(productId).success) {
+    return { ok: false, message: "Vérifiez les quantités saisies." };
+  }
+  if (parsed.data.lost > parsed.data.produced) return { ok: false, message: "Les pertes ne peuvent pas dépasser la production." };
+  const { error } = await supabaseAdmin().rpc("admin_record_production", {
+    p_cycle_id: cycleId,
+    p_product_id: productId,
+    p_produced: parsed.data.produced,
+    p_lost: parsed.data.lost,
+    p_note: parsed.data.note,
+    p_actor: admin.id,
+  });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  revalidatePath(`/admin/fournees/${cycleId}`);
+  return { ok: true, message: "Production enregistrée. Rien n'est publié tant que vous ne publiez pas le surplus." };
+}
+
+const publishSchema = z.object({
+  items: z.array(z.object({ productId: z.uuid(), units })).max(50),
+  endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Indiquez la dernière date de vente du surplus."),
+  deliveryAllowed: z.boolean(),
+});
+
+/** Publication explicite du surplus par Alima (jamais automatique). */
+export async function publishSurplus(cycleId: string, input: z.input<typeof publishSchema>): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const parsed = publishSchema.safeParse(input);
+  if (!parsed.success || !z.uuid().safeParse(cycleId).success) {
+    return { ok: false, message: parsed.success ? "Fournée introuvable." : parsed.error.issues[0]!.message };
+  }
+  const { error } = await supabaseAdmin().rpc("admin_publish_surplus", {
+    p_cycle_id: cycleId,
+    p_items: parsed.data.items.filter((i) => i.units > 0).map((i) => ({ product_id: i.productId, units: i.units })),
+    p_ends_at: toIso(parsed.data.endsAt),
+    p_delivery_allowed: parsed.data.deliveryAllowed,
+    p_actor: admin.id,
+  });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Surplus publié : les douceurs indiquées sont en vente, dans la limite de ces quantités." };
+}
+
+/** Retirer un produit du surplus : ses unités restantes repassent en stock interne. */
+export async function withdrawSurplus(cycleId: string, productId: string): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const { error } = await supabaseAdmin().rpc("admin_withdraw_surplus", { p_cycle_id: cycleId, p_product_id: productId, p_actor: admin.id });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Produit retiré du surplus." };
 }

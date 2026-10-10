@@ -8,6 +8,7 @@ import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
 import { maxQuantityFor } from "@/lib/availability";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { cn } from "@/lib/cn";
+import { cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
 
 /**
@@ -53,7 +54,7 @@ export function AddToBox({ product, tone = "light", compact = false }: { product
   if (!cycleOpen) {
     return (
       <p className={cn("font-bold", tone === "dark" ? "text-creme/85" : "text-encre-douce")}>
-        Les commandes sont fermées pour le moment.
+        {catalog.cycle ? cycleStatusLine(catalog.cycle) : "Les commandes sont fermées pour le moment."}
       </p>
     );
   }

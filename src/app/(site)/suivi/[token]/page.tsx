@@ -57,6 +57,7 @@ export default async function SuiviPage({
           totalFcfa: order.totalFcfa,
           reservationExpiresAt: order.reservationExpiresAt,
           cycleNumber: order.cycleNumber,
+          orderKind: order.orderKind,
           slot: order.slot,
           items: order.items,
           history: order.history,

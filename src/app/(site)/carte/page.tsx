@@ -4,6 +4,7 @@ import { BrandHeading } from "@/components/brand/BrandHeading";
 import { CarteExperience } from "@/components/catalog/CarteExperience";
 import { getCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
+import { cycleStatusLine } from "@/lib/cycle-status";
 
 export const metadata: Metadata = {
   title: "La carte",
@@ -26,7 +27,7 @@ export default async function CartePage({ searchParams }: { searchParams: Promis
           </BrandHeading>
           {cycle && (
             <p className="mt-2 text-encre-douce">
-              {cycle.isOpen ? `Fournée n°${cycle.number} ouverte.` : `Fournée n°${cycle.number} fermée aux commandes.`}
+              {cycleStatusLine(cycle)}
             </p>
           )}
         </div>
