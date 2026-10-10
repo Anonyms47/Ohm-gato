@@ -58,7 +58,7 @@ test.describe("Pages légales", () => {
 
 test.describe("Acceptation au paiement", () => {
   test("case non cochée par défaut, bloquante, liens dans un nouvel onglet, version enregistrée", async ({ page }) => {
-    await addToBox(page, "muffins-pepites", "Box de 6");
+    await addToBox(page, "brownies", "Box de 4");
     await fillPickupCheckout(page);
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
 
@@ -99,7 +99,7 @@ test.describe("Acceptation au paiement", () => {
   });
 
   test("livraison : rappel que les frais se règlent au livreur, aucun frais ajouté", async ({ page }) => {
-    await addToBox(page, "muffins-pepites", "Box de 6");
+    await addToBox(page, "brownies", "Box de 4");
     await page.goto("/commande");
     await waitForHydration(page);
     await page.getByLabel("Nom").fill("Awa Diop");

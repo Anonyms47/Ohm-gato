@@ -147,7 +147,7 @@ test.describe("Mon carnet OHMEGATO", () => {
     await page.getByRole("button", { name: "Garder en préféré" }).click();
     await expect(page.getByRole("button", { name: /est dans vos préférés/ })).toBeVisible();
     await page.goto("/compte/profil#preferes");
-    await expect(page.getByRole("link", { name: "Cookies" })).toBeVisible();
+    await expect(page.locator("#preferes").getByRole("link", { name: "Cookies" })).toBeVisible();
 
     await waitForHydration(page);
     await page.getByRole("button", { name: "Supprimer mon compte" }).click();
