@@ -10,7 +10,7 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 | Contrat et documentation API **Orange Money** (identifiants, code marchand, format des notifications) | Bouton Orange Money désactivé |
 | **Créneaux** de livraison et de retrait par fournée, avec capacité | Pas de créneau proposé |
 | **Validation des allergènes** dans /admin → Produits : gluten, œufs, lait (déduits des recettes, à confirmer) ; soja, arachides, fruits à coque, sésame (« à vérifier » sur les emballages et dans l'atelier) | Les allergènes déduits des recettes sont affichés ; les « à vérifier » ne le sont jamais ; aucune trace n'est mentionnée |
-| **Conditions de vente et politique de remboursement** (rédigées avec Alima) | Pas de page de conditions ; à publier avant la mise en ligne |
+| **Délai de remboursement** et **durées de conservation des données** (à valider) | Non affichés sur les pages légales tant qu'ils ne sont pas saisis dans /admin → Documents et règles |
 | **Compte WhatsApp Business (Cloud API)** : jeton, identifiant du numéro, modèle « authentification » approuvé | Connexion par téléphone impossible en production (l'e-mail reste possible) |
 | **SMTP** pour les e-mails de connexion (adresse d'expéditeur) | Codes par e-mail limités par Supabase |
 | **Logos officiels Wave et Orange Money** (kits marchands) | Boutons de paiement aux couleurs officielles, sans logo |
@@ -44,6 +44,8 @@ Tant qu'une donnée manque, la fonction concernée est masquée ou bloquée prop
 
 ## Situation administrative
 
-- OHMEGATO n'est pas encore immatriculée (pas de NINEA ni de RCCM) : le site n'affiche donc ni raison sociale ni numéro d'identification.
-- Pas d'e-mail officiel : le contact passe par WhatsApp et le téléphone, et le bon de fournée ne demande plus d'adresse e-mail (aucun e-mail n'est envoyé).
+- OHMEGATO est présentée comme « une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation ». Le site n'affiche ni raison sociale, ni NINEA, ni RCCM.
+- **Identité légale à compléter dès la formalisation** (privée, dans /admin → Documents et règles) : nom civil complet de l'exploitante, NINEA, RCCM, adresse administrative. Les mentions légales seront ensuite mises à jour par une nouvelle version, après validation.
+- E-mail officiel : contact@ohmegato.com. Le bon de fournée ne demande pas d'adresse e-mail.
+- Les textes légaux v1.0 sont une version de lancement : une relecture par un professionnel du droit sénégalais est recommandée (voir le rapport de publication).
 - **À vérifier avant de demander les accès API** : l'ouverture d'un compte marchand Wave Business avec API de paiement en ligne et d'un compte Orange Money marchand peut exiger des documents d'entreprise (NINEA, registre de commerce). À confirmer auprès de Wave et d'Orange Money ; sans ces accès, le paiement en ligne reste bloqué et les commandes se finalisent sur WhatsApp.

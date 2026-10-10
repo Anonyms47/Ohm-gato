@@ -1,6 +1,7 @@
 import "server-only";
 import { serverEnv } from "@/lib/env";
 import { rateLimit } from "@/lib/http";
+import { ACCEPTED_AT_CHECKOUT } from "@/lib/legal/documents";
 import { orderErrorMessage } from "@/lib/orders/errors";
 import { generateTrackingToken } from "@/lib/orders/tracking";
 import { getProvider } from "@/lib/payments";
@@ -73,6 +74,13 @@ export async function placeOrder(
   }
 
   const db = supabaseAdmin();
+
+  // Les versions acceptées doivent être celles en vigueur : sinon le client relit les nouvelles conditions.
+  const accepted = await currentAcceptedVersions(data.acceptance.termsVersionId, data.acceptance.cancellationVersionId);
+  if (!accepted) {
+    return { ok: false, code: "TERMS_UPDATED", message: orderErrorMessage("TERMS_UPDATED"), status: 409 };
+  }
+
   const { token, hash } = generateTrackingToken(data.idempotencyKey);
   const delivery = data.fulfillment === "delivery" ? data.delivery : null;
 
@@ -112,6 +120,25 @@ export async function placeOrder(
 
   const result = placed as { order_id: string; reference: string; status: string; replayed: boolean };
 
+  // Preuve d'acceptation (versions et empreintes, sans adresse IP). En cas d'échec, la commande
+  // reste provisoire et un nouvel essai avec la même clé d'idempotence la complète.
+  const { error: acceptanceError } = await db.from("order_acceptances").upsert(
+    {
+      order_id: result.order_id,
+      user_id: context.userId,
+      terms_version_id: accepted.terms.id,
+      terms_hash: accepted.terms.hash,
+      cancellation_version_id: accepted.cancellation.id,
+      cancellation_hash: accepted.cancellation.hash,
+      channel: "web",
+    },
+    { onConflict: "order_id", ignoreDuplicates: true },
+  );
+  if (acceptanceError) {
+    console.error("Enregistrement de l'acceptation impossible", { reference: result.reference, reason: acceptanceError.message });
+    return { ok: false, code: "ACCEPTANCE_FAILED", message: orderErrorMessage("ACCEPTANCE_FAILED"), status: 503 };
+  }
+
   if (result.status !== "pending_payment") {
     return { ok: false, code: "ORDER_NOT_PAYABLE", message: orderErrorMessage("ORDER_NOT_PAYABLE"), status: 409 };
   }
@@ -128,6 +155,21 @@ export async function placeOrder(
     });
     return { ok: true, reference: result.reference, trackingToken: token, status: "pending_payment", checkoutUrl: null };
   }
+}
+
+/** Vérifie que les deux versions envoyées sont les versions publiées des documents acceptés. */
+async function currentAcceptedVersions(termsId: string, cancellationId: string) {
+  const { data, error } = await supabaseAdmin()
+    .from("legal_document_versions")
+    .select("id, document_slug, content_hash")
+    .eq("status", "published")
+    .in("document_slug", [...ACCEPTED_AT_CHECKOUT]);
+  if (error) throw error;
+  const rows = (data ?? []) as { id: string; document_slug: string; content_hash: string }[];
+  const terms = rows.find((r) => r.document_slug === "conditions-generales");
+  const cancellation = rows.find((r) => r.document_slug === "annulation-remboursement");
+  if (!terms || !cancellation || terms.id !== termsId || cancellation.id !== cancellationId) return null;
+  return { terms: { id: terms.id, hash: terms.content_hash }, cancellation: { id: cancellation.id, hash: cancellation.content_hash } };
 }
 
 /**

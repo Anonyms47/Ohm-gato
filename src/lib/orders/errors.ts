@@ -16,6 +16,8 @@ export const ORDER_ERROR_MESSAGES: Record<string, string> = {
   CYCLE_FULL: "La fournée a atteint sa capacité maximale.",
   ORDER_NOT_PAYABLE: "Cette commande ne peut plus être payée.",
   ORDER_NOT_FOUND: "Commande introuvable.",
+  ACCEPTANCE_FAILED: "La commande n'a pas pu être finalisée. Réessayez dans un instant : elle ne sera pas créée en double.",
+  TERMS_UPDATED: "Nos conditions viennent d'être mises à jour. Rechargez la page pour les consulter et les accepter à nouveau.",
 };
 
 export function orderErrorMessage(code: string, detail?: Record<string, unknown>): string {

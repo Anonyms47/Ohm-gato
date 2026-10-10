@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { jsonError } from "@/lib/http";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /** Export des données personnelles (JSON), lues avec la session : uniquement les siennes. */
@@ -8,7 +9,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return jsonError(401, "UNAUTHENTICATED", "Connectez-vous.");
   const db = await supabaseServer();
-  const [profile, addresses, favorites, preferences, orders, requests] = await Promise.all([
+  const [profile, addresses, favorites, preferences, orders, requests, acceptances] = await Promise.all([
     db.from("profiles").select("full_name, phone, email, marketing_consent, order_updates_consent, consents_updated_at, created_at").eq("id", user.id).single(),
     db.from("addresses").select("label, recipient_name, recipient_phone, address_line, district, landmark, floor_door, instructions, latitude, longitude, created_at"),
     db.from("favorites").select("created_at, products(name)"),
@@ -22,6 +23,13 @@ export async function GET() {
     db
       .from("custom_requests")
       .select("reference, status, occasion, event_at, guests, ambiance, personalization, budget_fcfa, created_at, custom_request_items(kind, quantity, format, flavors, description), custom_request_messages(body, from_staff, created_at), custom_proposals(version, body, total_fcfa, status, created_at)"),
+    // Preuves d'acceptation (table réservée au serveur) : filtrées sur le compte connecté.
+    supabaseAdmin()
+      .from("order_acceptances")
+      .select(
+        "accepted_at, channel, orders(reference), terms:legal_document_versions!order_acceptances_terms_version_id_fkey(title, version), cancellation:legal_document_versions!order_acceptances_cancellation_version_id_fkey(title, version)",
+      )
+      .eq("user_id", user.id),
   ]);
   const body = {
     exportedAt: new Date().toISOString(),
@@ -32,6 +40,7 @@ export async function GET() {
     favorites: favorites.data,
     orders: orders.data,
     customRequests: requests.data,
+    acceptedTerms: acceptances.data,
   };
   return new NextResponse(JSON.stringify(body, null, 2), {
     headers: {

@@ -34,6 +34,11 @@ const LABELS: Record<string, string> = {
   "story.media.remove": "Média retiré",
   "role.grant": "Rôle attribué",
   "role.revoke": "Rôle retiré",
+  "legal.draft": "Brouillon de document enregistré",
+  "legal.publish": "Document publié",
+  "legal.restore": "Ancienne version reprise",
+  "legal.discard": "Brouillon de document abandonné",
+  "refund.record": "Remboursement enregistré",
   "account.delete": "Compte supprimé par son titulaire",
 };
 

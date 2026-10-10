@@ -11,7 +11,7 @@ insert into public.site_settings (key, value, is_public) values
   ('order.min_notice_hours', '24', true),
   ('order.custom_notice_days', '{"min": 2, "max": 4}', true),
   -- À CONFIRMER : non publics tant qu'Alima ne les a pas transmis.
-  ('brand.email', 'null', false),
+  ('brand.email', '"contact@ohmegato.com"', true),
   ('brand.contact_hours', 'null', false),
   ('home.alima_note', 'null', false),
   ('story.alima_quote', 'null', false)
@@ -83,7 +83,7 @@ values
    'Barre rectangulaire, base de gâteau au yaourt et véritable goût d’orange.',
    null,
    'tranche', 'tranches', 'cake-tranches', 'orange',
-   'cool_wrapped_1w', null, true,
+   'cool_wrapped_1w', 'Réfrigération recommandée en cas de forte chaleur.', true,
    '{moelleux-pommes,verrines-fruitees}', 60),
 
   ('choux-creme', 'Choux à la crème',

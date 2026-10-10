@@ -58,7 +58,7 @@ export function SiteHeader({ account }: { account: AccountSummary | null }) {
   const { resolved, setDrawerOpen, lastAdded, hydrated } = useCart();
   const count = hydrated ? resolved.itemCount : 0;
   return (
-    <header className="sticky top-0 z-40 border-b-2 border-chocolat/15 bg-creme/95 backdrop-blur-[2px]">
+    <header className="sticky top-0 z-40 print:hidden border-b-2 border-chocolat/15 bg-creme/95 backdrop-blur-[2px]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
         <Logo />
         <nav aria-label="Navigation principale" className="hidden lg:block">
@@ -167,7 +167,7 @@ export function MobileNav({ account }: { account: AccountSummary | null }) {
     </button>
   );
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 print:hidden md:hidden">
       {count > 0 && !hideBand && (
         <button
           type="button"
@@ -239,7 +239,7 @@ export function ResumeBanner() {
   const { resumePending, resolveResume, resolved } = useCart();
   if (!resumePending || resolved.lines.length === 0) return null;
   return (
-    <aside aria-label="Boîte en attente" className="border-b-2 border-chocolat/15 bg-blanc-casse">
+    <aside aria-label="Boîte en attente" className="print:hidden border-b-2 border-chocolat/15 bg-blanc-casse">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>
           <span className="font-display text-[1.25rem]">Une boîte vous attendait.</span>{" "}
