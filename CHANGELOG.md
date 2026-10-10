@@ -32,6 +32,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Modifié
 
+- Numéros de commande lisibles : OHM<fournée>-<numéro sur 4 chiffres> dans l'ordre des commandes de chaque fournée (OHM1-0001, OHM1-0002…), attribués par la base sans doublon possible. Les commandes déjà passées gardent leur numéro.
 - Lisibilité : date limite de commande mise en avant dans un encadré sur l'accueil, prix distingués du nom des produits, « Bon à savoir » aligné à gauche, créneaux de livraison et de retrait affichés un par ligne (horaires jamais coupés), prix non répétés sur Nos fournées quand le choix du format les affiche déjà, notes des fiches produits alignées et en écriture lisible.
 - Précommande sans limite de stock : chaque client commande la quantité voulue jusqu'à la date limite, la production suit la demande. Plus de capacité à saisir pour ouvrir une fournée ; le stock ne sert qu'à la vente du surplus publié par Alima après la livraison.
 - Livraison : les frais ne sont plus payés en ligne ni inclus dans le total ; mention « Frais de livraison non compris, à régler directement au livreur selon votre position. » avant et après paiement. Adresse, quartier, point de repère, destinataire et position exacte sur la carte obligatoires ; position envoyable à OHMEGATO sur WhatsApp.

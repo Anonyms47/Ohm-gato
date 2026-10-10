@@ -281,7 +281,7 @@ test.describe("Administration d'Alima", () => {
     await page.goto("/admin/commandes?q=Ibrahima");
     await page.getByRole("link", { name: /^OHM12-/ }).first().click();
     await expect(page.getByRole("heading", { name: "Position exacte" })).toBeVisible();
-    const reference = (await page.getByText(/^OHM12-[A-Z0-9]{5}$/).first().textContent())!.trim();
+    const reference = (await page.getByText(/^OHM12-\d{4,}$/).first().textContent())!.trim();
     await expect(page.getByRole("link", { name: "Ouvrir l'itinéraire" })).toBeVisible();
     await waitForHydration(page);
     for (const label of ["Passer en préparation", "Marquer prête"]) {
