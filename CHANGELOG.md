@@ -32,6 +32,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Modifié
 
+- Précommande sans limite de stock : chaque client commande la quantité voulue jusqu'à la date limite, la production suit la demande. Plus de capacité à saisir pour ouvrir une fournée ; le stock ne sert qu'à la vente du surplus publié par Alima après la livraison.
 - Livraison : les frais ne sont plus payés en ligne ni inclus dans le total ; mention « Frais de livraison non compris, à régler directement au livreur selon votre position. » avant et après paiement. Adresse, quartier, point de repère, destinataire et position exacte sur la carte obligatoires ; position envoyable à OHMEGATO sur WhatsApp.
 - Conservation : règle d'Alima appliquée aux huit produits (cake à l'orange : une semaine), affichée sur les fiches et dans le suivi de commande.
 - Bon de fournée : chaque étape est validée indépendamment (les erreurs d'adresse n'étaient pas détectées tant qu'aucun créneau n'était choisi).

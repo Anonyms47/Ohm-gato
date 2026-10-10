@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
-import { maxQuantityFor } from "@/lib/availability";
+import { maxQuantityFor, orderableUnits } from "@/lib/availability";
 
 /**
  * Recomposer une ancienne boîte : chaque format est repris au prix et au stock actuels.
@@ -22,11 +22,11 @@ export function RecomposeBox({ items }: { items: { variantId: string | null; fla
       const variant = product?.variants.find((v) => v.id === item.variantId);
       const flavorOk =
         !product || product.flavors.length === 0 ? item.flavorId === null : product.flavors.some((f) => f.id === item.flavorId && f.availableInCycle);
-      if (!catalog.cycle?.isOpen || !product || !variant || !variant.enabledInCycle || !flavorOk || product.unitsLeft === null) {
+      if (!catalog.cycle?.isOpen || !product || !variant || !variant.enabledInCycle || !flavorOk || orderableUnits(product) === null) {
         missing.push(label);
         continue;
       }
-      const quantity = Math.min(item.quantity, maxQuantityFor(variant, product.unitsLeft));
+      const quantity = Math.min(item.quantity, maxQuantityFor(variant, orderableUnits(product)!));
       if (quantity < 1) {
         missing.push(label);
         continue;

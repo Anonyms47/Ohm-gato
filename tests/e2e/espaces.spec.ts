@@ -9,7 +9,8 @@ test.describe("Nos fournées — le journal du four", () => {
     await expect(page.getByText("Précommandes ouvertes").first()).toBeVisible();
     await expect(page.getByText("Date limite de commande")).toBeVisible();
     await expect(page.getByText("Livraison et retrait").first()).toBeVisible();
-    await expect(page.getByText(/^Reste \d+ cookies$/)).toBeVisible();
+    // Précommande sans limite de quantité : aucun « reste » affiché.
+    await expect(page.getByText(/^Reste \d+ cookies$/)).toHaveCount(0);
     await expect(page.getByText("Pas encore de date programmée.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Les fournées passées" })).toBeVisible();
     const cookies = page.locator("li").filter({ has: page.getByRole("heading", { name: "Cookies" }) });

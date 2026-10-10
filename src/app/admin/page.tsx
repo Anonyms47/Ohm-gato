@@ -100,7 +100,7 @@ export default async function AdminDashboard() {
                       <tr key={i.product_id} className="border-b border-dashed border-chocolat/15">
                         <td className="py-1">{i.product_name}</td>
                         <td className={`py-1 text-right ${d.lowStock.some((l) => l.product_id === i.product_id) ? "font-bold text-erreur" : ""}`}>
-                          {i.available_units}/{i.total_units}
+                          {d.cycle?.status === "surplus" ? `${i.available_units}/${i.total_units}` : "Sans limite"}
                         </td>
                         <td className="py-1 text-right">{i.reserved_units}</td>
                         <td className="py-1 text-right">{i.sold_units}</td>

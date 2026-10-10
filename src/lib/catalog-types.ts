@@ -48,8 +48,10 @@ export interface CatalogProduct {
   variants: CatalogVariant[];
   flavors: CatalogFlavor[];
   inCycle: boolean;
-  /** Unités encore commandables dans la fournée (null hors fournée). */
+  /** Unités encore commandables dans la fournée (null hors fournée ou en précommande). */
   unitsLeft: number | null;
+  /** Précommande : quantité libre, la production suit la demande. */
+  unlimited: boolean;
   availability: AvailabilityState;
 }
 

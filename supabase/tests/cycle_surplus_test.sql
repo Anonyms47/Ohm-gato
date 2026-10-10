@@ -7,13 +7,11 @@ select plan(30);
 -- Une seule fournée vend à la fois : la fournée de démonstration est mise de côté.
 update public.production_cycles set status = 'done' where status in ('open', 'surplus');
 
--- Fournée de test : 10 cookies au maximum en précommande, un créneau de retrait.
+-- Fournée de test : cookies sans stock saisi (précommande sans limite), un créneau de retrait.
 insert into public.production_cycles (id, number, title, opens_at, closes_at, production_date, fulfillment_date, status, production_days)
 values ('00000000-0000-4000-8000-000000000900', 900, 'Fournée test surplus', now() - interval '2 hours', now() + interval '1 hour',
         current_date, current_date + 5, 'open', 3);
 insert into public.cycle_products (cycle_id, product_id) select '00000000-0000-4000-8000-000000000900', id from public.products where slug = 'cookies';
-insert into public.inventory_units (cycle_id, product_id, total_units)
-  select '00000000-0000-4000-8000-000000000900', id, 10 from public.products where slug = 'cookies';
 insert into public.delivery_slots (id, cycle_id, kind, starts_at, ends_at, phase)
 values ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000900', 'pickup', now() + interval '5 days', now() + interval '5 days 2 hours', 'preorder');
 
@@ -47,7 +45,7 @@ select is((select payment_status::text from public.orders where id = (select id 
 
 -- 2. Une précommande en attente de paiement (réservée)
 create temp table pending_order as select (public.place_order(pg_temp.order_payload(2, '00000000-0000-4000-8000-000000000901', 'h-s2')) ->> 'order_id')::uuid as id;
-select is(pg_temp.free_units(), 4, '10 - 4 vendus - 2 réservés = 4 places de précommande');
+select is(pg_temp.free_units(), 0, 'précommande sans limite : le total suit les 6 unités engagées, rien n''est en vente');
 
 -- 3. Clôture automatique à la date limite (vérifiée côté serveur)
 reset role;
@@ -81,7 +79,7 @@ select throws_ok($$ select public.admin_publish_surplus('00000000-0000-4000-8000
 select lives_ok($$ select public.admin_publish_surplus('00000000-0000-4000-8000-000000000900',
   jsonb_build_array(jsonb_build_object('product_id', (select cookies from t), 'units', 2)), now() + interval '7 days', false, null) $$,
   'Alima publie 2 cookies de surplus');
-select is(pg_temp.free_units(), 2, 'seul le surplus publié est disponible, pas la capacité de précommande');
+select is(pg_temp.free_units(), 2, 'seul le surplus publié est disponible');
 
 -- 6. Commandes tardives : surplus seulement, concurrence sur la dernière unité
 select throws_ok($$ select public.place_order(pg_temp.order_payload(1, '00000000-0000-4000-8000-000000000901', 'h-s4')) $$,

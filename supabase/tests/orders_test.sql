@@ -80,10 +80,10 @@ select is(pg_temp.cookie_stock(), array[60, 15, 0], 'double envoi : aucune rése
 -- ---------------------------------------------------------------------------
 -- Refus
 -- ---------------------------------------------------------------------------
-select throws_ok(
-  format('select public.place_order(%L::jsonb)', pg_temp.order_payload(gen_random_uuid(),
-    jsonb_build_array(jsonb_build_object('variant_id', (select verrine_box4 from ids), 'flavor_id', (select fraise from ids), 'quantity', 1)))),
-  'P0001', 'INSUFFICIENT_STOCK', 'survente refusée (3 verrines, box de 4)');
+create temp table o_verrines as
+select public.place_order(pg_temp.order_payload(gen_random_uuid(),
+  jsonb_build_array(jsonb_build_object('variant_id', (select verrine_box4 from ids), 'flavor_id', (select fraise from ids), 'quantity', 1)))) as r;
+select is((select r ->> 'status' from o_verrines), 'pending_payment', 'précommande sans limite de stock (box de 4 verrines, 3 prévues)');
 
 select throws_ok(
   format('select public.place_order(%L::jsonb)', pg_temp.order_payload(gen_random_uuid(),

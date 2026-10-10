@@ -161,7 +161,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
       </section>
       <section aria-labelledby="produits">
         <h2 id="produits" className="mb-4 font-display text-[1.6rem]">
-          Produits, formats et capacité de précommande
+          Produits, formats et parfums
         </h2>
         <CycleProductsEditor cycleId={cycle.id} products={products} flavors={flavors} setup={setup} />
       </section>

@@ -39,6 +39,12 @@ export default async function AdminStock({ searchParams }: { searchParams: Promi
       <p className="text-encre-douce">
         Stock en unités réelles : une box de 6 consomme 6 unités. Disponible = total − réservé (paiements en cours) − vendu. La base refuse toute survente.
       </p>
+      {cycle.status !== "surplus" && (
+        <p className="font-bold">
+          Précommande sans limite de quantité : le stock ne sert qu&apos;à la vente du surplus, publié depuis la page de la fournée après la livraison des
+          commandes confirmées.
+        </p>
+      )}
       {setup.inventory.length === 0 ? (
         <p>Aucun stock défini : composez la fournée dans « Fournées ».</p>
       ) : (
@@ -52,7 +58,7 @@ export default async function AdminStock({ searchParams }: { searchParams: Promi
                   {unit(i.productId)}
                 </p>
               </div>
-              <StockRow cycleId={cycle.id} productId={i.productId} total={i.totalUnits} label={name(i.productId)} />
+              {cycle.status === "surplus" && <StockRow cycleId={cycle.id} productId={i.productId} total={i.totalUnits} label={name(i.productId)} />}
             </li>
           ))}
         </ul>

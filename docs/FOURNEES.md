@@ -2,7 +2,7 @@
 
 ## Le principe
 
-1. Les clients **précommandent** jusqu'à la date limite (heure de Dakar). Après, le site refuse toute précommande, même si la page est restée ouverte.
+1. Les clients **précommandent la quantité qu'ils veulent**, sans limite de stock, jusqu'à la date limite (heure de Dakar). Après, le site refuse toute précommande, même si la page est restée ouverte.
 2. Alima **produit selon la demande** : la synthèse de la demande (admin → Fournées → la fournée) donne, par produit, ce qui est payé, ce qui est à vérifier et ce qu'il faut produire.
 3. Les commandes **payées et confirmées sont prioritaires** : leur stock n'est jamais proposé à d'autres clients.
 4. Après la production (et en général après les livraisons), Alima peut **publier le surplus** réellement disponible. Rien n'est publié automatiquement.
@@ -13,9 +13,9 @@
 Admin → Fournées → la fournée (en brouillon) :
 
 1. **Configuration de la fournée** : vérifier le titre, la date d'ouverture, la **date limite de précommande**, le début de la période de production, le **nombre de jours de production** (et les dates exactes si elles sont fixées), le **jour principal de livraison et de retrait**. Enregistrer.
-2. **Produits, formats et capacité de précommande** : cocher les produits proposés, les formats et parfums, et saisir pour chacun la **capacité de précommande** (le nombre maximal d'unités que vous acceptez). Enregistrer.
+2. **Produits, formats et parfums** : cocher les produits proposés, les formats et parfums. Aucun stock à saisir : la précommande est sans limite de quantité. Enregistrer.
 3. **Créneaux** : ajouter les créneaux « Précommandes » (retrait et/ou livraison) du jour principal, avec leur capacité.
-4. En haut de la page, cliquer sur **« Ouvrir les commandes »** et confirmer. Le site refuse l'ouverture tant qu'un produit n'a pas de capacité ou qu'aucun créneau de précommande n'existe.
+4. En haut de la page, cliquer sur **« Ouvrir les commandes »** et confirmer. Le site refuse l'ouverture tant qu'aucun produit n'est coché ou qu'aucun créneau de précommande n'existe.
 
 ## Après la date limite
 
@@ -34,6 +34,7 @@ Admin → Fournées → la fournée (en brouillon) :
 ## Règles garanties par la base de données
 
 - Aucune précommande après la date limite ; aucune commande tardive hors du surplus publié ni hors des créneaux de commandes tardives.
+- Le stock ne limite que la vente du surplus : la quantité publiée par Alima est le maximum vendu aux clients tardifs.
 - Aucune quantité négative, aucune double vente de la même unité (deux clients pour la dernière : un seul l'obtient).
 - Une précommande annulée pendant la vente du surplus garde ses unités en stock interne : c'est Alima qui décide de les republier.
 - Les quantités produites, pertes et notes internes ne sont jamais visibles des clients.
