@@ -5,7 +5,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
-import { maxQuantityFor } from "@/lib/availability";
+import { maxQuantityFor, orderableUnits } from "@/lib/availability";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { cn } from "@/lib/cn";
 import { cycleStatusLine } from "@/lib/cycle-status";
@@ -26,7 +26,7 @@ export function AddToBox({ product, tone = "light", compact = false }: { product
   const unitsInBox = resolved.lines
     .filter((l) => l.product?.id === product.id && l.variant)
     .reduce((sum, l) => sum + l.variant!.unitsConsumed * l.line.quantity, 0);
-  const unitsLeft = Math.max(0, (product.unitsLeft ?? 0) - unitsInBox);
+  const unitsLeft = Math.max(0, (orderableUnits(product) ?? 0) - unitsInBox);
 
   const firstBuyable = variants.find((v) => v.unitsConsumed <= unitsLeft);
   const [variantId, setVariantId] = useState<string | null>(firstBuyable?.id ?? null);

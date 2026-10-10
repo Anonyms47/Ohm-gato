@@ -21,7 +21,12 @@ const tone: Partial<Record<CyclePhase, string>> = {
 function slotWindow(slots: SlotSummary[], kind: "delivery" | "pickup") {
   const matching = slots.filter((s) => s.kind === kind || s.kind === "both");
   if (matching.length === 0) return null;
-  return matching.map((s) => `${formatDay(s.startsAt)}, ${formatTime(s.startsAt)} – ${formatTime(s.endsAt)}${s.isFull ? " (complet)" : ""}`).join(" · ");
+  return matching.map((s) => ({
+    key: s.id,
+    day: formatDay(s.startsAt),
+    // L'horaire ne se coupe jamais en fin de ligne.
+    range: `${formatTime(s.startsAt)} – ${formatTime(s.endsAt)}${s.isFull ? " (complet)" : ""}`,
+  }));
 }
 
 function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; canOrder: boolean; surplus: boolean }) {
@@ -47,13 +52,16 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
             </span>
           )}
         </div>
-        <ul className="flex flex-wrap gap-x-4 gap-y-1">
-          {variants.map((v) => (
-            <li key={v.id} className="tabular-nums">
-              {v.label} · <strong>{formatFcfa(v.priceFcfa)}</strong>
-            </li>
-          ))}
-        </ul>
+        {/* Les formats et leurs prix figurent déjà dans le choix du format quand la commande est possible. */}
+        {!(canOrder && product.availability !== "sold_out") && (
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            {variants.map((v) => (
+              <li key={v.id} className="tabular-nums">
+                {v.label} · <strong>{formatFcfa(v.priceFcfa)}</strong>
+              </li>
+            ))}
+          </ul>
+        )}
         {product.flavors.some((f) => f.availableInCycle) && (
           <p className="text-encre-douce">
             Parfums : {product.flavors.filter((f) => f.availableInCycle).map((f) => f.name).join(", ")}
@@ -156,14 +164,31 @@ export function FourneePoster({
           {deliveryWindow && (
             <div>
               <dt className="font-bold">{surplus ? "Livraison des commandes tardives" : "Créneaux de livraison"}</dt>
-              <dd>{deliveryWindow}</dd>
+              <dd>
+                <ul className="mt-1 flex flex-col gap-1 tabular-nums">
+                  {deliveryWindow.map((w) => (
+                    <li key={w.key}>
+                      {w.day}, <span className="whitespace-nowrap">{w.range}</span>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
             </div>
           )}
           {pickupWindow && (
             <div>
               <dt className="font-bold">{surplus ? "Retrait des commandes tardives" : "Retrait gratuit"}</dt>
               <dd>
-                {pickupWindow} — {brand.pickupAddress}, {brand.city}
+                <ul className="mt-1 flex flex-col gap-1 tabular-nums">
+                  {pickupWindow.map((w) => (
+                    <li key={w.key}>
+                      {w.day}, <span className="whitespace-nowrap">{w.range}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-encre-douce">
+                  {brand.pickupAddress}, {brand.city}
+                </p>
               </dd>
             </div>
           )}

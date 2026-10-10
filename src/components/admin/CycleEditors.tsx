@@ -133,7 +133,7 @@ export function CycleStatusActions({ cycle }: { cycle: AdminCycle }) {
   if (options.length === 0) return <p className="text-encre-douce">Aucune action possible : la fournée est {cycle.status === "done" ? "terminée" : "annulée"}.</p>;
   const openNote =
     cycle.status === "draft" || cycle.status === "scheduled"
-      ? "Avant d'ouvrir : vérifiez les produits, la capacité de chaque produit, les créneaux et leur capacité."
+      ? "Avant d'ouvrir : vérifiez les produits, les formats, les parfums et les créneaux. La précommande est sans limite de quantité."
       : null;
   return (
     <div className="flex flex-col gap-2">
@@ -158,11 +158,10 @@ interface Row {
   included: boolean;
   disabledVariantIds: string[];
   availableFlavorIds: string[] | null;
-  totalUnits: number | null;
   sortOrder: number;
 }
 
-/** Produits de la fournée : formats autorisés, parfums, stock en unités réelles. */
+/** Produits de la fournée : formats autorisés et parfums. La précommande est sans limite de quantité. */
 export function CycleProductsEditor({
   cycleId,
   products,
@@ -178,25 +177,22 @@ export function CycleProductsEditor({
   const [rows, setRows] = useState<Row[]>(() =>
     products.map((p) => {
       const cp = setup.products.find((x) => x.productId === p.id);
-      const inv = setup.inventory.find((x) => x.productId === p.id);
       return {
         productId: p.id,
         included: Boolean(cp),
         disabledVariantIds: cp?.disabledVariantIds ?? [],
         availableFlavorIds: cp?.availableFlavorIds ?? null,
-        totalUnits: inv?.totalUnits ?? null,
         sortOrder: cp?.sortOrder ?? p.sortOrder,
       };
     }),
   );
-  const [reason, setReason] = useState("");
   const [state, setState] = useState<AdminState>(null);
   const [busy, setBusy] = useState(false);
   const update = (productId: string, patch: Partial<Row>) => setRows((all) => all.map((r) => (r.productId === productId ? { ...r, ...patch } : r)));
 
   const save = async () => {
     setBusy(true);
-    const result = await saveCycleProducts(cycleId, rows, reason);
+    const result = await saveCycleProducts(cycleId, rows);
     setBusy(false);
     setState(result);
     if (result?.ok) router.refresh();
@@ -207,7 +203,6 @@ export function CycleProductsEditor({
       <ul className="flex flex-col gap-3">
         {products.map((product) => {
           const row = rows.find((r) => r.productId === product.id)!;
-          const inv = setup.inventory.find((x) => x.productId === product.id);
           const productFlavors = flavors.filter((f) => product.flavorIds.includes(f.id));
           return (
             <li key={product.id} className="rounded-[12px] border-2 border-chocolat/20 bg-blanc-casse p-4">
@@ -221,7 +216,7 @@ export function CycleProductsEditor({
                 {product.name} {!product.isActive && <span className="font-normal text-orange-encre">(non publié)</span>}
               </label>
               {row.included && (
-                <div className="mt-3 grid gap-4 md:grid-cols-[1fr_1fr_12rem]">
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <fieldset>
                     <legend className="font-bold">Formats autorisés</legend>
                     {product.variants
@@ -254,29 +249,19 @@ export function CycleProductsEditor({
                   ) : (
                     <p className="text-encre-douce">Sans parfum.</p>
                   )}
-                  <Field label={`Stock (${product.unitLabelPlural})`} hint={inv ? `Réservé ${inv.reservedUnits} · vendu ${inv.soldUnits}` : "Unités réelles produites."}>
-                    {({ id }) => (
-                      <TextInput
-                        id={id}
-                        type="number"
-                        min={0}
-                        value={row.totalUnits ?? ""}
-                        onChange={(e) => update(product.id, { totalUnits: e.target.value === "" ? null : Number(e.target.value) })}
-                      />
-                    )}
-                  </Field>
                 </div>
               )}
             </li>
           );
         })}
       </ul>
-      <Field label="Raison des changements de stock" optional hint="Gardée dans l'historique des mouvements.">
-        {({ id }) => <TextInput id={id} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} />}
-      </Field>
+      <p className="text-encre-douce">
+        Pas de stock à saisir : chaque client précommande la quantité voulue jusqu&apos;à la date limite. Après la livraison, vous saisissez la
+        production réelle et publiez le surplus restant.
+      </p>
       <StateMessage state={state} />
       <Button state={busy ? "loading" : "idle"} loadingLabel="Enregistrement…" onClick={() => void save()} className="self-start">
-        Enregistrer produits et stock
+        Enregistrer les produits
       </Button>
     </div>
   );

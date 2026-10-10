@@ -99,7 +99,7 @@ export async function getCycle(id: string): Promise<AdminCycle | null> {
 /** Fournée de travail : ouverte, sinon en cours de production, sinon la prochaine. */
 export async function activeCycle(): Promise<AdminCycle | null> {
   const cycles = await listCycles();
-  const order = ["open", "closed", "preparing", "delivering", "scheduled", "draft"];
+  const order = ["open", "surplus", "closed", "preparing", "delivering", "scheduled", "draft"];
   return [...cycles].filter((c) => order.includes(c.status)).sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || b.number - a.number)[0] ?? null;
 }
 
@@ -699,7 +699,8 @@ export async function dashboard() {
     toPrepare: prepare,
     deliveries: prepare.filter((o) => o.fulfillment === "delivery").length,
     pickups: prepare.filter((o) => o.fulfillment === "pickup").length,
-    lowStock: inv.filter((i) => i.total_units === 0 || i.available_units <= Math.ceil(i.total_units * 0.2)),
+    // Le stock ne compte que pendant la vente du surplus : la précommande est sans limite.
+    lowStock: cycle?.status === "surplus" ? inv.filter((i) => i.available_units <= Math.ceil(i.total_units * 0.2)) : [],
     inventory: inv,
     openRequests: reqs.filter((r) => ["received", "studying", "info_requested"].includes(r.status)).length,
     acceptedRequests: reqs.filter((r) => ["accepted", "awaiting_payment", "paid", "preparing"].includes(r.status)).length,

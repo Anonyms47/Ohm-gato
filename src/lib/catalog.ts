@@ -225,6 +225,8 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
         availableInCycle: Boolean(cp) && (cp!.available_flavor_ids === null || cp!.available_flavor_ids.includes(f.id)),
       }));
     const productStock = stock.get(p.id) ?? null;
+    // Précommande : quantité libre. Le stock ne compte que pour le surplus publié par Alima.
+    const unlimited = Boolean(cp) && cycle?.orderKind === "preorder";
     return {
       id: p.id,
       slug: p.slug,
@@ -249,7 +251,8 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
       variants,
       flavors,
       inCycle: Boolean(cp),
-      unitsLeft: cp && productStock ? availableUnits(productStock) : null,
+      unitsLeft: cp && productStock && !unlimited ? availableUnits(productStock) : null,
+      unlimited,
       availability: productAvailability({
         cycleIsOpen: cycle?.isOpen ?? false,
         inCycle: Boolean(cp),
@@ -257,6 +260,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
         variants: variants.filter((v) => v.enabledInCycle),
         // Surplus : seule la quantité réelle restante est affichée, sans « presque épuisé ».
         surplus: cycle?.orderKind === "surplus",
+        unlimited,
       }),
     };
   });

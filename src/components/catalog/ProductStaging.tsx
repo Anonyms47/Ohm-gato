@@ -1,4 +1,3 @@
-import { Annotation } from "@/components/brand/BrandHeading";
 import type { CatalogProduct } from "@/lib/catalog-types";
 
 /**
@@ -52,10 +51,10 @@ export function ProductStaging({ product }: { product: CatalogProduct }) {
   if (list.length === 0) return null;
   return (
     <ul className="flex flex-col gap-3">
-      {list.map((note, i) => (
-        <li key={note} className="flex items-baseline gap-3" style={{ marginLeft: `${(i % 3) * 1.25}rem` }}>
+      {list.map((note) => (
+        <li key={note} className="flex items-baseline gap-3">
           <span aria-hidden className="size-3 shrink-0 translate-y-[-2px] rounded-full bg-caramel" />
-          <Annotation className="text-[1.5rem]">{note}</Annotation>
+          <span className="text-[1.15rem] font-bold">{note}</span>
         </li>
       ))}
     </ul>

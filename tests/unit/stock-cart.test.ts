@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableUnits, maxQuantityFor, productAvailability } from "@/lib/availability";
+import { availableUnits, maxQuantityFor, orderableUnits, productAvailability } from "@/lib/availability";
 import { addLine, emptyCart, itemCount, lineKey, parseStoredCart, setQuantity, subtotal, unitsByProduct } from "@/lib/cart";
 import { resolveCart } from "@/lib/cart-resolve";
 import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
@@ -26,6 +26,15 @@ describe("stock en unités réelles", () => {
     expect(productAvailability({ ...base, stock: { totalUnits: 60, reservedUnits: 0, soldUnits: 60 } })).toBe("sold_out");
     expect(productAvailability({ ...base, inCycle: false, stock: null })).toBe("out_of_cycle");
     expect(productAvailability({ ...base, cycleIsOpen: false, stock: { totalUnits: 60, reservedUnits: 0, soldUnits: 0 } })).toBe("closed");
+  });
+  it("précommande sans limite : la quantité est libre, quel que soit le stock", () => {
+    const base = { cycleIsOpen: true, inCycle: true, variants, unlimited: true };
+    expect(productAvailability({ ...base, stock: null })).toBe("available");
+    expect(productAvailability({ ...base, stock: { totalUnits: 0, reservedUnits: 0, soldUnits: 0 } })).toBe("available");
+    expect(productAvailability({ ...base, cycleIsOpen: false, stock: null })).toBe("closed");
+    expect(orderableUnits({ unitsLeft: null, unlimited: true })).toBe(Number.POSITIVE_INFINITY);
+    expect(orderableUnits({ unitsLeft: 4, unlimited: false })).toBe(4);
+    expect(maxQuantityFor(variants[2]!, Number.POSITIVE_INFINITY)).toBe(50);
   });
 });
 
@@ -75,7 +84,7 @@ describe("revalidation de Ma boîte", () => {
       { id: "unite", label: "Unité", unitsConsumed: 1, priceFcfa: 800, enabledInCycle: true },
       { id: "box6", label: "Box de 6", unitsConsumed: 6, priceFcfa: 4500, enabledInCycle: true },
     ],
-    flavors: [], inCycle: true, unitsLeft: 10, availability: "available",
+    flavors: [], inCycle: true, unitsLeft: 10, unlimited: false, availability: "available",
   };
 
   it("stock partagé entre formats : la seconde ligne dépasse", () => {

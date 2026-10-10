@@ -108,13 +108,12 @@ const setupSchema = z.array(
     included: z.boolean(),
     disabledVariantIds: z.array(z.uuid()),
     availableFlavorIds: z.array(z.uuid()).nullable(),
-    totalUnits: z.number().int().min(0).nullable(),
     sortOrder: z.number().int(),
   }),
 );
 
-/** Produits, formats, parfums et stock de la fournée. */
-export async function saveCycleProducts(cycleId: string, payload: unknown, reason: string): Promise<AdminState> {
+/** Produits, formats et parfums de la fournée (précommande sans limite de quantité). */
+export async function saveCycleProducts(cycleId: string, payload: unknown): Promise<AdminState> {
   const admin = await requireAdmin();
   const parsed = setupSchema.safeParse(payload);
   if (!parsed.success) return { ok: false, message: "Données invalides." };
@@ -138,21 +137,11 @@ export async function saveCycleProducts(cycleId: string, payload: unknown, reaso
       sort_order: item.sortOrder,
     });
     if (error) return { ok: false, message: "Enregistrement impossible." };
-    if (item.totalUnits !== null) {
-      const { error: stockError } = await db.rpc("admin_set_stock", {
-        p_cycle_id: cycleId,
-        p_product_id: item.productId,
-        p_total: item.totalUnits,
-        p_reason: reason || "composition de la fournée",
-        p_actor: admin.id,
-      });
-      if (stockError) return { ok: false, message: adminErrorMessage(stockError) };
-    }
   }
   await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.products", p_entity: "production_cycles", p_entity_id: cycleId, p_details: { products: parsed.data.filter((p) => p.included).length } });
   revalidatePath("/admin", "layout");
   revalidatePath("/", "layout");
-  return { ok: true, message: "Produits et stock de la fournée enregistrés." };
+  return { ok: true, message: "Produits de la fournée enregistrés." };
 }
 
 const slotSchema = z.object({

@@ -32,6 +32,14 @@ export function variantIsPurchasable(variant: VariantLike, unitsLeft: number): b
   return variant.unitsConsumed <= unitsLeft;
 }
 
+/**
+ * Unités encore commandables pour un produit : sans limite pendant la précommande (la
+ * production suit la demande), sinon le stock réellement restant.
+ */
+export function orderableUnits(product: { unitsLeft: number | null; unlimited: boolean }): number | null {
+  return product.unlimited ? Number.POSITIVE_INFINITY : product.unitsLeft;
+}
+
 /** Nombre maximal d'exemplaires d'un format encore commandables. */
 export function maxQuantityFor(variant: VariantLike, unitsLeft: number, cap = 50): number {
   return Math.min(cap, Math.floor(unitsLeft / variant.unitsConsumed));
@@ -44,9 +52,12 @@ export function productAvailability(input: {
   variants: VariantLike[];
   /** Vente du surplus : jamais de « presque épuisé », seule la quantité réelle compte. */
   surplus?: boolean;
+  /** Précommande : aucune limite de stock. */
+  unlimited?: boolean;
 }): AvailabilityState {
   if (!input.inCycle) return "out_of_cycle";
   if (!input.cycleIsOpen) return "closed";
+  if (input.unlimited) return input.variants.length === 0 ? "sold_out" : "available";
   if (!input.stock || input.variants.length === 0) return "sold_out";
   const left = availableUnits(input.stock);
   const smallest = Math.min(...input.variants.map((v) => v.unitsConsumed));

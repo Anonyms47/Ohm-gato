@@ -5,6 +5,7 @@
  */
 import { lineKey, type Cart, type CartLine } from "@/lib/cart";
 import type { CatalogFlavor, CatalogProduct, CatalogVariant, CycleSummary } from "@/lib/catalog-types";
+import { orderableUnits } from "@/lib/availability";
 import { lineTotal } from "@/lib/money";
 
 export type LineIssue =
@@ -62,7 +63,8 @@ export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: Cycle
       // Stock commun : les lignes d'un même produit se partagent les unités restantes.
       const used = (unitsUsed.get(product.id) ?? 0) + variant.unitsConsumed * line.quantity;
       unitsUsed.set(product.id, used);
-      if (product.unitsLeft === null || used > product.unitsLeft) issue = "insufficient_stock";
+      const left = orderableUnits(product);
+      if (left === null || used > left) issue = "insufficient_stock";
     }
 
     return {
