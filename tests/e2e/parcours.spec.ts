@@ -133,11 +133,11 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
 });
 
 test.describe("Stock, fournée et disponibilités", () => {
-  test("stock commun : la box de 4 verrines est indisponible avec 3 unités", async ({ page }) => {
+  test("précommande sans limite : la box de 4 verrines reste commandable même avec 3 unités prévues", async ({ page }) => {
     await page.goto("/carte/verrines-fruitees");
     const box = page.getByRole("radio", { name: /Box de 4/ });
-    await expect(box).toBeDisabled();
-    await expect(page.getByText("Plus assez de pièces").first()).toBeVisible();
+    await expect(box).toBeEnabled();
+    await expect(page.getByText("Plus assez de pièces")).toHaveCount(0);
   });
 
   test("parfum absent de la fournée : désactivé avec sa raison", async ({ page }) => {
