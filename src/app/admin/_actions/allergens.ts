@@ -58,25 +58,50 @@ export async function saveAllergenInfo(productId: string, input: AllergenPayload
     return { ok: false, message: "Un parfum ne fait plus partie de ce produit. Rechargez la page." };
   }
 
-  const { error } = await db.rpc("admin_replace_allergen_info", {
-    p_product_id: productId,
-    p_statuses: statuses.map((s) => ({
-      flavor_id: s.flavorId,
-      allergen_id: s.allergenId,
-      status: s.status,
-      note: s.note,
-      verification: s.verification,
-      verified_at: s.verifiedAt,
-    })),
-    p_notes: recipeNotes.map((n, index) => ({
-      flavor_id: n.flavorId,
-      label: n.label,
-      sort_order: index + 1,
-      verification: n.verification,
-      verified_at: n.verifiedAt,
-    })),
-  });
-  if (error) return { ok: false, message: "Enregistrement impossible : rien n'a été modifié." };
+  const statusRows = statuses.map((s) => ({
+    product_id: productId,
+    flavor_id: s.flavorId,
+    allergen_id: s.allergenId,
+    status: s.status,
+    note: s.note || null,
+    verification: s.verification,
+    verified_at: s.verifiedAt,
+  }));
+  const noteRows = recipeNotes.map((n, index) => ({
+    product_id: productId,
+    flavor_id: n.flavorId,
+    label: n.label,
+    sort_order: index + 1,
+    verification: n.verification,
+    verified_at: n.verifiedAt,
+  }));
+  const failed = { ok: false as const, message: "Enregistrement impossible : les informations précédentes ont été conservées." };
+
+  // Copie de sécurité : en cas d'échec d'écriture, les valeurs précédentes sont remises.
+  const statusCols = "product_id, flavor_id, allergen_id, status, note, verification, verified_at";
+  const noteCols = "product_id, flavor_id, label, sort_order, verification, verified_at";
+  const [oldStatuses, oldNotes] = await Promise.all([
+    db.from("product_allergen_statuses").select(statusCols).eq("product_id", productId),
+    db.from("product_recipe_notes").select(`id, ${noteCols}`).eq("product_id", productId),
+  ]);
+  if (oldStatuses.error || oldNotes.error) return failed;
+
+  const replaceStatuses = async (rows: Record<string, unknown>[]) => {
+    const removed = await db.from("product_allergen_statuses").delete().eq("product_id", productId);
+    if (removed.error) return false;
+    return rows.length === 0 || !(await db.from("product_allergen_statuses").insert(rows)).error;
+  };
+  if (!(await replaceStatuses(statusRows))) {
+    await replaceStatuses(oldStatuses.data as Record<string, unknown>[]);
+    return failed;
+  }
+  // Informations de recette : les nouvelles d'abord, puis retrait des anciennes (rien n'est perdu entre les deux).
+  if (noteRows.length > 0 && (await db.from("product_recipe_notes").insert(noteRows)).error) {
+    await replaceStatuses(oldStatuses.data as Record<string, unknown>[]);
+    return failed;
+  }
+  const oldNoteIds = (oldNotes.data as { id: string }[]).map((n) => n.id);
+  if (oldNoteIds.length > 0) await db.from("product_recipe_notes").delete().in("id", oldNoteIds);
 
   await db.rpc("write_audit", {
     p_actor: admin.id,

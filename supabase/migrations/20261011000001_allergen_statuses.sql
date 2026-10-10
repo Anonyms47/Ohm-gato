@@ -100,20 +100,3 @@ insert into public.site_settings (key, value, is_public) values
   ('allergens.workshop_traces_review', '{"ingredients": false, "packaging": false, "utensils": false, "confirmed_at": null}', false)
 on conflict (key) do nothing;
 
--- Remplacement atomique des allergènes et informations de recette d'un produit (un échec ne perd rien).
-create or replace function public.admin_replace_allergen_info(p_product_id uuid, p_statuses jsonb, p_notes jsonb)
-returns void language plpgsql security definer set search_path = '' as $$
-begin
-  delete from public.product_allergen_statuses where product_id = p_product_id;
-  delete from public.product_recipe_notes where product_id = p_product_id;
-  insert into public.product_allergen_statuses (product_id, flavor_id, allergen_id, status, note, verification, verified_at)
-  select p_product_id, (s ->> 'flavor_id')::uuid, (s ->> 'allergen_id')::uuid, (s ->> 'status')::public.allergen_status,
-         nullif(s ->> 'note', ''), (s ->> 'verification')::public.allergen_verification, (s ->> 'verified_at')::timestamptz
-  from jsonb_array_elements(p_statuses) s;
-  insert into public.product_recipe_notes (product_id, flavor_id, label, sort_order, verification, verified_at)
-  select p_product_id, (n ->> 'flavor_id')::uuid, n ->> 'label', (n ->> 'sort_order')::int,
-         (n ->> 'verification')::public.allergen_verification, (n ->> 'verified_at')::timestamptz
-  from jsonb_array_elements(p_notes) n;
-end $$;
-revoke all on function public.admin_replace_allergen_info(uuid, jsonb, jsonb) from public, anon, authenticated;
-grant execute on function public.admin_replace_allergen_info(uuid, jsonb, jsonb) to service_role;

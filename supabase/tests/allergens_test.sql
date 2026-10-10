@@ -1,7 +1,7 @@
 -- Allergènes : matrice préremplie, statuts conservateurs, indicateur interne jamais lisible côté client.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(12);
 
 create temp table s as
 select p.slug as product, f.slug as flavor, a.slug as allergen, x.status::text as status, x.verification::text as verification
@@ -21,19 +21,6 @@ select ok(not exists (select 1 from public.allergens where slug = 'chocolat' and
 select is((select label from public.product_recipe_notes n join public.products p on p.id = n.product_id join public.flavors f on f.id = n.flavor_id
   where p.slug = 'verrines-fruitees' and f.slug = 'mangue'), 'de la mangue', 'verrine mangue : information de recette');
 select is((select value ->> 'enabled' from public.site_settings where key = 'allergens.workshop_traces'), 'false', 'traces d''atelier désactivées par défaut');
-
--- Remplacement atomique : une ligne invalide annule tout, rien n'est perdu.
-create temp table c as select id from public.products where slug = 'cookies';
-grant select on c to service_role;
-set local role service_role;
-select throws_ok($$ select public.admin_replace_allergen_info((select id from c),
-  '[{"flavor_id": null, "allergen_id": "00000000-0000-4000-8000-000000000000", "status": "inconnu", "verification": "deduced_from_recipe"}]', '[]') $$,
-  '22P02', null, 'statut invalide refusé');
-select is((select count(*)::int from public.product_allergen_statuses where product_id = (select id from c)), 7, 'les allergènes des cookies sont intacts');
-reset role;
-set local role anon;
-select throws_ok($$ select public.admin_replace_allergen_info(gen_random_uuid(), '[]', '[]') $$, '42501', null, 'réservé au serveur');
-reset role;
 
 set local role anon;
 select lives_ok($$ select product_id, flavor_id, allergen_id, status from public.product_allergen_statuses $$, 'le client lit les statuts');
