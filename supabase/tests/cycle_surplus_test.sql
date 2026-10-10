@@ -2,7 +2,7 @@
 -- publication manuelle du surplus, commandes tardives limitées au surplus réel.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(32);
 
 -- Une seule fournée vend à la fois : la fournée de démonstration est mise de côté.
 update public.production_cycles set status = 'done' where status in ('open', 'surplus');
@@ -45,6 +45,8 @@ select is((select payment_status::text from public.orders where id = (select id 
 
 -- 2. Une précommande en attente de paiement (réservée)
 create temp table pending_order as select (public.place_order(pg_temp.order_payload(2, '00000000-0000-4000-8000-000000000901', 'h-s2')) ->> 'order_id')::uuid as id;
+select is((select reference from public.orders where id = (select id from paid_order)), 'OHM900-0001', 'numéro de commande lisible : fournée et numéro sur 4 chiffres');
+select is((select reference from public.orders where id = (select id from pending_order)), 'OHM900-0002', 'numéros suivis dans l''ordre des commandes de la fournée');
 select is(pg_temp.free_units(), 0, 'précommande sans limite : le total suit les 6 unités engagées, rien n''est en vente');
 
 -- 3. Clôture automatique à la date limite (vérifiée côté serveur)
