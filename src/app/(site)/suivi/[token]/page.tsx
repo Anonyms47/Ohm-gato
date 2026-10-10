@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { OrderTracker } from "@/components/order/OrderTracker";
 import { brand } from "@/config/brand";
 import { getCurrentUser } from "@/lib/auth/session";
+import { phoneLoginAvailable } from "@/lib/messaging";
 import { getOrderByToken } from "@/lib/orders/get-order";
 import { ownedReferences } from "@/lib/orders/owner-cookie";
 import { paymentMethods } from "@/lib/payments";
@@ -36,6 +37,7 @@ export default async function SuiviPage({
         returningFromPayment={retour === "paiement"}
         paymentMethods={paymentMethods()}
         pickupAddress={brand.pickupAddress}
+        phoneLogin={phoneLoginAvailable()}
         waveLink={order.lastPaymentProvider === "wave_link" ? waveLinkFor(order.totalFcfa) : null}
         order={{
           reference: order.reference,

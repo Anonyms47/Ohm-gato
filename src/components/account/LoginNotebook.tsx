@@ -48,12 +48,12 @@ function NotebookCover() {
 }
 
 /**
- * « Retrouvons votre carnet » : connexion par code temporaire (téléphone en priorité,
- * e-mail en complément). Aucun mot de passe. Le compte est créé au premier code validé.
+ * « Retrouvons votre carnet » : connexion par code temporaire (téléphone en priorité quand
+ * WhatsApp est branché, e-mail sinon). Aucun mot de passe. Le compte est créé au premier code validé.
  */
-export function LoginNotebook({ next, testMode }: { next: string; testMode: boolean }) {
+export function LoginNotebook({ next, testMode, phoneEnabled }: { next: string; testMode: boolean; phoneEnabled: boolean }) {
   const router = useRouter();
-  const [channel, setChannel] = useState<Channel>("phone");
+  const [channel, setChannel] = useState<Channel>(phoneEnabled ? "phone" : "email");
   const [step, setStep] = useState<Step>("contact");
   const [destination, setDestination] = useState("");
   const [code, setCode] = useState("");
@@ -184,29 +184,31 @@ export function LoginNotebook({ next, testMode }: { next: string; testMode: bool
 
           {step === "contact" && (
             <form onSubmit={onContactSubmit} noValidate className="mt-6 flex flex-col gap-5">
-              <div role="radiogroup" aria-label="Recevoir le code par" className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    ["phone", "Téléphone"],
-                    ["email", "E-mail"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={channel === value}
-                    onClick={() => {
-                      setChannel(value);
-                      setDestination("");
-                      setError(null);
-                    }}
-                    className="min-h-12 rounded-[10px] border-2 border-chocolat/35 font-bold aria-checked:border-chocolat aria-checked:bg-chocolat aria-checked:text-creme"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {phoneEnabled && (
+                <div role="radiogroup" aria-label="Recevoir le code par" className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      ["phone", "Téléphone"],
+                      ["email", "E-mail"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={channel === value}
+                      onClick={() => {
+                        setChannel(value);
+                        setDestination("");
+                        setError(null);
+                      }}
+                      className="min-h-12 rounded-[10px] border-2 border-chocolat/35 font-bold aria-checked:border-chocolat aria-checked:bg-chocolat aria-checked:text-creme"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <Field
                 label={channel === "phone" ? "Numéro de téléphone" : "Adresse e-mail"}
                 hint={channel === "phone" ? "Le code arrive par message sur ce numéro (WhatsApp)." : "Le code arrive dans votre boîte e-mail."}
