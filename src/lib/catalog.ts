@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { AllergenDef, AllergenStatus, WorkshopTraces } from "@/lib/allergens";
 import { availableUnits, productAvailability } from "@/lib/availability";
+import { orderKindFor } from "@/lib/cycle-status";
 import type {
   Accent,
   Catalog,
@@ -21,8 +22,12 @@ interface CycleRow {
   opens_at: string;
   closes_at: string;
   production_date: string;
+  production_days: number | null;
+  production_dates: string[];
   fulfillment_date: string;
   status: string;
+  surplus_ends_at: string | null;
+  surplus_delivery_allowed: boolean;
   palette: Accent;
   featured: { slug: string } | null;
 }
@@ -50,7 +55,14 @@ interface ProductRow {
   product_images: { storage_path: string; alt: string; width: number; height: number; role: "cutout" | "scene" | "detail"; sort_order: number }[];
 }
 
-function toCycle(row: CycleRow, now: number): CycleSummary {
+export function toCycleSummary(row: CycleRow, now: number): CycleSummary {
+  const base = {
+    status: row.status,
+    opensAt: row.opens_at,
+    closesAt: row.closes_at,
+    surplusEndsAt: row.surplus_ends_at,
+  };
+  const orderKind = orderKindFor(base, now);
   return {
     id: row.id,
     number: row.number,
@@ -59,24 +71,29 @@ function toCycle(row: CycleRow, now: number): CycleSummary {
     opensAt: row.opens_at,
     closesAt: row.closes_at,
     productionDate: row.production_date,
+    productionDays: row.production_days,
+    productionDates: row.production_dates ?? [],
     fulfillmentDate: row.fulfillment_date,
     status: row.status,
-    isOpen:
-      row.status === "open" && Date.parse(row.opens_at) <= now && now < Date.parse(row.closes_at),
+    surplusEndsAt: row.surplus_ends_at,
+    surplusDeliveryAllowed: row.surplus_delivery_allowed,
+    isOpen: orderKind !== null,
+    orderKind,
     featuredProductSlug: row.featured?.slug ?? null,
     palette: row.palette,
   };
 }
+const toCycle = toCycleSummary;
 
-const CYCLE_SELECT =
-  "id, number, title, message, opens_at, closes_at, production_date, fulfillment_date, status, palette, featured:products!production_cycles_featured_product_id_fkey(slug)";
+export const CYCLE_SELECT =
+  "id, number, title, message, opens_at, closes_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, palette, featured:products!production_cycles_featured_product_id_fkey(slug)";
 
 /** Fournée à mettre en avant : ouverte, sinon la prochaine programmée, sinon la plus récente. */
 export const getCurrentCycle = cache(async (): Promise<CycleSummary | null> => {
   const { data, error } = await supabasePublic()
     .from("production_cycles")
     .select(CYCLE_SELECT)
-    .in("status", ["scheduled", "open", "closed", "preparing", "delivering"])
+    .in("status", ["scheduled", "open", "closed", "preparing", "delivering", "surplus"])
     .order("opens_at", { ascending: false })
     .limit(10)
     .returns<CycleRow[]>();
@@ -137,7 +154,8 @@ function imageUrl(path: string): string {
 
 export const getCatalog = cache(async (): Promise<Catalog> => {
   const db = supabasePublic();
-  const cycle = await getCurrentCycle();
+  const current = await getCurrentCycle();
+  const cycle = current ? { ...current } : null;
 
   const productsQuery = db
     .from("products")
@@ -237,9 +255,18 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
         inCycle: Boolean(cp),
         stock: productStock,
         variants: variants.filter((v) => v.enabledInCycle),
+        // Surplus : seule la quantité réelle restante est affichée, sans « presque épuisé ».
+        surplus: cycle?.orderKind === "surplus",
       }),
     };
   });
+
+  // Surplus épuisé : la fournée se ferme d'elle-même (aucune commande possible).
+  if (cycle?.orderKind === "surplus" && !products.some((p) => p.inCycle && p.availability === "available")) {
+    cycle.isOpen = false;
+    cycle.orderKind = null;
+    cycle.surplusExhausted = true;
+  }
 
   const allergenDefs: AllergenDef[] = (
     allergensRes.data as { id: string; slug: string; sentence_label: string | null; no_added_text: string | null; sort_order: number }[]
@@ -260,7 +287,32 @@ function parseWorkshopTraces(value: unknown): WorkshopTraces {
   return { enabled: v?.enabled === true && allergens.length > 0, allergens };
 }
 
-export async function getSlots(cycleId: string): Promise<SlotSummary[]> {
+/** Créneaux d'une phase : précommande (jour principal) ou surplus (commandes tardives). */
+/** Une fournée publiée par son numéro (page de détail). */
+export const getCycleByNumber = cache(async (number: number): Promise<CycleSummary | null> => {
+  const { data, error } = await supabasePublic()
+    .from("production_cycles")
+    .select(CYCLE_SELECT)
+    .eq("number", number)
+    .neq("status", "draft")
+    .maybeSingle<CycleRow>();
+  if (error) throw error;
+  return data ? toCycle(data, Date.now()) : null;
+});
+
+/** Produits au programme d'une fournée (archives, fournée à venir). */
+export async function getCycleProductNames(cycleId: string): Promise<string[]> {
+  const { data, error } = await supabasePublic()
+    .from("cycle_products")
+    .select("sort_order, products(name)")
+    .eq("cycle_id", cycleId)
+    .order("sort_order")
+    .returns<{ sort_order: number; products: { name: string } | null }[]>();
+  if (error) throw error;
+  return (data ?? []).flatMap((cp) => (cp.products ? [cp.products.name] : []));
+}
+
+export async function getSlots(cycleId: string, phase: "preorder" | "surplus" = "preorder"): Promise<SlotSummary[]> {
   const db = supabasePublic();
   const [slotsRes, statusRes] = await Promise.all([
     db
@@ -268,6 +320,7 @@ export async function getSlots(cycleId: string): Promise<SlotSummary[]> {
       .select("id, kind, starts_at, ends_at")
       .eq("cycle_id", cycleId)
       .eq("is_active", true)
+      .eq("phase", phase)
       .order("starts_at"),
     db.rpc("cycle_slot_status", { p_cycle_id: cycleId }),
   ]);

@@ -26,6 +26,8 @@ const local = (iso: string) => iso.slice(0, 16);
 export function CycleForm({ cycle, products, nextNumber }: { cycle: AdminCycle | null; products: AdminProduct[]; nextNumber: number }) {
   const [palette, setPalette] = useState<string>(cycle?.palette ?? "caramel");
   const [featured, setFeatured] = useState<string>(cycle?.featuredProductId ?? "");
+  const [days, setDays] = useState<string>(cycle?.productionDays ? String(cycle.productionDays) : "3");
+  const dayCount = Math.min(7, Math.max(1, Number(days) || 1));
   return (
     <AdminForm action={cycle ? updateCycle : createCycle} submitLabel={cycle ? "Enregistrer la fournée" : "Créer la fournée (brouillon)"}>
       {cycle && <input type="hidden" name="id" value={cycle.id} />}
@@ -39,15 +41,41 @@ export function CycleForm({ cycle, products, nextNumber }: { cycle: AdminCycle |
         {({ id }) => <TextArea id={id} name="message" rows={3} maxLength={400} defaultValue={cycle?.message ?? ""} />}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Ouverture des commandes" hint="Heure de Dakar">
-          {({ id }) => <TextInput id={id} name="opensAt" type="datetime-local" required defaultValue={cycle ? local(cycle.opensAt) : ""} />}
+        <Field label="Ouverture des commandes" hint="Heure de Dakar (Africa/Dakar). À l'ouverture manuelle, la date devient celle du clic si elle est plus tardive.">
+          {({ id, describedBy }) => (
+            <TextInput id={id} aria-describedby={describedBy} name="opensAt" type="datetime-local" required defaultValue={cycle ? local(cycle.opensAt) : ""} />
+          )}
         </Field>
-        <Field label="Clôture des commandes" hint="Heure de Dakar">
-          {({ id }) => <TextInput id={id} name="closesAt" type="datetime-local" required defaultValue={cycle ? local(cycle.closesAt) : ""} />}
+        <Field label="Date limite de précommande" hint="Heure de Dakar. Les précommandes se ferment automatiquement à cette heure.">
+          {({ id, describedBy }) => (
+            <TextInput id={id} aria-describedby={describedBy} name="closesAt" type="datetime-local" required defaultValue={cycle ? local(cycle.closesAt) : ""} />
+          )}
         </Field>
-        <Field label="Préparation">{({ id }) => <TextInput id={id} name="productionDate" type="date" required defaultValue={cycle?.productionDate ?? ""} />}</Field>
-        <Field label="Livraison et retrait">{({ id }) => <TextInput id={id} name="fulfillmentDate" type="date" required defaultValue={cycle?.fulfillmentDate ?? ""} />}</Field>
+        <Field label="Début de la période de production" hint="Premier jour de la semaine de production.">
+          {({ id, describedBy }) => (
+            <TextInput id={id} aria-describedby={describedBy} name="productionDate" type="date" required defaultValue={cycle?.productionDate ?? ""} />
+          )}
+        </Field>
+        <Field label="Jour principal de livraison et de retrait">
+          {({ id }) => <TextInput id={id} name="fulfillmentDate" type="date" required defaultValue={cycle?.fulfillmentDate ?? ""} />}
+        </Field>
       </div>
+      <fieldset className="flex min-w-0 flex-col gap-3 rounded-[12px] border-2 border-dashed border-chocolat/30 p-4">
+        <legend className="px-1 font-bold">Jours de production</legend>
+        <Field label="Nombre de jours de production" hint="Affiché : « Production organisée sur … jours pendant la semaine du … ».">
+          {({ id, describedBy }) => (
+            <TextInput id={id} aria-describedby={describedBy} name="productionDays" type="number" min={1} max={7} value={days} onChange={(e) => setDays(e.target.value)} />
+          )}
+        </Field>
+        <p className="text-encre-douce">Dates exactes (facultatives) : laissez vide tant qu&apos;elles ne sont pas fixées, rien n&apos;est inventé.</p>
+        <div className="grid gap-3 sm:grid-cols-3 [&>*]:min-w-0">
+          {Array.from({ length: dayCount }, (_, i) => (
+            <Field key={i} label={`Jour de production ${i + 1}`} optional>
+              {({ id }) => <TextInput id={id} name="productionDates" type="date" defaultValue={cycle?.productionDates[i] ?? ""} />}
+            </Field>
+          ))}
+        </div>
+      </fieldset>
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Capacité totale (unités)" optional hint="Vide = limitée par le stock de chaque produit.">
           {({ id }) => <TextInput id={id} name="capacityUnits" type="number" min={0} defaultValue={cycle?.capacityUnits ?? ""} />}
@@ -78,25 +106,38 @@ const TRANSITIONS: Record<string, { to: string; label: string; confirm?: string;
     { to: "cancelled", label: "Annuler la fournée", confirm: "La fournée sera annulée.", destructive: true },
   ],
   open: [
-    { to: "closed", label: "Clôturer les commandes", confirm: "Plus aucune commande ne sera acceptée pour cette fournée." },
+    { to: "closed", label: "Clôturer les précommandes", confirm: "Plus aucune précommande ne sera acceptée pour cette fournée." },
     { to: "cancelled", label: "Annuler la fournée", confirm: "Commandes en attente annulées ; commandes payées signalées pour remboursement.", destructive: true },
   ],
   closed: [
-    { to: "preparing", label: "Passer en préparation" },
-    { to: "open", label: "Rouvrir les commandes", confirm: "Les clients pourront de nouveau commander." },
+    { to: "preparing", label: "Passer en production", confirm: "La fournée passe en production." },
+    { to: "open", label: "Rouvrir les précommandes", confirm: "Les clients pourront de nouveau précommander jusqu'à la date limite." },
     { to: "cancelled", label: "Annuler la fournée", confirm: "Commandes en attente annulées ; commandes payées signalées pour remboursement.", destructive: true },
   ],
   preparing: [
     { to: "delivering", label: "Passer en livraison et retrait" },
     { to: "done", label: "Terminer la fournée", confirm: "La fournée passera dans les archives." },
   ],
-  delivering: [{ to: "done", label: "Terminer la fournée", confirm: "La fournée passera dans les archives." }],
+  delivering: [{ to: "done", label: "Terminer la fournée", confirm: "La fournée passera dans les archives. Aucun surplus ne sera proposé." }],
+  surplus: [
+    {
+      to: "done",
+      label: "Terminer la fournée",
+      confirm: "La vente du surplus s'arrête immédiatement et la fournée passe dans les archives.",
+    },
+  ],
 };
 
 export function CycleStatusActions({ cycle }: { cycle: AdminCycle }) {
   const options = TRANSITIONS[cycle.status] ?? [];
   if (options.length === 0) return <p className="text-encre-douce">Aucune action possible : la fournée est {cycle.status === "done" ? "terminée" : "annulée"}.</p>;
+  const openNote =
+    cycle.status === "draft" || cycle.status === "scheduled"
+      ? "Avant d'ouvrir : vérifiez les produits, la capacité de chaque produit, les créneaux et leur capacité."
+      : null;
   return (
+    <div className="flex flex-col gap-2">
+    {openNote && <p className="text-encre-douce">{openNote}</p>}
     <div className="flex flex-wrap gap-3">
       {options.map((t) => (
         <ActionButton
@@ -107,6 +148,7 @@ export function CycleStatusActions({ cycle }: { cycle: AdminCycle }) {
           confirm={t.confirm ? { title: `${t.label} ?`, description: <p>{t.confirm}</p>, destructive: t.destructive } : undefined}
         />
       ))}
+    </div>
     </div>
   );
 }
@@ -241,7 +283,8 @@ export function CycleProductsEditor({
 }
 
 export function SlotsEditor({ cycleId, slots, fulfillmentDate }: { cycleId: string; slots: CycleSetup["slots"]; fulfillmentDate: string }) {
-  const [kind, setKind] = useState("delivery");
+  const [kind, setKind] = useState("pickup");
+  const [phase, setPhase] = useState("preorder");
   return (
     <div className="flex flex-col gap-4">
       {slots.length === 0 ? (
@@ -251,7 +294,8 @@ export function SlotsEditor({ cycleId, slots, fulfillmentDate }: { cycleId: stri
           {slots.map((s) => (
             <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] bg-blanc-casse p-3">
               <span>
-                <strong>{s.kind === "delivery" ? "Livraison" : s.kind === "pickup" ? "Retrait" : "Livraison et retrait"}</strong> ·{" "}
+                <strong>{s.kind === "delivery" ? "Livraison" : s.kind === "pickup" ? "Retrait" : "Livraison et retrait"}</strong>
+                {" "}({s.phase === "surplus" ? "commandes tardives" : "précommandes"}) ·{" "}
                 {formatSlot(s.startsAt, s.endsAt)} · {s.orders} commande{s.orders > 1 ? "s" : ""}
                 {s.capacityOrders ? ` / ${s.capacityOrders}` : ""} {!s.isActive && <span className="text-orange-encre">(désactivé)</span>}
               </span>
@@ -273,7 +317,17 @@ export function SlotsEditor({ cycleId, slots, fulfillmentDate }: { cycleId: stri
       <AdminForm action={addSlot} submitLabel="Ajouter le créneau" className="rounded-[12px] border-2 border-dashed border-chocolat/30 p-4">
         <input type="hidden" name="cycleId" value={cycleId} />
         <input type="hidden" name="kind" value={kind} />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <input type="hidden" name="phase" value={phase} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 [&>*]:min-w-0">
+          <OhmegatoSelect
+            label="Pour"
+            value={phase}
+            onValueChange={setPhase}
+            options={[
+              { value: "preorder", label: "Précommandes" },
+              { value: "surplus", label: "Commandes tardives (surplus)" },
+            ]}
+          />
           <OhmegatoSelect
             label="Type"
             value={kind}

@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Le bon de fournée", robots: { index
 
 export default async function CommandePage() {
   const { cycle } = await getCatalog();
-  const [slots, user, legal] = await Promise.all([cycle ? getSlots(cycle.id) : Promise.resolve([]), getCurrentUser(), getCheckoutAcceptance()]);
+  const [slots, user, legal] = await Promise.all([cycle ? getSlots(cycle.id, cycle.orderKind === "surplus" ? "surplus" : "preorder") : Promise.resolve([]), getCurrentUser(), getCheckoutAcceptance()]);
   const acceptance = legal
     ? { termsVersionId: legal.termsId, termsVersion: legal.termsVersion, cancellationVersionId: legal.cancellationId, cancellationVersion: legal.cancellationVersion }
     : null;

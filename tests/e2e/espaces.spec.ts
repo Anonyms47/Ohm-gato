@@ -5,9 +5,9 @@ test.describe("Nos fournées — le journal du four", () => {
   test("fournée, dates, produits et ajout direct à Ma boîte", async ({ page }) => {
     await page.goto("/fournees");
     await waitForHydration(page);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Le journal du four");
-    await expect(page.getByText("Commandes ouvertes").first()).toBeVisible();
-    await expect(page.getByText("Ouverture des commandes")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nos fournées");
+    await expect(page.getByText("Précommandes ouvertes").first()).toBeVisible();
+    await expect(page.getByText("Date limite de commande")).toBeVisible();
     await expect(page.getByText("Livraison et retrait").first()).toBeVisible();
     await expect(page.getByText(/^Reste \d+ cookies$/)).toBeVisible();
     await expect(page.getByText("Pas encore de date programmée.")).toBeVisible();
@@ -309,9 +309,9 @@ test.describe("Administration d'Alima", () => {
     const number = String(100 + Math.floor(Math.random() * 800));
     await page.getByLabel("Numéro").fill(number);
     await page.getByLabel("Ouverture des commandes").fill("2030-01-10T09:00");
-    await page.getByLabel("Clôture des commandes").fill("2030-01-12T18:00");
-    await page.getByLabel("Préparation").fill("2030-01-13");
-    await page.getByLabel("Livraison et retrait").fill("2030-01-14");
+    await page.getByLabel("Date limite de précommande").fill("2030-01-12T18:00");
+    await page.getByLabel("Début de la période de production").fill("2030-01-13");
+    await page.getByLabel("Jour principal de livraison et de retrait").fill("2030-01-14");
     await page.getByRole("button", { name: "Créer la fournée (brouillon)" }).click();
     await expect(page.getByRole("heading", { name: new RegExp(`Fournée n°${number}`) })).toBeVisible();
     await waitForHydration(page);

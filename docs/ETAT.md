@@ -14,9 +14,11 @@
 
 **Pages légales** (version 1.0 publiée le 10 octobre 2026, rédigées dans `content/legal/`, stockées et versionnées en base) : `/conditions-generales`, `/livraison-retrait`, `/annulation-remboursement`, `/confidentialite`, `/cookies`, `/mentions-legales`, `/allergenes-conservation`. Rendu sans HTML brut (markdown restreint, liens filtrés). Acceptation obligatoire au bon de fournée, preuve enregistrée par commande dans `order_acceptances` (sans IP) ; une commande garde la version acceptée. Délais de remboursement et durées de conservation affichés seulement une fois renseignés dans l'administration.
 
+**Fournées** (logique officielle) : précommandes → clôture automatique à la date limite (heure de Dakar) → production → livraisons et retraits → surplus éventuel publié par Alima → fin. Statuts en base : draft, scheduled, open (précommandes), closed, preparing (production), delivering, surplus, done, cancelled. Commandes marquées `preorder` ou `surplus`. Le stock réservé aux commandes confirmées n'est jamais proposé aux retardataires ; le surplus n'est jamais publié automatiquement.
+
 **Administration** (`/admin`, interface séparée, rôle vérifié côté serveur à chaque page et action, journal d'audit)
 - Tableau de bord : commandes du jour, à préparer, paiements, fournée active, stock faible, sur-mesure, livraisons, retraits.
-- Fournées : création, dates, message d'accueil, produit vedette, programmer / ouvrir / clôturer / préparation / livraison / terminer / annuler, produits, formats, parfums, stock, créneaux.
+- Fournées : date limite, période et jours de production (dates exactes facultatives), jour principal de livraison, produits, capacité de précommande, créneaux de précommande et de commandes tardives avec capacité ; synthèse de la demande (commandé, à vérifier, payé, annulé, à produire, supplément, produit, pertes, réservé, remis, restant, surplus publié et vendu, disponible) ; saisie de la production ; surplus théorique ; publication du surplus avec récapitulatif ; retrait d'un produit du surplus ; fiche de production imprimable ; journal d'audit.
 - Produits : textes, catégorie, unités de stock, formats et prix, parfums, allergènes (statut par produit ou par parfum, précision et indicateur internes, date de validation, aperçu client exact), informations de recette, conservation, photos, publication.
 - Commandes : recherche, filtres, détail, position sur la carte, statut avec historique, WhatsApp, reçu imprimable.
 - Positions de livraison : carte, fiche de chaque arrêt, itinéraire, copie et partage au livreur, « confiée au livreur », « livraison terminée ».
@@ -29,7 +31,7 @@
 
 **Allergènes** : informations confirmées par Alima le 10 octobre 2026 (provenance interne, historique des valeurs, filtre « Confirmé par Alima / Déduit de la recette / À vérifier sur l'emballage / Non renseigné » et compteur dans /admin/produits).
 
-**Tests** : unitaires (Vitest), 108 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
+**Tests** : unitaires (Vitest), 138 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
 
 ## Limites connues
 

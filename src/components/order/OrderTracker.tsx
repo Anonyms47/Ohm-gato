@@ -39,6 +39,8 @@ export interface TrackerOrder {
   totalFcfa: number;
   reservationExpiresAt: string | null;
   cycleNumber: number | null;
+  /** Précommande (jour principal de la fournée) ou commande tardive sur le surplus. */
+  orderKind?: "preorder" | "surplus";
   slot: { startsAt: string; endsAt: string } | null;
   /** Informations personnelles visibles (navigateur d'origine ou propriétaire connecté). */
   showPrivate: boolean;
@@ -300,6 +302,11 @@ export function OrderTracker({
           </div>
         </dl>
         <div className="mt-4 flex flex-col gap-1">
+          {order.cycleNumber !== null && (
+            <p data-testid="type-commande-suivi">
+              <strong>{order.orderKind === "surplus" ? "Commande tardive (surplus)" : "Précommande"}</strong> · fournée n°{order.cycleNumber}
+            </p>
+          )}
           <p>
             <strong>{order.fulfillment === "pickup" ? "Retrait" : "Livraison"} :</strong>{" "}
             {order.slot ? formatSlot(order.slot.startsAt, order.slot.endsAt) : "date convenue avec OHMEGATO"}

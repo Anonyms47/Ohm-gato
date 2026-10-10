@@ -14,6 +14,7 @@ import { brand } from "@/config/brand";
 import type { SlotSummary } from "@/lib/catalog-types";
 import { DELIVERY_FEE_NOTICE, DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { cn } from "@/lib/cn";
+import { SURPLUS_MESSAGE, cycleStatusLine, preorderMessage } from "@/lib/cycle-status";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import { formatSenegalPhone, normalizeSenegalPhone } from "@/lib/phone";
@@ -269,13 +270,19 @@ export function CheckoutFlow({
   }
   if (!cycle?.isOpen) {
     return (
-      <p className="mt-6 text-[1.1rem]">
-        Les commandes sont fermées pour le moment. Votre boîte est conservée ; la prochaine fournée est annoncée sur{" "}
-        <a href={brand.instagramUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-          Instagram
-        </a>
-        .
-      </p>
+      <div className="mt-6 flex flex-col gap-3 text-[1.1rem]" data-testid="commande-fermee">
+        <p>{cycle ? cycleStatusLine(cycle) : "Les commandes sont fermées pour le moment. Votre boîte est conservée."}</p>
+        <p>
+          <Link href="/fournees" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+            Voir Nos fournées
+          </Link>{" "}
+          ou suivre les annonces sur{" "}
+          <a href={brand.instagramUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+            Instagram
+          </a>
+          .
+        </p>
+      </div>
     );
   }
   if (resolved.lines.length === 0) {
@@ -322,6 +329,11 @@ export function CheckoutFlow({
   return (
     <FormProvider {...methods}>
       <form noValidate onSubmit={(e) => e.preventDefault()} className="mt-6 flex flex-col gap-4">
+        <p className="rounded-[12px] border-2 border-chocolat bg-rose/30 p-4 font-bold" data-testid="type-commande">
+          {cycle.orderKind === "surplus"
+            ? `Commande tardive — ${SURPLUS_MESSAGE} Les créneaux proposés sont ceux réellement disponibles pour le surplus.`
+            : `Précommande — ${preorderMessage(cycle)}`}
+        </p>
         <ol className="flex flex-col gap-4">
           {STEPS.map((s, index) => {
             const isCurrent = s.id === step;
@@ -398,10 +410,13 @@ export function CheckoutFlow({
                           <div className="grid gap-3 sm:grid-cols-2">
                             {(
                               [
-                                { value: "delivery", title: "Livraison dans Dakar", text: "En général le lendemain matin. Frais à régler au livreur selon votre position." },
+                                { value: "delivery", title: "Livraison dans Dakar", text: "Le jour prévu, sur le créneau choisi. Frais à régler au livreur selon votre position." },
                                 { value: "pickup", title: "Retrait", text: `${brand.pickupAddress}. Gratuit.` },
                               ] as const
-                            ).map((option) => (
+                            )
+                              // Commandes tardives : livraison seulement si Alima l'a ouverte.
+                              .filter((option) => option.value !== "delivery" || cycle.orderKind !== "surplus" || cycle.surplusDeliveryAllowed)
+                              .map((option) => (
                               <label
                                 key={option.value}
                                 className="flex min-h-20 cursor-pointer gap-3 rounded-[12px] border-2 border-chocolat/30 bg-creme p-4 has-[:checked]:border-chocolat has-[:checked]:bg-blanc-casse has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-rose-encre"

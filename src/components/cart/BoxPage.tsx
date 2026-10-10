@@ -6,7 +6,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { CartLines } from "@/components/cart/CartLines";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { ButtonLink } from "@/components/ui/Button";
-import { formatDay, formatTime } from "@/lib/dates";
+import { cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
 
 export function BoxPage() {
@@ -29,9 +29,7 @@ export function BoxPage() {
     <div className="mt-6 flex flex-col gap-6">
       {cycle && (
         <p className="text-encre-douce">
-          {cycle.isOpen
-            ? `Fournée n°${cycle.number} — commandes jusqu'au ${formatDay(cycle.closesAt)}, ${formatTime(cycle.closesAt)}.`
-            : "Les commandes sont fermées : votre boîte est conservée pour la prochaine fournée."}
+          {cycleStatusLine(cycle)}
         </p>
       )}
       {resolved.fromOtherCycle && (

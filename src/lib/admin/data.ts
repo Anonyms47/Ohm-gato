@@ -3,6 +3,7 @@ import type { CycleSummary } from "@/lib/catalog-types";
 import type { Fulfillment, OrderStatus, PaymentStatus } from "@/lib/order-status";
 import type { ProviderId } from "@/lib/payments/types";
 import type { AllergenDef, AllergenStatus, AllergenVerification, ConfirmationMethod, ConfirmationSource, Provenance, WorkshopTraces } from "@/lib/allergens";
+import { orderKindFor } from "@/lib/cycle-status";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -19,6 +20,8 @@ function startOfDakarDay(date = new Date()): string {
 export interface AdminCycle extends CycleSummary {
   capacityUnits: number | null;
   featuredProductId: string | null;
+  /** Dates réelles des changements de phase (journal). */
+  phaseDates: { closedAt: string | null; productionStartedAt: string | null; fulfillmentStartedAt: string | null; surplusOpenedAt: string | null; completedAt: string | null };
 }
 
 interface CycleRow {
@@ -29,8 +32,17 @@ interface CycleRow {
   opens_at: string;
   closes_at: string;
   production_date: string;
+  production_days: number | null;
+  production_dates: string[] | null;
   fulfillment_date: string;
   status: string;
+  surplus_ends_at: string | null;
+  surplus_delivery_allowed: boolean;
+  closed_at: string | null;
+  production_started_at: string | null;
+  fulfillment_started_at: string | null;
+  surplus_opened_at: string | null;
+  completed_at: string | null;
   palette: CycleSummary["palette"];
   capacity_units: number | null;
   featured_product_id: string | null;
@@ -38,7 +50,7 @@ interface CycleRow {
 }
 
 function toCycle(r: CycleRow): AdminCycle {
-  const now = Date.now();
+  const orderKind = orderKindFor({ status: r.status, opensAt: r.opens_at, closesAt: r.closes_at, surplusEndsAt: r.surplus_ends_at });
   return {
     id: r.id,
     number: r.number,
@@ -47,18 +59,30 @@ function toCycle(r: CycleRow): AdminCycle {
     opensAt: r.opens_at,
     closesAt: r.closes_at,
     productionDate: r.production_date,
+    productionDays: r.production_days,
+    productionDates: r.production_dates ?? [],
     fulfillmentDate: r.fulfillment_date,
     status: r.status,
-    isOpen: r.status === "open" && Date.parse(r.opens_at) <= now && now < Date.parse(r.closes_at),
+    surplusEndsAt: r.surplus_ends_at,
+    surplusDeliveryAllowed: r.surplus_delivery_allowed,
+    isOpen: orderKind !== null,
+    orderKind,
     featuredProductSlug: r.featured?.slug ?? null,
     palette: r.palette,
     capacityUnits: r.capacity_units,
     featuredProductId: r.featured_product_id,
+    phaseDates: {
+      closedAt: r.closed_at,
+      productionStartedAt: r.production_started_at,
+      fulfillmentStartedAt: r.fulfillment_started_at,
+      surplusOpenedAt: r.surplus_opened_at,
+      completedAt: r.completed_at,
+    },
   };
 }
 
 const CYCLE_SELECT =
-  "id, number, title, message, opens_at, closes_at, production_date, fulfillment_date, status, palette, capacity_units, featured_product_id, featured:products!production_cycles_featured_product_id_fkey(slug)";
+  "id, number, title, message, opens_at, closes_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, closed_at, production_started_at, fulfillment_started_at, surplus_opened_at, completed_at, palette, capacity_units, featured_product_id, featured:products!production_cycles_featured_product_id_fkey(slug)";
 
 export async function listCycles(): Promise<AdminCycle[]> {
   const { data, error } = await db().from("production_cycles").select(CYCLE_SELECT).order("number", { ascending: false }).returns<CycleRow[]>();
@@ -234,15 +258,38 @@ export async function getWorkshopTraces(): Promise<WorkshopTracesAdmin> {
 
 export interface CycleSetup {
   products: { productId: string; disabledVariantIds: string[]; availableFlavorIds: string[] | null; sortOrder: number }[];
-  inventory: { productId: string; totalUnits: number; reservedUnits: number; soldUnits: number }[];
-  slots: { id: string; kind: "delivery" | "pickup" | "both"; startsAt: string; endsAt: string; capacityOrders: number | null; isActive: boolean; orders: number }[];
+  inventory: {
+    productId: string;
+    totalUnits: number;
+    reservedUnits: number;
+    soldUnits: number;
+    extraUnits: number;
+    producedUnits: number | null;
+    lostUnits: number;
+    surplusPublishedUnits: number;
+    productionNote: string | null;
+    productionRecordedAt: string | null;
+  }[];
+  slots: {
+    id: string;
+    kind: "delivery" | "pickup" | "both";
+    phase: "preorder" | "surplus";
+    startsAt: string;
+    endsAt: string;
+    capacityOrders: number | null;
+    isActive: boolean;
+    orders: number;
+  }[];
 }
 
 export async function getCycleSetup(cycleId: string): Promise<CycleSetup> {
   const [cp, inv, slots, orders] = await Promise.all([
     db().from("cycle_products").select("product_id, disabled_variant_ids, available_flavor_ids, sort_order").eq("cycle_id", cycleId),
-    db().from("inventory_units").select("product_id, total_units, reserved_units, sold_units").eq("cycle_id", cycleId),
-    db().from("delivery_slots").select("id, kind, starts_at, ends_at, capacity_orders, is_active").eq("cycle_id", cycleId).order("starts_at"),
+    db()
+      .from("inventory_units")
+      .select("product_id, total_units, reserved_units, sold_units, extra_units, produced_units, lost_units, surplus_published_units, production_note, production_recorded_at")
+      .eq("cycle_id", cycleId),
+    db().from("delivery_slots").select("id, kind, phase, starts_at, ends_at, capacity_orders, is_active").eq("cycle_id", cycleId).order("starts_at"),
     db().from("orders").select("slot_id").eq("cycle_id", cycleId).not("status", "in", "(cancelled,expired,refunded)"),
   ]);
   for (const r of [cp, inv, slots, orders]) if (r.error) throw r.error;
@@ -260,10 +307,17 @@ export async function getCycleSetup(cycleId: string): Promise<CycleSetup> {
       totalUnits: r.total_units as number,
       reservedUnits: r.reserved_units as number,
       soldUnits: r.sold_units as number,
+      extraUnits: r.extra_units as number,
+      producedUnits: r.produced_units as number | null,
+      lostUnits: r.lost_units as number,
+      surplusPublishedUnits: r.surplus_published_units as number,
+      productionNote: r.production_note as string | null,
+      productionRecordedAt: r.production_recorded_at as string | null,
     })),
     slots: (slots.data ?? []).map((s) => ({
       id: s.id as string,
       kind: s.kind as "delivery" | "pickup" | "both",
+      phase: s.phase as "preorder" | "surplus",
       startsAt: s.starts_at as string,
       endsAt: s.ends_at as string,
       capacityOrders: s.capacity_orders as number | null,
@@ -271,6 +325,93 @@ export async function getCycleSetup(cycleId: string): Promise<CycleSetup> {
       orders: perSlot.get(s.id as string) ?? 0,
     })),
   };
+}
+
+/** Synthèse de la demande d'une fournée, par produit (unités réelles). */
+export interface DemandRow {
+  productId: string;
+  name: string;
+  unitLabelPlural: string;
+  ordered: number;
+  toVerify: number;
+  paid: number;
+  cancelled: number;
+  toProduce: number;
+  extra: number;
+  produced: number | null;
+  lost: number;
+  reservedForOrders: number;
+  handedOver: number;
+  remaining: number | null;
+  surplusPublished: number;
+  surplusSold: number;
+  available: number;
+}
+
+const OPEN_ORDER = ["pending_payment", "awaiting_validation", "confirmed", "preparing", "finishing", "ready", "out_for_delivery", "needs_attention"];
+const HANDED = ["delivered", "picked_up"];
+const CANCELLED = ["cancelled", "expired", "refunded"];
+
+export async function getCycleDemand(cycleId: string, products: AdminProduct[]): Promise<DemandRow[]> {
+  const [items, setup] = await Promise.all([
+    db()
+      .from("order_items")
+      .select("product_id, units_per_item, quantity, orders!inner(cycle_id, status, payment_status, order_kind)")
+      .eq("orders.cycle_id", cycleId),
+    getCycleSetup(cycleId),
+  ]);
+  if (items.error) throw items.error;
+  type Item = { product_id: string | null; units_per_item: number; quantity: number; orders: { status: string; payment_status: string; order_kind: string } };
+  const rows = new Map<string, DemandRow>();
+  for (const cp of setup.products) {
+    const product = products.find((p) => p.id === cp.productId);
+    const inv = setup.inventory.find((i) => i.productId === cp.productId);
+    rows.set(cp.productId, {
+      productId: cp.productId,
+      name: product?.name ?? "Produit retiré",
+      unitLabelPlural: product?.unitLabelPlural ?? "unités",
+      ordered: 0,
+      toVerify: 0,
+      paid: 0,
+      cancelled: 0,
+      toProduce: 0,
+      extra: inv?.extraUnits ?? 0,
+      produced: inv?.producedUnits ?? null,
+      lost: inv?.lostUnits ?? 0,
+      reservedForOrders: 0,
+      handedOver: 0,
+      remaining: null,
+      surplusPublished: inv?.surplusPublishedUnits ?? 0,
+      surplusSold: 0,
+      available: inv ? Math.max(0, inv.totalUnits - inv.reservedUnits - inv.soldUnits) : 0,
+    });
+  }
+  for (const it of (items.data ?? []) as unknown as Item[]) {
+    if (!it.product_id) continue;
+    const row = rows.get(it.product_id);
+    if (!row) continue;
+    const units = it.units_per_item * it.quantity;
+    const o = it.orders;
+    if (o.order_kind === "surplus") {
+      if (!CANCELLED.includes(o.status) && o.status !== "pending_payment") row.surplusSold += units;
+      continue;
+    }
+    if (CANCELLED.includes(o.status)) {
+      row.cancelled += units;
+      continue;
+    }
+    row.ordered += units;
+    // Commande provisoire (paiement pas encore choisi) : elle ne compte pas dans la production.
+    if (o.status !== "pending_payment") row.toProduce += units;
+    if (o.payment_status === "paid") row.paid += units;
+    else row.toVerify += units;
+    if (HANDED.includes(o.status)) row.handedOver += units;
+    else if (OPEN_ORDER.includes(o.status)) row.reservedForOrders += units;
+  }
+  for (const row of rows.values()) {
+    if (row.produced !== null) row.remaining = Math.max(0, row.produced - row.lost - row.reservedForOrders - row.handedOver - row.surplusSold);
+  }
+  return [...rows.values()];
 }
 
 export interface AdminOrderRow {
