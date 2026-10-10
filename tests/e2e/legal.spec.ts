@@ -151,7 +151,8 @@ test.describe("Administration des documents", () => {
 
     await page.getByRole("button", { name: `Publier la version ${version}` }).click();
     await page.getByRole("button", { name: "Publier", exact: true }).click();
-    await expect(page.getByText("Nouvelle version publiée sur le site.")).toBeVisible();
+    // Le brouillon publié disparaît (et son message avec) : on vérifie l'historique, durable.
+    await expect(page.getByTestId(`version-${version}`)).toContainText("En ligne");
 
     await pub.reload();
     await expect(pub.getByTestId("version-document")).toContainText(`Version ${version}`);
