@@ -2,6 +2,7 @@ import "server-only";
 import type { CycleSummary } from "@/lib/catalog-types";
 import type { Fulfillment, OrderStatus, PaymentStatus } from "@/lib/order-status";
 import type { ProviderId } from "@/lib/payments/types";
+import type { AllergenDef, AllergenStatus, AllergenVerification, WorkshopTraces } from "@/lib/allergens";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -78,6 +79,24 @@ export async function activeCycle(): Promise<AdminCycle | null> {
   return [...cycles].filter((c) => order.includes(c.status)).sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || b.number - a.number)[0] ?? null;
 }
 
+export interface AdminAllergenStatus {
+  id: string;
+  flavorId: string | null;
+  allergenId: string;
+  status: AllergenStatus;
+  note: string;
+  verification: AllergenVerification;
+  verifiedAt: string | null;
+}
+
+export interface AdminRecipeNote {
+  id: string;
+  flavorId: string | null;
+  label: string;
+  verification: AllergenVerification;
+  verifiedAt: string | null;
+}
+
 export interface AdminProduct {
   id: string;
   slug: string;
@@ -97,7 +116,8 @@ export interface AdminProduct {
   isActive: boolean;
   variants: { id: string; label: string; unitsConsumed: number; priceFcfa: number; sortOrder: number; isActive: boolean }[];
   flavorIds: string[];
-  allergens: { id: string; confirmed: boolean }[];
+  allergenStatuses: AdminAllergenStatus[];
+  recipeNotes: AdminRecipeNote[];
   images: { id: string; path: string; alt: string; width: number; height: number; role: string; sortOrder: number }[];
 }
 
@@ -108,7 +128,9 @@ export async function listProducts(): Promise<AdminProduct[]> {
       `id, slug, name, category, short_description, description, tips, unit_label, unit_label_plural, staging, accent,
        storage_rule, storage_note, storage_confirmed, sort_order, is_active,
        product_variants(id, label, units_consumed, price_fcfa, sort_order, is_active),
-       product_flavors(flavor_id), product_allergens(allergen_id, confirmed),
+       product_flavors(flavor_id, sort_order),
+       product_allergen_statuses(id, flavor_id, allergen_id, status, note, verification, verified_at),
+       product_recipe_notes(id, flavor_id, label, sort_order, verification, verified_at),
        product_images(id, storage_path, alt, width, height, role, sort_order)`,
     )
     .order("sort_order");
@@ -133,8 +155,15 @@ export async function listProducts(): Promise<AdminProduct[]> {
     variants: [...(p.product_variants as { id: string; label: string; units_consumed: number; price_fcfa: number; sort_order: number; is_active: boolean }[])]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((v) => ({ id: v.id, label: v.label, unitsConsumed: v.units_consumed, priceFcfa: v.price_fcfa, sortOrder: v.sort_order, isActive: v.is_active })),
-    flavorIds: (p.product_flavors as { flavor_id: string }[]).map((f) => f.flavor_id),
-    allergens: (p.product_allergens as { allergen_id: string; confirmed: boolean }[]).map((a) => ({ id: a.allergen_id, confirmed: a.confirmed })),
+    flavorIds: [...(p.product_flavors as { flavor_id: string; sort_order: number }[])].sort((a, b) => a.sort_order - b.sort_order).map((f) => f.flavor_id),
+    allergenStatuses: (
+      p.product_allergen_statuses as { id: string; flavor_id: string | null; allergen_id: string; status: AllergenStatus; note: string | null; verification: AllergenVerification; verified_at: string | null }[]
+    ).map((a) => ({ id: a.id, flavorId: a.flavor_id, allergenId: a.allergen_id, status: a.status, note: a.note ?? "", verification: a.verification, verifiedAt: a.verified_at })),
+    recipeNotes: [
+      ...(p.product_recipe_notes as { id: string; flavor_id: string | null; label: string; sort_order: number; verification: AllergenVerification; verified_at: string | null }[]),
+    ]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((n) => ({ id: n.id, flavorId: n.flavor_id, label: n.label, verification: n.verification, verifiedAt: n.verified_at })),
     images: [...(p.product_images as { id: string; storage_path: string; alt: string; width: number; height: number; role: string; sort_order: number }[])]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((i) => ({ id: i.id, path: i.storage_path, alt: i.alt, width: i.width, height: i.height, role: i.role, sortOrder: i.sort_order })),
@@ -147,10 +176,53 @@ export async function listFlavors() {
   return data as { id: string; slug: string; name: string }[];
 }
 
-export async function listAllergens() {
-  const { data, error } = await db().from("allergens").select("id, slug, name").order("name");
+export interface AdminAllergen extends AllergenDef {
+  name: string;
+}
+
+export async function listAllergens(): Promise<AdminAllergen[]> {
+  const { data, error } = await db()
+    .from("allergens")
+    .select("id, slug, name, sentence_label, no_added_text, sort_order")
+    .eq("is_active", true)
+    .order("sort_order");
   if (error) throw error;
-  return data as { id: string; slug: string; name: string }[];
+  return (data as { id: string; slug: string; name: string; sentence_label: string | null; no_added_text: string | null; sort_order: number }[]).map((a) => ({
+    id: a.id,
+    slug: a.slug,
+    name: a.name,
+    sentenceLabel: a.sentence_label ?? a.name.toLocaleLowerCase("fr"),
+    noAddedText: a.no_added_text ?? "",
+    sortOrder: a.sort_order,
+  }));
+}
+
+export interface WorkshopTracesAdmin {
+  traces: WorkshopTraces;
+  review: { ingredients: boolean; packaging: boolean; utensils: boolean; confirmedAt: string | null };
+}
+
+export async function getWorkshopTraces(): Promise<WorkshopTracesAdmin> {
+  const { data, error } = await db()
+    .from("site_settings")
+    .select("key, value")
+    .in("key", ["allergens.workshop_traces", "allergens.workshop_traces_review"]);
+  if (error) throw error;
+  const byKey = Object.fromEntries((data as { key: string; value: Record<string, unknown> | null }[]).map((s) => [s.key, s.value ?? {}]));
+  const t = byKey["allergens.workshop_traces"] ?? {};
+  const r = byKey["allergens.workshop_traces_review"] ?? {};
+  return {
+    traces: {
+      enabled: t.enabled === true,
+      allergens: Array.isArray(t.allergens) ? (t.allergens as unknown[]).filter((a): a is string => typeof a === "string") : [],
+    },
+    review: {
+      ingredients: r.ingredients === true,
+      packaging: r.packaging === true,
+      utensils: r.utensils === true,
+      confirmedAt: typeof r.confirmed_at === "string" ? r.confirmed_at : null,
+    },
+  };
 }
 
 export interface CycleSetup {

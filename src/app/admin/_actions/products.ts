@@ -155,21 +155,6 @@ export async function saveFlavors(productId: string, flavorIds: string[], newFla
   return { ok: true, message: "Parfums enregistrés." };
 }
 
-export async function saveAllergens(productId: string, allergens: { id: string; confirmed: boolean }[]): Promise<AdminState> {
-  const admin = await requireAdmin();
-  const db = supabaseAdmin();
-  await db.from("product_allergens").delete().eq("product_id", productId);
-  if (allergens.length > 0) {
-    const { error } = await db
-      .from("product_allergens")
-      .insert(allergens.map((a) => ({ product_id: productId, allergen_id: a.id, confirmed: a.confirmed })));
-    if (error) return { ok: false, message: "Enregistrement impossible." };
-  }
-  await audit(admin.id, "product.allergens", productId, allergens);
-  refresh(productId);
-  return { ok: true, message: "Allergènes enregistrés. Seuls les allergènes confirmés sont affichés aux clients." };
-}
-
 function imageSize(bytes: Uint8Array, mime: string): { width: number; height: number } | null {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (mime === "image/png") return { width: view.getUint32(16), height: view.getUint32(20) };

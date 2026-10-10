@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import type { AllergenDef, AllergenStatus, WorkshopTraces } from "@/lib/allergens";
 import { availableUnits, productAvailability } from "@/lib/availability";
 import type {
   Accent,
@@ -44,7 +45,8 @@ interface ProductRow {
   sort_order: number;
   product_variants: { id: string; label: string; units_consumed: number; price_fcfa: number; sort_order: number }[];
   product_flavors: { sort_order: number; flavors: { id: string; slug: string; name: string } | null }[];
-  product_allergens: { allergens: { slug: string; name: string } | null }[];
+  product_allergen_statuses: { flavor_id: string | null; allergen_id: string; status: AllergenStatus }[];
+  product_recipe_notes: { flavor_id: string | null; label: string; sort_order: number }[];
   product_images: { storage_path: string; alt: string; width: number; height: number; role: "cutout" | "scene" | "detail"; sort_order: number }[];
 }
 
@@ -144,7 +146,8 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
        storage_rule, storage_note, storage_confirmed, pairing_slugs, sort_order,
        product_variants(id, label, units_consumed, price_fcfa, sort_order),
        product_flavors(sort_order, flavors(id, slug, name)),
-       product_allergens(allergens(slug, name)),
+       product_allergen_statuses(flavor_id, allergen_id, status),
+       product_recipe_notes(flavor_id, label, sort_order),
        product_images(storage_path, alt, width, height, role, sort_order)`,
     )
     .eq("is_active", true)
@@ -152,7 +155,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
     .order("sort_order")
     .returns<ProductRow[]>();
 
-  const [productsRes, cycleProductsRes, inventoryRes] = await Promise.all([
+  const [productsRes, cycleProductsRes, inventoryRes, allergensRes, settings] = await Promise.all([
     productsQuery,
     cycle
       ? db
@@ -166,8 +169,11 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
           .select("product_id, total_units, reserved_units, sold_units")
           .eq("cycle_id", cycle.id)
       : Promise.resolve({ data: [], error: null }),
+    db.from("allergens").select("id, slug, sentence_label, no_added_text, sort_order").eq("is_active", true).order("sort_order"),
+    getPublicSettings(),
   ]);
   if (productsRes.error) throw productsRes.error;
+  if (allergensRes.error) throw allergensRes.error;
   if (cycleProductsRes.error) throw cycleProductsRes.error;
   if (inventoryRes.error) throw inventoryRes.error;
 
@@ -214,7 +220,10 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
       accent: p.accent,
       storage:
         p.storage_confirmed && p.storage_rule ? { rule: p.storage_rule, note: p.storage_note } : null,
-      allergens: p.product_allergens.flatMap((pa) => (pa.allergens ? [pa.allergens] : [])),
+      allergenInfo: {
+        entries: p.product_allergen_statuses.map((e) => ({ allergenId: e.allergen_id, flavorId: e.flavor_id, status: e.status })),
+        recipeNotes: p.product_recipe_notes.map((n) => ({ flavorId: n.flavor_id, label: n.label, sortOrder: n.sort_order })),
+      },
       pairingSlugs: p.pairing_slugs,
       images: [...p.product_images]
         .sort((a, b) => a.sort_order - b.sort_order)
@@ -232,8 +241,24 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
     };
   });
 
-  return { cycle, products };
+  const allergenDefs: AllergenDef[] = (
+    allergensRes.data as { id: string; slug: string; sentence_label: string | null; no_added_text: string | null; sort_order: number }[]
+  ).map((a) => ({
+    id: a.id,
+    slug: a.slug,
+    sentenceLabel: a.sentence_label ?? a.slug,
+    noAddedText: a.no_added_text ?? "",
+    sortOrder: a.sort_order,
+  }));
+
+  return { cycle, products, allergenDefs, workshopTraces: parseWorkshopTraces(settings["allergens.workshop_traces"]) };
 });
+
+function parseWorkshopTraces(value: unknown): WorkshopTraces {
+  const v = value as Partial<WorkshopTraces> | null | undefined;
+  const allergens = Array.isArray(v?.allergens) ? v.allergens.filter((a): a is string => typeof a === "string") : [];
+  return { enabled: v?.enabled === true && allergens.length > 0, allergens };
+}
 
 export async function getSlots(cycleId: string): Promise<SlotSummary[]> {
   const db = supabasePublic();

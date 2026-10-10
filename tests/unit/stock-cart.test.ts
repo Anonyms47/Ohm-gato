@@ -69,7 +69,7 @@ describe("revalidation de Ma boîte", () => {
   };
   const cookies: CatalogProduct = {
     id: "cookies", slug: "cookies", name: "Cookies", shortDescription: "", description: "", tips: null, unitLabel: "cookie",
-    unitLabelPlural: "cookies", staging: "", accent: "caramel", storage: null, allergens: [], pairingSlugs: [], images: [],
+    unitLabelPlural: "cookies", staging: "", accent: "caramel", storage: null, allergenInfo: { entries: [], recipeNotes: [] }, pairingSlugs: [], images: [],
     variants: [
       { id: "unite", label: "Unité", unitsConsumed: 1, priceFcfa: 800, enabledInCycle: true },
       { id: "box6", label: "Box de 6", unitsConsumed: 6, priceFcfa: 4500, enabledInCycle: true },

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createProduct, deleteProductImage, saveAllergens, saveFlavors, saveVariant, updateProduct, uploadProductImage } from "@/app/admin/_actions/products";
+import { createProduct, deleteProductImage, saveFlavors, saveVariant, updateProduct, uploadProductImage } from "@/app/admin/_actions/products";
 import { ActionButton, AdminForm, StateMessage } from "@/components/admin/AdminUi";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
@@ -59,7 +59,7 @@ export function ProductForm({ product, categories }: { product: AdminProduct; ca
         <Field label="Unité (singulier)">{({ id }) => <TextInput id={id} name="unitLabel" required defaultValue={product.unitLabel} />}</Field>
         <Field label="Unité (pluriel)">{({ id }) => <TextInput id={id} name="unitLabelPlural" required defaultValue={product.unitLabelPlural} />}</Field>
       </fieldset>
-      <fieldset className="flex flex-col gap-4 rounded-[12px] border-2 border-chocolat/20 p-4">
+      <fieldset className="flex min-w-0 flex-col gap-4 rounded-[12px] border-2 border-chocolat/20 p-4">
         <legend className="px-1 font-bold">Conservation</legend>
         <OhmegatoSelect
           label="Règle"
@@ -157,55 +157,6 @@ export function FlavorsEditor({ product, flavors }: { product: AdminProduct; fla
         }}
       >
         Enregistrer les parfums
-      </Button>
-    </div>
-  );
-}
-
-export function AllergensEditor({ product, allergens }: { product: AdminProduct; allergens: { id: string; name: string }[] }) {
-  const [values, setValues] = useState(product.allergens);
-  const [state, setState] = useState<AdminState>(null);
-  const [busy, setBusy] = useState(false);
-  const toggle = (id: string, key: "present" | "confirmed", checked: boolean) =>
-    setValues((all) => {
-      const current = all.find((a) => a.id === id);
-      if (key === "present") return checked ? [...all, { id, confirmed: false }] : all.filter((a) => a.id !== id);
-      return current ? all.map((a) => (a.id === id ? { ...a, confirmed: checked } : a)) : all;
-    });
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-encre-douce">Un allergène n&apos;est affiché aux clients qu&apos;une fois confirmé pour cette recette.</p>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {allergens.map((a) => {
-          const current = values.find((v) => v.id === a.id);
-          return (
-            <li key={a.id} className="flex flex-wrap items-center gap-4 rounded-[10px] bg-blanc-casse p-2">
-              <label className="flex min-h-11 items-center gap-2 font-bold">
-                <input type="checkbox" className="size-5 accent-[var(--ohm-chocolat)]" checked={Boolean(current)} onChange={(e) => toggle(a.id, "present", e.target.checked)} />
-                {a.name}
-              </label>
-              {current && (
-                <label className="flex min-h-11 items-center gap-2">
-                  <input type="checkbox" className="size-5 accent-[var(--ohm-chocolat)]" checked={current.confirmed} onChange={(e) => toggle(a.id, "confirmed", e.target.checked)} />
-                  confirmé
-                </label>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <StateMessage state={state} />
-      <Button
-        variant="secondary"
-        className="self-start"
-        state={busy ? "loading" : "idle"}
-        onClick={async () => {
-          setBusy(true);
-          setState(await saveAllergens(product.id, values));
-          setBusy(false);
-        }}
-      >
-        Enregistrer les allergènes
       </Button>
     </div>
   );

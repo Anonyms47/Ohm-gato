@@ -15,10 +15,11 @@
 **Administration** (`/admin`, interface séparée, rôle vérifié côté serveur à chaque page et action, journal d'audit)
 - Tableau de bord : commandes du jour, à préparer, paiements, fournée active, stock faible, sur-mesure, livraisons, retraits.
 - Fournées : création, dates, message d'accueil, produit vedette, programmer / ouvrir / clôturer / préparation / livraison / terminer / annuler, produits, formats, parfums, stock, créneaux.
-- Produits : textes, catégorie, unités de stock, formats et prix, parfums, allergènes (confirmés), conservation, photos, publication.
+- Produits : textes, catégorie, unités de stock, formats et prix, parfums, allergènes (statut par produit ou par parfum, précision et indicateur internes, date de validation, aperçu client exact), informations de recette, conservation, photos, publication.
 - Commandes : recherche, filtres, détail, position sur la carte, statut avec historique, WhatsApp, reçu imprimable.
 - Positions de livraison : carte, fiche de chaque arrêt, itinéraire, copie et partage au livreur, « confiée au livreur », « livraison terminée ».
 - Stock : disponible / réservé / vendu, ajustements avec raison, historique, réservations en cours.
+- Réglages : traces d'atelier, activables seulement après les trois vérifications d'Alima (ingrédients, emballages, ustensiles).
 - Sur-mesure, clients (historique, adresses, consentements, notes internes), réglages éditoriaux, rôles, journal d'audit.
 
 **Sécurité** : RLS forcée partout (vérifiée avec deux comptes dans `supabase/tests/accounts_admin_test.sql`), rôles jamais accordés depuis le navigateur, actions admin réservées au serveur, limitation de débit (codes, commandes, demandes, messages), contrôle d'origine, validation Zod, fichiers contrôlés par leurs octets, liens de suivi opaques ; sur un lien ouvert ailleurs que sur le navigateur d'origine, les informations personnelles ne s'affichent qu'après connexion par code avec le numéro de la commande.

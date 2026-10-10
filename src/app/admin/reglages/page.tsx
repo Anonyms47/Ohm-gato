@@ -1,12 +1,13 @@
 import { RemoveMedia, RolesEditor, StoryMediaUpload, TextSetting } from "@/components/admin/SettingsEditors";
-import { getSettings, listStaff } from "@/lib/admin/data";
+import { WorkshopTracesEditor } from "@/components/admin/WorkshopTracesEditor";
+import { getSettings, getWorkshopTraces, listAllergens, listStaff } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
 
 export const metadata = { title: "Réglages et rôles" };
 
 export default async function AdminReglages() {
   const admin = await requireAdmin();
-  const [settings, staff] = await Promise.all([getSettings(), listStaff()]);
+  const [settings, staff, workshop, allergens] = await Promise.all([getSettings(), listStaff(), getWorkshopTraces(), listAllergens()]);
   const text = (key: string) => (typeof settings[key]?.value === "string" ? (settings[key]!.value as string) : "");
   const archives = Array.isArray(settings["story.archive_photos"]?.value) ? (settings["story.archive_photos"]!.value as { url: string; alt: string }[]) : [];
   const alima = settings["story.alima_photo"]?.value as { url: string; alt: string } | undefined;
@@ -19,6 +20,10 @@ export default async function AdminReglages() {
         <p className="text-encre-douce">Un texte vide n&apos;est jamais affiché : rien n&apos;est inventé à sa place.</p>
         <TextSetting settingKey="home.alima_note" label="Le mot d'Alima (accueil)" hint="Affiché sur l'accueil, signé Alima." initial={text("home.alima_note")} />
         <TextSetting settingKey="story.quote" label="Citation d'Alima (Notre histoire)" hint="Uniquement une vraie citation." initial={text("story.quote")} />
+      </section>
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-[1.5rem]">Traces d&apos;atelier</h2>
+        <WorkshopTracesEditor initial={workshop} allergens={allergens} />
       </section>
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-[1.5rem]">Médias de « Notre histoire »</h2>
