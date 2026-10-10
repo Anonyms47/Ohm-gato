@@ -22,7 +22,7 @@ async function patchCycle(values: Record<string, unknown>) {
 test.describe("Fournées : précommande, clôture et surplus", () => {
   test("précommandes ouvertes : message officiel, frise en quatre moments, bouton adapté", async ({ page }) => {
     await page.goto("/fournees");
-    await expect(page.getByTestId("message-fournee")).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée pendant la semaine/);
+    await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée pendant la semaine/);
     const frise = page.getByRole("list", { name: "Les quatre moments de la fournée" });
     await expect(frise.getByRole("listitem")).toHaveCount(4);
     await expect(frise.getByText("Alima prépare votre fournée")).toBeVisible();
@@ -45,7 +45,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
       await patchCycle({ closes_at: new Date(Date.now() - 60_000).toISOString() });
       await page.goto("/fournees");
       await expect(page.getByText("Précommandes clôturées").first()).toBeVisible();
-      await expect(page.getByTestId("message-fournee")).toHaveText(PREORDER_CLOSED);
+      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(PREORDER_CLOSED);
       await expect(page.getByText("Revenez après la fournée pour vérifier les disponibilités.")).toBeVisible();
       await expect(page.getByRole("button", { name: /Prévenez-moi/ })).toHaveCount(0);
       await page.goto("/commande");
@@ -69,7 +69,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
       await patchCycle({ status: "surplus", surplus_ends_at: new Date(Date.now() + 3 * 86400_000).toISOString(), surplus_delivery_allowed: false });
       await page.goto("/fournees");
       await expect(page.getByText("Surplus disponible").first()).toBeVisible();
-      await expect(page.getByTestId("message-fournee")).toHaveText(SURPLUS);
+      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(SURPLUS);
       await expect(page.getByRole("link", { name: "Voir les douceurs disponibles" })).toBeVisible();
       await expect(page.getByText(/^En surplus : \d+ cookies$/)).toBeVisible();
       await expect(page.getByText("Presque épuisé")).toHaveCount(0);
@@ -77,7 +77,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
 
       await patchCycle({ surplus_ends_at: new Date(Date.now() - 60_000).toISOString() });
       await page.goto("/fournees");
-      await expect(page.getByTestId("message-fournee")).toHaveText(
+      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(
         "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.",
       );
       await expect(page.getByRole("link", { name: "Découvrir les prochaines fournées" })).toBeVisible();

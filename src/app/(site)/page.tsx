@@ -56,12 +56,14 @@ export default async function FourneePage() {
               )}
             </BrandHeading>
             {cycle?.message && <p className="max-w-prose text-[1.15rem]">{cycle.message}</p>}
-            <p className="text-[1.15rem] font-bold">{cycleLine(cycle)}</p>
-            {cycle && (
-              <p className="text-encre-douce">
-                {productionLabel(cycle)} Livraison ou retrait le {formatDay(cycle.fulfillmentDate)}.
-              </p>
-            )}
+            <div className="max-w-prose rounded-[12px] border-2 border-chocolat bg-blanc-casse p-4">
+              <p className="text-[1.15rem] font-bold">{cycleLine(cycle)}</p>
+              {cycle && (
+                <p className="mt-2 text-encre-douce">
+                  {productionLabel(cycle)} Livraison ou retrait le {formatDay(cycle.fulfillmentDate)}.
+                </p>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               {action ? (
                 <ButtonLink href={action.href}>{action.label}</ButtonLink>
@@ -121,7 +123,11 @@ export default async function FourneePage() {
                       <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)] group-hover:-rotate-2" />
                       <span className="font-display text-[1.3rem] leading-tight">{product.name}</span>
                       <span className="flex flex-wrap items-center gap-2">
-                        {price !== null && <span className="tabular-nums">dès {formatFcfa(price)}</span>}
+                        {price !== null && (
+                          <span className="tabular-nums text-encre-douce">
+                            dès <strong className="text-caramel-encre">{formatFcfa(price)}</strong>
+                          </span>
+                        )}
                         {product.availability !== "available" && <AvailabilityBadge state={product.availability} />}
                       </span>
                     </Link>
@@ -180,30 +186,30 @@ export default async function FourneePage() {
             </h2>
             <dl className="mt-4 divide-y-2 divide-dashed divide-chocolat/25">
               {cycle && (
-                <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
+                <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                   <dt className="font-bold">Date limite de commande</dt>
                   <dd>
                     {formatDay(cycle.closesAt)}, {formatTime(cycle.closesAt)}
                   </dd>
                 </div>
               )}
-              <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
+              <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                 <dt className="font-bold">Livraison</dt>
-                <dd className="sm:text-right">
+                <dd>
                   Dans Dakar, le jour prévu de la fournée. Frais non compris, à régler directement au livreur selon votre position.
                 </dd>
               </div>
-              <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
+              <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                 <dt className="font-bold">Retrait</dt>
-                <dd className="sm:text-right">{brand.pickupAddress}. Gratuit.</dd>
+                <dd>{brand.pickupAddress}. Gratuit.</dd>
               </div>
-              <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
+              <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                 <dt className="font-bold">Paiement</dt>
-                <dd className="sm:text-right">Les produits uniquement, par lien marchand Wave ; le paiement est vérifié par OHMEGATO.</dd>
+                <dd>Les produits uniquement, par lien marchand Wave ; le paiement est vérifié par OHMEGATO.</dd>
               </div>
-              <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:justify-between">
+              <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                 <dt className="font-bold">Délais</dt>
-                <dd className="sm:text-right">24 h minimum. Sur-mesure : 2 à 4 jours selon la quantité.</dd>
+                <dd>24 h minimum. Sur-mesure : 2 à 4 jours selon la quantité.</dd>
               </div>
             </dl>
             <p className="mt-6 text-center font-script text-[1.4rem] text-caramel-encre">à très vite</p>
