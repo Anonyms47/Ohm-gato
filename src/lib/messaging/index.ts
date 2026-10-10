@@ -14,6 +14,12 @@ export interface DeliveredCode {
   testCode?: string;
 }
 
+/** Connexion par téléphone possible : WhatsApp configuré, ou mode test (codes affichés à l'écran). */
+export function phoneLoginAvailable(): boolean {
+  const env = serverEnv();
+  return Boolean(env.WHATSAPP_ACCESS_TOKEN && env.WHATSAPP_PHONE_NUMBER_ID && env.WHATSAPP_OTP_TEMPLATE) || env.OTP_TEST_MODE;
+}
+
 /**
  * Remise d'un code de connexion sur le téléphone du client.
  * Ordre : WhatsApp Cloud API si configurée ; sinon, en mode test seulement, boîte de test.

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginNotebook } from "@/components/account/LoginNotebook";
 import { getCurrentUser, safeNext } from "@/lib/auth/session";
 import { serverEnv } from "@/lib/env";
+import { phoneLoginAvailable } from "@/lib/messaging";
 
 export const metadata: Metadata = {
   title: "Retrouvons votre carnet",
@@ -17,7 +18,7 @@ export default async function ConnexionPage({ searchParams }: { searchParams: Pr
   return (
     <div className="ohm-grille min-h-[70dvh]">
       <div className="mx-auto max-w-xl px-4 py-10 sm:px-6 sm:py-16">
-        <LoginNotebook next={next} testMode={serverEnv().OTP_TEST_MODE} />
+        <LoginNotebook next={next} testMode={serverEnv().OTP_TEST_MODE} phoneEnabled={phoneLoginAvailable()} />
       </div>
     </div>
   );

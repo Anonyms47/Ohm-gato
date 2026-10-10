@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { serverEnv } from "@/lib/env";
 import { rateLimit } from "@/lib/http";
-import { deliverLoginCode, MessagingUnavailableError } from "@/lib/messaging";
+import { deliverLoginCode, MessagingUnavailableError, phoneLoginAvailable } from "@/lib/messaging";
 import { normalizeSenegalPhone } from "@/lib/phone";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -18,6 +18,7 @@ export type Channel = "phone" | "email";
 
 export type OtpFailure =
   | "INVALID_DESTINATION"
+  | "PHONE_UNAVAILABLE"
   | "RATE_LIMITED"
   | "RESEND_TOO_SOON"
   | "SEND_FAILED"
@@ -28,6 +29,7 @@ export type OtpFailure =
 
 export const otpMessages: Record<OtpFailure, string> = {
   INVALID_DESTINATION: "Ce numéro ou cette adresse n'est pas valide.",
+  PHONE_UNAVAILABLE: "La connexion par téléphone n'est pas encore disponible. Utilisez votre adresse e-mail.",
   RATE_LIMITED: "Trop de demandes en peu de temps. Patientez quelques minutes avant de réessayer.",
   RESEND_TOO_SOON: "Un code vient d'être envoyé. Patientez quelques secondes avant d'en demander un autre.",
   SEND_FAILED:
@@ -75,6 +77,7 @@ export type RequestCodeResult =
   | { ok: false; code: OtpFailure; retryAfter?: number };
 
 export async function requestLoginCode(channel: Channel, raw: string, ip: string): Promise<RequestCodeResult> {
+  if (channel === "phone" && !phoneLoginAvailable()) return { ok: false, code: "PHONE_UNAVAILABLE" };
   const destination = normalizeDestination(channel, raw);
   if (!destination) return { ok: false, code: "INVALID_DESTINATION" };
 

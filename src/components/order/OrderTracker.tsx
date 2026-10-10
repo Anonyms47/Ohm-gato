@@ -73,6 +73,7 @@ export function OrderTracker({
   paymentMethods,
   pickupAddress,
   waveLink = null,
+  phoneLogin = true,
 }: {
   token: string;
   order: TrackerOrder;
@@ -81,6 +82,8 @@ export function OrderTracker({
   pickupAddress: string;
   /** Lien marchand Wave à payer (commande confirmée, paiement à vérifier par OHMEGATO). */
   waveLink?: string | null;
+  /** Connexion par téléphone disponible (sinon, aucun lien « numéro de la commande »). */
+  phoneLogin?: boolean;
 }) {
   const router = useRouter();
   const { clear, hydrated } = useCart();
@@ -306,10 +309,16 @@ export function OrderTracker({
           ) : !order.showPrivate ? (
             <p className="text-encre-douce">
               Adresse masquée sur ce lien.{" "}
-              <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-                Se connecter avec le numéro de la commande
-              </a>{" "}
-              pour afficher vos informations.
+              {phoneLogin ? (
+                <>
+                  <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                    Se connecter avec le numéro de la commande
+                  </a>{" "}
+                  pour afficher vos informations.
+                </>
+              ) : (
+                "Elle s'affiche sur le navigateur qui a passé la commande."
+              )}
             </p>
           ) : (
             <p>
@@ -331,10 +340,15 @@ export function OrderTracker({
         {order.fulfillment === "delivery" && <p className="mt-3 font-bold">{DELIVERY_FEE_NOTICE}</p>}
         {!order.showPrivate && order.fulfillment === "pickup" && paid && (
           <p className="mt-4 text-encre-douce">
-            Le code de retrait s&apos;affiche sur le navigateur qui a passé la commande, ou après{" "}
-            <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-              connexion avec le numéro de la commande
-            </a>
+            Le code de retrait s&apos;affiche sur le navigateur qui a passé la commande
+            {phoneLogin && (
+              <>
+                , ou après{" "}
+                <a href={`/connexion?suite=${encodeURIComponent(`/suivi/${token}`)}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                  connexion avec le numéro de la commande
+                </a>
+              </>
+            )}
             .
           </p>
         )}
