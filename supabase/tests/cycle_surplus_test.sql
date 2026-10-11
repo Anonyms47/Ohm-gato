@@ -2,7 +2,7 @@
 -- publication manuelle du surplus, commandes tardives limitées au surplus réel.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(35);
 
 -- Une seule fournée vend à la fois : la fournée de démonstration est mise de côté.
 update public.production_cycles set status = 'done' where status in ('open', 'surplus');
@@ -49,12 +49,34 @@ select is((select reference from public.orders where id = (select id from paid_o
 select is((select reference from public.orders where id = (select id from pending_order)), 'OHM900-0002', 'numéros suivis dans l''ordre des commandes de la fournée');
 select is(pg_temp.free_units(), 0, 'précommande sans limite : le total suit les 6 unités engagées, rien n''est en vente');
 
--- 3. Clôture automatique à la date limite (vérifiée côté serveur)
+-- 3. Clôture automatique à la date limite, à l'heure du serveur, sans action d'Alima :
+--    le statut administratif reste « open » pendant ces vérifications.
+reset role;
+create temp table avant_limite as select
+  (select last_value from public.order_reference_counters where cycle_id = '00000000-0000-4000-8000-000000000900') as compteur,
+  (select count(*) from public.orders where cycle_id = '00000000-0000-4000-8000-000000000900') as commandes,
+  (select count(*) from public.payments p join public.orders o on o.id = p.order_id
+     where o.cycle_id = '00000000-0000-4000-8000-000000000900') as paiements;
+-- Exactement à la date limite (now() est l'heure du serveur, identique dans toute la transaction).
+update public.production_cycles set closes_at = now() where id = '00000000-0000-4000-8000-000000000900';
+set local role service_role;
+select throws_ok($$ select public.place_order(pg_temp.order_payload(1, '00000000-0000-4000-8000-000000000901', 'h-s3a')) $$,
+  'P0001', 'PREORDER_CLOSED', 'précommande refusée exactement à la date limite');
 reset role;
 update public.production_cycles set closes_at = now() - interval '1 minute' where id = '00000000-0000-4000-8000-000000000900';
 set local role service_role;
 select throws_ok($$ select public.place_order(pg_temp.order_payload(1, '00000000-0000-4000-8000-000000000901', 'h-s3')) $$,
-  'P0001', 'PREORDER_CLOSED', 'précommande refusée après la date limite');
+  'P0001', 'PREORDER_CLOSED', 'précommande refusée après la date limite, fournée encore « open »');
+reset role;
+select is((select last_value from public.order_reference_counters where cycle_id = '00000000-0000-4000-8000-000000000900'),
+  (select compteur from avant_limite), 'aucun numéro de commande consommé par une précommande refusée');
+select is(
+  array[(select count(*) from public.orders where cycle_id = '00000000-0000-4000-8000-000000000900'),
+        (select count(*) from public.payments p join public.orders o on o.id = p.order_id
+           where o.cycle_id = '00000000-0000-4000-8000-000000000900')],
+  array[(select commandes from avant_limite), (select paiements from avant_limite)],
+  'après la limite : aucune commande enregistrée, aucun paiement initié');
+set local role service_role;
 select lives_ok($$ select public.admin_set_cycle_status('00000000-0000-4000-8000-000000000900', 'closed', null) $$, 'précommandes clôturées');
 select isnt((select closed_at from public.production_cycles where id = '00000000-0000-4000-8000-000000000900'), null, 'date de clôture enregistrée');
 select throws_ok($$ select public.admin_set_cycle_status('00000000-0000-4000-8000-000000000900', 'surplus', null) $$,
