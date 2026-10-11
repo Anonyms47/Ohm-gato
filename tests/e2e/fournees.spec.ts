@@ -63,7 +63,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
       await page.goto("/fournees");
       await expect(page.getByText("Précommandes clôturées").first()).toBeVisible();
       await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(PREORDER_CLOSED);
-      await expect(page.getByText("Revenez après la fournée pour vérifier les disponibilités.")).toBeVisible();
+      await expect(page.getByText("Revenez après la fournée pour vérifier les disponibilités.").filter({ visible: true })).toBeVisible();
       await expect(page.getByRole("button", { name: /Prévenez-moi/ })).toHaveCount(0);
       await expect(page.getByRole("link", { name: "Composer ma boîte" })).toHaveCount(0);
       await expect(page.getByText("Choisir le format")).toHaveCount(0);
