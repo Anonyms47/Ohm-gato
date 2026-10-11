@@ -47,7 +47,6 @@ export function BoxPage() {
       <p className="-mt-4 text-encre-douce">
         {DELIVERY_FEE_NOTICE} Le retrait est gratuit.
       </p>
-      <BoxAllergens />
       {resolved.hasIssues && (
         <p role="alert" className="font-bold text-erreur">
           Corrigez les articles signalés avant de passer commande.
@@ -63,6 +62,8 @@ export function BoxPage() {
           <ButtonLink href="/commande">Remplir le bon de fournée</ButtonLink>
         )}
       </div>
+      {/* Les allergènes restent consultables, après l'action principale. */}
+      <BoxAllergens />
     </div>
   );
 }

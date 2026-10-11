@@ -101,7 +101,8 @@ export async function LegalPage({ slug, before, after }: { slug: LegalSlug; befo
               </div>
             </nav>
           )}
-          <div className="min-w-0 max-w-[68ch]">
+          {/* Le texte est posé sur une feuille unie : le quadrillage reste autour, jamais derrière les lignes. */}
+          <div className="min-w-0 max-w-[72ch] rounded-[14px] border-2 border-chocolat/15 bg-blanc-casse p-4 sm:p-8 print:border-0 print:bg-transparent print:p-0">
             {before && <div className="mb-8">{before}</div>}
             <LegalContent blocks={blocks} />
             {after && <div className="mt-10">{after}</div>}

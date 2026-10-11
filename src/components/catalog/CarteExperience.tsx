@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Drawer } from "vaul";
+import { useEffect, useRef, useState } from "react";
 import { BrandHeading } from "@/components/brand/BrandHeading";
 import { AddToBox } from "@/components/catalog/AddToBox";
 import { AvailabilityBadge } from "@/components/catalog/AvailabilityBadge";
@@ -21,11 +20,34 @@ function priceRange(product: CatalogProduct) {
 
 /**
  * La Carte. Tablette et ordinateur : menu typographique à gauche, scène fixe à droite.
- * Téléphone : une affiche verticale par produit et un index ouvrable depuis le bas.
+ * Téléphone : une affiche verticale par produit et des raccourcis fixés sous l'en-tête.
  */
 export function CarteExperience({ products }: { products: CatalogProduct[] }) {
   const [selectedSlug, setSelectedSlug] = useState(products[0]?.slug ?? null);
   const selected = products.find((p) => p.slug === selectedSlug) ?? products[0];
+  // Téléphone : le raccourci du produit visible est mis en évidence pendant le défilement.
+  const [visibleSlug, setVisibleSlug] = useState(products[0]?.slug ?? null);
+  const chips = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const posters = products.map((p) => document.getElementById(`affiche-${p.slug}`)).filter((el): el is HTMLElement => el !== null);
+    if (posters.length === 0 || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.find((e) => e.isIntersecting);
+        if (hit) setVisibleSlug(hit.target.id.replace("affiche-", ""));
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    posters.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [products]);
+  useEffect(() => {
+    const chip = chips.current?.querySelector<HTMLElement>(`[data-slug="${visibleSlug}"]`);
+    const bar = chips.current;
+    if (!chip || !bar) return;
+    // Défilement de la barre seule (jamais de la page).
+    bar.scrollTo({ left: chip.offsetLeft - bar.clientWidth / 2 + chip.clientWidth / 2, behavior: "smooth" });
+  }, [visibleSlug]);
 
   if (!selected) {
     return <p className="mx-auto max-w-7xl px-4 py-12 text-[1.1rem] sm:px-6">Aucun produit dans cette vue pour le moment.</p>;
@@ -92,12 +114,29 @@ export function CarteExperience({ products }: { products: CatalogProduct[] }) {
 
       {/* Téléphone */}
       <div className="md:hidden">
+        {/* Raccourcis toujours visibles sous l'en-tête : rien ne recouvre le texte des produits. */}
+        <nav aria-label="Aller à un produit" className="sticky top-16 z-30 border-y-2 border-chocolat/15 bg-creme/95 backdrop-blur-[2px]">
+          <ul ref={chips} className="relative flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none]">
+            {products.map((product) => (
+              <li key={product.id} className="shrink-0">
+                <a
+                  href={`#affiche-${product.slug}`}
+                  data-slug={product.slug}
+                  aria-current={visibleSlug === product.slug ? "true" : undefined}
+                  className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full border-2 border-chocolat/35 bg-blanc-casse px-4 font-bold aria-[current=true]:border-chocolat aria-[current=true]:bg-chocolat aria-[current=true]:text-creme"
+                >
+                  {product.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <ol className="flex flex-col">
           {products.map((product, index) => (
             <li
               key={product.id}
               id={`affiche-${product.slug}`}
-              className={cn("scroll-mt-20 px-4 py-10", index % 2 === 0 ? "ohm-grille" : "bg-blanc-casse")}
+              className={cn("scroll-mt-32 px-4 py-10", index % 2 === 0 ? "ohm-grille" : "bg-blanc-casse")}
             >
               <article aria-labelledby={`titre-${product.slug}`} className="flex flex-col gap-4">
                 <div className="flex items-start justify-between gap-3">
@@ -114,39 +153,6 @@ export function CarteExperience({ products }: { products: CatalogProduct[] }) {
           ))}
         </ol>
 
-        <Drawer.Root>
-          <Drawer.Trigger className="fixed bottom-[8.5rem] right-3 z-30 min-h-12 rounded-full border-2 border-chocolat bg-creme px-5 font-bold shadow-[0_3px_0_var(--ohm-chocolat)]">
-            Index de la carte
-          </Drawer.Trigger>
-          <Drawer.Portal>
-            <Drawer.Overlay className="fixed inset-0 z-50 bg-cacao/45" />
-            <Drawer.Content
-              aria-describedby={undefined}
-              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col rounded-t-[18px] border-t-2 border-chocolat bg-blanc-casse pb-[env(safe-area-inset-bottom)] outline-none"
-            >
-              <div aria-hidden className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-chocolat/25" />
-              <div className="flex items-center justify-between px-4 pb-2 pt-3">
-                <Drawer.Title className="font-display text-[1.4rem]">Aller à…</Drawer.Title>
-                <Drawer.Close className="min-h-11 px-3 font-bold underline decoration-caramel decoration-2 underline-offset-4">Fermer</Drawer.Close>
-              </div>
-              <ul className="overflow-y-auto px-2 pb-4">
-                {products.map((product) => (
-                  <li key={product.id}>
-                    <Drawer.Close asChild>
-                      <a
-                        href={`#affiche-${product.slug}`}
-                        className="flex min-h-12 items-center justify-between gap-3 rounded-[8px] px-3 text-[1.1rem] font-bold hover:bg-grille/60"
-                      >
-                        {product.name}
-                        <span className="text-[0.95rem] font-normal text-encre-douce tabular-nums">{priceRange(product)}</span>
-                      </a>
-                    </Drawer.Close>
-                  </li>
-                ))}
-              </ul>
-            </Drawer.Content>
-          </Drawer.Portal>
-        </Drawer.Root>
       </div>
     </>
   );

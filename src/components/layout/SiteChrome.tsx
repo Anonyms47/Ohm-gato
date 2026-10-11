@@ -41,12 +41,16 @@ function BoxIcon({ className }: { className?: string }) {
 }
 
 /** Pastille du nombre d'articles, avec un léger rebond à chaque ajout. */
-function CountBadge({ count, bumpKey }: { count: number; bumpKey: number | undefined }) {
+function CountBadge({ count, bumpKey, inline = false }: { count: number; bumpKey: number | undefined; inline?: boolean }) {
   if (count === 0) return null;
   return (
     <span
       key={bumpKey}
-      className="absolute -right-1.5 -top-1.5 grid min-w-6 place-items-center rounded-full bg-rose px-1.5 text-[0.8rem] font-bold leading-6 text-cacao animate-[ohm-ajout_360ms_var(--ohm-courbe)]"
+      className={cn(
+        "grid place-items-center rounded-full bg-rose font-bold text-cacao animate-[ohm-ajout_360ms_var(--ohm-courbe)]",
+        // Dans la barre mobile, la pastille suit le mot sans jamais le recouvrir.
+        inline ? "min-w-5 px-1 text-[0.75rem] leading-5" : "absolute -right-1.5 -top-1.5 min-w-6 px-1.5 text-[0.8rem] leading-6",
+      )}
     >
       {count}
     </span>
@@ -160,9 +164,9 @@ export function MobileNav({ account }: { account: AccountSummary | null }) {
       className={cn(mobileLink, "w-full")}
       aria-label={`Ma boîte (panier), ${count} article${count > 1 ? "s" : ""}`}
     >
-      <span className="relative">
+      <span className="inline-flex items-center gap-1 whitespace-nowrap">
         Ma boîte
-        <CountBadge count={count} bumpKey={lastAdded?.at} />
+        <CountBadge count={count} bumpKey={lastAdded?.at} inline />
       </span>
     </button>
   );
