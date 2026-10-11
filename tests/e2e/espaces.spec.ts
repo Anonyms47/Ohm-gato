@@ -296,11 +296,14 @@ test.describe("Administration d'Alima", () => {
     await waitForHydration(page);
     await page.getByRole("button", { name: new RegExp(reference) }).click();
     await page.getByRole("textbox", { name: /^Livreur/ }).fill("Modou");
+    // Chaque bouton disparaît dès que la commande change d'étape (son message avec lui) :
+    // on vérifie donc l'étape atteinte plutôt que le message éphémère.
     await page.getByRole("button", { name: "Confier au livreur" }).click();
-    await expect(page.getByText("Commande confiée au livreur.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Livraison terminée" })).toBeVisible();
     await page.getByRole("button", { name: "Livraison terminée" }).click();
     await page.getByRole("button", { name: "Oui, livrée" }).click();
-    await expect(page.getByText("Statut mis à jour.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Livraison terminée" })).toHaveCount(0);
+    await expect(page.getByText("Livrée", { exact: true }).first()).toBeVisible();
   });
 
   test("fournée : création en brouillon, stock et journal d'audit", async ({ page }) => {
