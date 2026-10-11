@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     "Cookies, brownies, moelleux, muffins, choux et verrines faits maison à Dakar. Commandes par fournées, livraison dans Dakar ou retrait à Sud Foire.",
   openGraph: { type: "website", locale: "fr_SN", siteName: brand.name },
   formatDetection: { telephone: false },
+  // Validation de la propriété https://ohmegato.com dans Google Search Console.
+  verification: { google: "BXOrSNuilsvrf16td1tcldYqcOEcS6ReAsBVtLOC1qs" },
 };
 
 export const viewport: Viewport = {
