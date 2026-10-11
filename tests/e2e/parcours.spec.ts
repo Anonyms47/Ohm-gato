@@ -23,6 +23,15 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await expect(page.getByText("Code de retrait")).toBeVisible();
     await expect(page.getByText(/4 500 FCFA/).first()).toBeVisible();
 
+    // Reçu PDF téléchargeable, au nom du numéro de commande.
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Télécharger le reçu (PDF)" }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/^recu-OHM12-\d{4,}\.pdf$/);
+    const receipt = await page.request.get(new URL(page.url()).pathname + "/recu");
+    expect(receipt.headers()["content-type"]).toBe("application/pdf");
+    expect((await receipt.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
     // Ma boîte est vidée sur cet appareil après la confirmation.
     await page.goto("/ma-boite");
     await expect(page.getByText("Votre boîte est vide.")).toBeVisible();
@@ -44,6 +53,9 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await payWithTestProvider(page);
     await page.getByRole("button", { name: /Revenir sans payer/ }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Paiement en attente");
+    // Pas de reçu tant que la commande n'est pas payée.
+    await expect(page.getByRole("link", { name: "Télécharger le reçu (PDF)" })).toHaveCount(0);
+    expect((await page.request.get(new URL(page.url()).pathname + "/recu")).status()).toBe(404);
     await page.getByRole("button", { name: "Reprendre avec Paiement de test" }).click();
     await expect(page).toHaveURL(/\/paiement-test\//);
     await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();

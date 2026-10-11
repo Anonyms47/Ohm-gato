@@ -253,7 +253,7 @@ test.describe("Administration d'Alima", () => {
     await expect(page.getByText("Fournée active")).toBeVisible();
   });
 
-  test("commande : statut, historique et livraison sur la carte", async ({ page }) => {
+  test("commande : statut, historique et livraison sur la carte", async ({ page, playwright }) => {
     // Commande livrée avec position.
     await addToBox(page, "cookies", "Box de 3");
     await page.goto("/commande");
@@ -285,6 +285,13 @@ test.describe("Administration d'Alima", () => {
     await expect(page.getByRole("heading", { name: "Position exacte" })).toBeVisible();
     const reference = (await page.getByText(/^OHM12-\d{4,}$/).first().textContent())!.trim();
     await expect(page.getByRole("link", { name: "Ouvrir l'itinéraire" })).toBeVisible();
+    // Reçu PDF pour l'équipe ; refusé sans connexion administrateur.
+    const receiptDownload = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Reçu PDF" }).click();
+    expect((await receiptDownload).suggestedFilename()).toBe(`recu-${reference}.pdf`);
+    const anonymous = await playwright.request.newContext({ baseURL: "http://localhost:3000" });
+    expect((await anonymous.get(new URL(page.url()).pathname + "/recu/pdf")).status()).toBe(403);
+    await anonymous.dispose();
     await waitForHydration(page);
     for (const label of ["Passer en préparation", "Marquer prête"]) {
       await page.getByRole("button", { name: label }).click();

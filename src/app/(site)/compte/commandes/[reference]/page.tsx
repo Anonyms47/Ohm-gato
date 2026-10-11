@@ -32,6 +32,15 @@ export default async function CommandeDetail({ params }: { params: Promise<{ ref
         </header>
         <div className="flex flex-wrap gap-3">
           <ButtonLink href={order.trackingPath}>{isAwaitingPayment(order.status, order.paymentStatus) ? "Reprendre le paiement" : "Suivi en direct"}</ButtonLink>
+          {order.paymentStatus === "paid" && (
+            <a
+              href={`/compte/commandes/${encodeURIComponent(order.reference)}/recu`}
+              download
+              className="inline-flex min-h-12 items-center rounded-[10px] border-2 border-chocolat/35 px-5 font-bold"
+            >
+              Télécharger le reçu (PDF)
+            </a>
+          )}
         </div>
 
         <section aria-labelledby="produits" className="ohm-ticket px-5 py-5">
