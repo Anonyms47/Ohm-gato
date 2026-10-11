@@ -3,6 +3,7 @@ import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { HandArrow } from "@/components/brand/HandArrow";
 import { AvailabilityBadge } from "@/components/catalog/AvailabilityBadge";
 import { ProductVisual } from "@/components/catalog/ProductVisual";
+import { FourneeFrise } from "@/components/cycles/FourneeFrise";
 import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
@@ -29,7 +30,9 @@ export default async function FourneePage() {
   const inCycle = products.filter((p) => p.inCycle);
   const featured =
     products.find((p) => p.slug === cycle?.featuredProductSlug) ?? inCycle[0] ?? products[0] ?? null;
-  const manifesto = products.find((p) => p.slug === "moelleux-chocolat") ?? null;
+  // Le produit manifeste n'est montré que s'il n'est pas déjà la vedette de la couverture.
+  const manifestoCandidate = products.find((p) => p.slug === "moelleux-chocolat") ?? null;
+  const manifesto = manifestoCandidate && manifestoCandidate.id !== featured?.id ? manifestoCandidate : null;
   const alimaNote = typeof settings["home.alima_note"] === "string" ? (settings["home.alima_note"] as string) : null;
   const phase = cycle ? phaseNow(cycle) : null;
   const action = cycle && phase ? phaseAction(phase, cycle.number) : null;
@@ -66,7 +69,15 @@ export default async function FourneePage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {action ? (
-                <ButtonLink href={action.href}>{action.label}</ButtonLink>
+                <>
+                  <ButtonLink href={action.href}>{action.label}</ButtonLink>
+                  <Link
+                    href={action.href === "/carte" ? "#moments" : "/carte"}
+                    className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4"
+                  >
+                    {action.href === "/carte" ? "Comment ça marche" : "Voir toute la carte"}
+                  </Link>
+                </>
               ) : cycle ? (
                 <ButtonLink href={`/fournees/${cycle.number}`} variant="secondary">
                   Voir la fournée
@@ -138,6 +149,27 @@ export default async function FourneePage() {
           )}
         </div>
       </section>
+
+      {/* Acte 2 bis — comment se passe une fournée */}
+      {cycle && phase && phase !== "cancelled" && (
+        <section aria-labelledby="moments" className="ohm-grille">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+            <Annotation>comment ça marche</Annotation>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <BrandHeading id="moments" size="titre" className="scroll-mt-28">
+                Votre fournée en quatre moments
+              </BrandHeading>
+              <Link
+                href="/fournees"
+                className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4"
+              >
+                Tout savoir sur nos fournées
+              </Link>
+            </div>
+            <FourneeFrise cycle={cycle} phase={phase} />
+          </div>
+        </section>
+      )}
 
       {/* Acte 3 — pause humaine (affichée seulement avec une vraie note d'Alima) */}
       {alimaNote && (

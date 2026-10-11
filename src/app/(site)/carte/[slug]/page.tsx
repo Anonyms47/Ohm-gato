@@ -43,6 +43,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { product, catalog } = found;
   const user = await getCurrentUser();
   const favorites = user ? await getMyFavorites(user.id) : [];
+  // Quand la commande est possible, les formats et leurs prix sont déjà dans le choix du format.
+  const orderable = product.inCycle && (catalog.cycle?.isOpen ?? false);
+  const fromPrice = (p: CatalogProduct) => {
+    const prices = p.variants.map((v) => v.priceFcfa);
+    return prices.length ? Math.min(...prices) : null;
+  };
   const perFlavor = product.flavors.length > 0 && flavorsWithOwnInfo(product.allergenInfo).size > 0;
   const pairings = product.pairingSlugs
     .map((s) => catalog.products.find((p) => p.slug === s))
@@ -104,24 +110,26 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
 
         <div className="flex flex-col gap-10">
-          <section aria-labelledby="formats">
-            <h2 id="formats" className="font-display text-[1.6rem]">
-              Formats
-            </h2>
-            <table className="mt-3 w-full border-collapse">
-              <caption className="sr-only">Formats et prix de {product.name}</caption>
-              <tbody>
-                {product.variants.map((v) => (
-                  <tr key={v.id} className="border-b-2 border-dashed border-chocolat/20">
-                    <th scope="row" className="py-3 text-left font-bold">
-                      {v.label}
-                    </th>
-                    <td className="py-3 text-right tabular-nums">{formatFcfa(v.priceFcfa)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+          {!orderable && (
+            <section aria-labelledby="formats">
+              <h2 id="formats" className="font-display text-[1.6rem]">
+                Formats
+              </h2>
+              <table className="mt-3 w-full border-collapse">
+                <caption className="sr-only">Formats et prix de {product.name}</caption>
+                <tbody>
+                  {product.variants.map((v) => (
+                    <tr key={v.id} className="border-b-2 border-dashed border-chocolat/20">
+                      <th scope="row" className="py-3 text-left font-bold">
+                        {v.label}
+                      </th>
+                      <td className="py-3 text-right tabular-nums">{formatFcfa(v.priceFcfa)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
 
           {product.tips && (
             <section aria-labelledby="conseils">
@@ -178,6 +186,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <Link href={`/carte/${p.slug}`} className="flex flex-col gap-2">
                     <ProductVisual product={p} sizes="(min-width: 768px) 20vw, 45vw" />
                     <span className="font-display text-[1.25rem]">{p.name}</span>
+                    {fromPrice(p) !== null && (
+                      <span className="tabular-nums text-encre-douce">
+                        dès <strong className="text-caramel-encre">{formatFcfa(fromPrice(p)!)}</strong>
+                      </span>
+                    )}
                   </Link>
                 </li>
               ))}
