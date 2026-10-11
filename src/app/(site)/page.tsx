@@ -37,8 +37,26 @@ export default async function FourneePage() {
   const phase = cycle ? phaseNow(cycle) : null;
   const action = cycle && phase ? phaseAction(phase, cycle.number) : null;
 
+  // Fiche « Pâtisserie » pour Google : uniquement des coordonnées déjà publiques (zone Dakar, sans adresse de retrait).
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Bakery",
+    name: brand.name,
+    url: siteUrl,
+    logo: `${siteUrl}/brand/logo-ohmegato.png`,
+    image: `${siteUrl}/opengraph-image`,
+    description: "Pâtisseries faites maison à Dakar, commandées par fournées : livraison dans Dakar ou retrait à Sud Foire.",
+    telephone: brand.phoneE164,
+    email: brand.email,
+    address: { "@type": "PostalAddress", addressLocality: brand.city, addressCountry: "SN" },
+    areaServed: { "@type": "City", name: brand.city },
+    sameAs: [brand.instagramUrl],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       {/* Acte 1 — couverture de fournée */}
       <section aria-labelledby="couverture" className="ohm-grille overflow-hidden">
         <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 pb-12 pt-8 sm:px-6 md:grid-cols-[1.05fr_1fr] md:pb-20 md:pt-14">

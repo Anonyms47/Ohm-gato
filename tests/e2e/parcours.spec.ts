@@ -6,6 +6,10 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
   test("retrait payé : confirmation serveur, tampon PAYÉE et code de retrait", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("La fournée");
+    // Fiche « Pâtisserie » lisible par Google, sans adresse de retrait.
+    const bakery = JSON.parse((await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}");
+    expect(bakery).toMatchObject({ "@type": "Bakery", name: "OHMEGATO", telephone: "+221780103050", address: { addressLocality: "Dakar" } });
+    expect(bakery.address.streetAddress).toBeUndefined();
     await page.getByRole("link", { name: "Composer ma boîte" }).click();
     await expect(page).toHaveURL(/\/carte$/);
 
