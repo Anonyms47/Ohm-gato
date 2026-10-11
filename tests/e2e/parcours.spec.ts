@@ -59,7 +59,7 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await page.getByRole("radio", { name: /^Livraison dans Dakar/ }).check();
 
     const notice = "Frais de livraison non compris, à régler directement au livreur selon votre position.";
-    await expect(page.getByText(notice).first()).toBeVisible();
+    await expect(page.getByText(notice).filter({ visible: true }).first()).toBeVisible();
     await page.getByLabel("Adresse").fill("Villa 24, rue MZ-12");
     await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
     await page.getByLabel("Point de repère").fill("En face de la pharmacie");
@@ -78,14 +78,14 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
     // Seuls les produits sont payés : 2 500 FCFA, sans frais de livraison.
     await expect(page.getByText(/Total à payer/)).toBeVisible();
-    await expect(page.getByText(/2\u202f500\u00a0FCFA/).first()).toBeVisible();
-    await expect(page.getByText(notice).first()).toBeVisible();
+    await expect(page.getByText(/2\u202f500\u00a0FCFA/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(notice).filter({ visible: true }).first()).toBeVisible();
 
     await acceptTermsAndContinue(page);
     await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
     await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
-    await expect(page.getByText(notice).first()).toBeVisible();
+    await expect(page.getByText(notice).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Envoyer ma position sur WhatsApp" })).toHaveAttribute("href", /maps\.google\.com/);
     await expect(page.getByRole("heading", { name: "Conservation" })).toBeVisible();
     await expect(page.getByText(/boîte hermétique à température ambiante et à consommer sous 2 jours/)).toBeVisible();
