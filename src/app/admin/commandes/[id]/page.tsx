@@ -44,6 +44,15 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
           <Link href={`/admin/commandes/${order.id}/recu`} className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold">
             Reçu
           </Link>
+          {order.paymentStatus === "paid" && (
+            <a
+              href={`/admin/commandes/${order.id}/recu/pdf`}
+              download
+              className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold"
+            >
+              Reçu PDF
+            </a>
+          )}
           <Link href={`/suivi/${generateTrackingToken(order.idempotencyKey).token}`} className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
             Page de suivi client
           </Link>

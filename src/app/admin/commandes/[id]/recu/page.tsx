@@ -20,10 +20,21 @@ export default async function Recu({ params }: { params: Promise<{ id: string }>
   const paid = order.payments.find((p) => p.status === "paid");
   return (
     <div className="mx-auto max-w-md">
-      <div className="mb-4 print:hidden">
+      <div className="mb-4 flex flex-wrap gap-3 print:hidden">
         <PrintButton />
+        {order.paymentStatus === "paid" && (
+          <a
+            href={`/admin/commandes/${order.id}/recu/pdf`}
+            download
+            className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold"
+          >
+            Télécharger en PDF
+          </a>
+        )}
       </div>
       <article className="ohm-ticket px-6 py-6 text-[0.95rem] print:shadow-none">
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo imprimé tel quel, sans optimisation d'image */}
+        <img src="/brand/logo-ohmegato.png" alt="" width={96} height={96} className="mx-auto mb-2 size-24" />
         <p className="text-center font-display text-[1.8rem]">{brand.name}</p>
         <p className="text-center">{brand.pickupAddress}</p>
         <p className="text-center">{brand.phoneDisplay}</p>

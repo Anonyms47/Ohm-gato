@@ -449,9 +449,13 @@ export function OrderTracker({
           Une question ? WhatsApp
         </a>
         {paid && (
-          <button type="button" onClick={() => window.print()} className="min-h-12 rounded-[10px] border-2 border-chocolat/35 px-5 font-bold">
-            Imprimer le reçu
-          </button>
+          <a
+            href={`/suivi/${token}/recu`}
+            download
+            className="inline-flex min-h-12 items-center rounded-[10px] border-2 border-chocolat/35 px-5 font-bold"
+          >
+            Télécharger le reçu (PDF)
+          </a>
         )}
       </div>
       <p className="text-[0.95rem] text-encre-douce print:hidden">
