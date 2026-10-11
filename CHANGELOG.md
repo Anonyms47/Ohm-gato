@@ -32,6 +32,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Modifié
 
+- Bon de fournée : récapitulatif « Votre boîte » (articles, sous-total, frais de livraison non compris, lien pour modifier) toujours visible à droite sur grand écran et repliable en haut de page sur téléphone.
 - Nos fournées : liste « Au programme » compacte (photo, nom, prix « dès … », disponibilité) avec le choix du format qui s'ouvre à la demande ; deux colonnes sur grand écran. La page est nettement plus courte sur téléphone et l'ajout à Ma boîte reste direct.
 - Pages plus simples à parcourir, dans l'identité OHMEGATO : accueil avec « Votre fournée en quatre moments » et lien « Comment ça marche », produit manifeste non répété quand il est déjà la vedette ; carte sur téléphone avec raccourcis fixés sous l'en-tête (le produit visible est mis en évidence) à la place du bouton flottant qui couvrait le texte ; fiche produit sans double affichage des prix, prix sur les suggestions ; Ma boîte avec le bouton « Remplir le bon de fournée » juste après le sous-total ; pastille du nombre d'articles qui ne recouvre plus « Ma boîte » dans la barre mobile ; pages légales sur une feuille unie pour une lecture confortable.
 - Numéros de commande lisibles : OHM<fournée>-<numéro sur 4 chiffres> dans l'ordre des commandes de chaque fournée (OHM1-0001, OHM1-0002…), attribués par la base sans doublon possible. Les commandes déjà passées gardent leur numéro.
