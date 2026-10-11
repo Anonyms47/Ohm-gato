@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { addToBox, db, e164, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, db, e164, fillPickupCheckout, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
 
 const CYCLE = "00000000-0000-4000-8000-000000000012";
 const PREORDER_CLOSED =
-  "Les précommandes sont terminées. La production est en préparation. Des produits supplémentaires pourront être proposés après la livraison des commandes confirmées.";
+  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
 const SURPLUS =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 
@@ -40,24 +40,38 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
 
   test("date limite passée : précommande refusée, boîte conservée, aucun faux surplus", async ({ page }) => {
     const before = await cycleRow();
+    const counts = async () => [
+      ((await db(`orders?select=id&cycle_id=eq.${CYCLE}`)) as unknown[]).length,
+      ((await db("payments?select=id")) as unknown[]).length,
+    ];
+    // Boîte remplie et bon de fournée complété AVANT la date limite.
     await addToBox(page, "cookies", "Unité");
+    await fillPickupCheckout(page);
+    await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
+    await acceptTermsAndContinue(page);
+    const start = await counts();
     try {
+      // La date limite passe pendant que le client est sur la page ; la fournée reste « open » côté administration.
       await patchCycle({ closes_at: new Date(Date.now() - 60_000).toISOString() });
+      await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
+      await expect(page.getByText(/Les précommandes sont terminées : cette commande n'a pas été enregistrée/)).toBeVisible();
+      await expect(page).toHaveURL(/\/commande$/);
+      // Côté serveur : aucune commande, aucun numéro, aucun paiement.
+      expect(await counts()).toEqual(start);
+      expect((await cycleRow()).status).toBe("open");
+
       await page.goto("/fournees");
       await expect(page.getByText("Précommandes clôturées").first()).toBeVisible();
       await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(PREORDER_CLOSED);
       await expect(page.getByText("Revenez après la fournée pour vérifier les disponibilités.")).toBeVisible();
       await expect(page.getByRole("button", { name: /Prévenez-moi/ })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Composer ma boîte" })).toHaveCount(0);
+      await expect(page.getByText("Choisir le format")).toHaveCount(0);
       await page.goto("/commande");
       await waitForHydration(page);
       await expect(page.getByTestId("commande-fermee")).toContainText("Les précommandes sont terminées");
       await expect(page.getByTestId("commande-fermee")).toContainText("Votre boîte est conservée");
-      // Côté serveur : la précommande est refusée même si le navigateur insiste.
-      const response = await page.request.post("/api/orders", {
-        headers: { "Content-Type": "application/json", Origin: "http://localhost:3000" },
-        data: { idempotencyKey: crypto.randomUUID() },
-      });
-      expect(response.status()).toBe(422);
+      await expect(page.getByRole("button", { name: /^Payer avec/ })).toHaveCount(0);
     } finally {
       await patchCycle({ closes_at: before.closes_at });
     }

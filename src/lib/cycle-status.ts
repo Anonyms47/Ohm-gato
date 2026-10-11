@@ -92,7 +92,7 @@ export function preorderMessage(cycle: Pick<CycleSummary, "closesAt" | "fulfillm
 }
 
 export const PREORDER_CLOSED_MESSAGE =
-  "Les précommandes sont terminées. La production est en préparation. Des produits supplémentaires pourront être proposés après la livraison des commandes confirmées.";
+  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
 export const SURPLUS_MESSAGE =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 export const DONE_MESSAGE = "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";

@@ -4,7 +4,7 @@ export const ORDER_ERROR_MESSAGES: Record<string, string> = {
   TOO_MANY_LINES: "Votre boîte contient trop de lignes. Regroupez certains articles.",
   CYCLE_NOT_OPEN: "Les commandes de cette fournée sont fermées. Votre boîte est conservée pour la prochaine.",
   PREORDER_CLOSED:
-    "Les précommandes sont terminées : cette commande n'a pas été enregistrée et rien n'a été débité. Votre boîte est conservée. Des produits supplémentaires pourront être proposés après la livraison des commandes confirmées.",
+    "Les précommandes sont terminées : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.",
   SURPLUS_CLOSED: "La vente du surplus de cette fournée est terminée : cette commande n'a pas été enregistrée. Votre boîte est conservée.",
   DELIVERY_UNAVAILABLE: "Pour les commandes tardives de cette fournée, seul le retrait est proposé.",
   SLOT_INVALID: "Ce créneau n'est plus proposé. Choisissez-en un autre.",
