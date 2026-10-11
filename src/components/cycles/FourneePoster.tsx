@@ -31,13 +31,15 @@ function slotWindow(slots: SlotSummary[], kind: "delivery" | "pickup") {
 
 function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; canOrder: boolean; surplus: boolean }) {
   const variants = product.variants.filter((v) => v.enabledInCycle);
+  const orderable = canOrder && product.availability !== "sold_out";
+  const from = variants.length ? Math.min(...variants.map((v) => v.priceFcfa)) : null;
   return (
-    <li className="grid gap-4 border-b-2 border-dashed border-chocolat/20 py-6 sm:grid-cols-[8rem_1fr] md:grid-cols-[8rem_1fr_minmax(16rem,22rem)]">
-      <Link href={`/carte/${product.slug}`} className="w-28 sm:w-32" aria-label={`Voir la fiche ${product.name}`}>
-        <ProductVisual product={product} sizes="8rem" />
+    <li className="grid grid-cols-[5rem_minmax(0,1fr)] content-start items-start gap-x-4 gap-y-3 border-b-2 border-dashed border-chocolat/20 py-5 sm:grid-cols-[7rem_minmax(0,1fr)]">
+      <Link href={`/carte/${product.slug}`} className="w-20 sm:w-28" aria-label={`Voir la fiche ${product.name}`}>
+        <ProductVisual product={product} sizes="7rem" />
       </Link>
-      <div className="flex min-w-0 flex-col gap-2">
-        <h3 className="font-display text-[1.45rem] leading-tight">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <h3 className="font-display text-[1.35rem] leading-tight sm:text-[1.45rem]">
           <Link href={`/carte/${product.slug}`} className="hover:underline">
             {product.name}
           </Link>
@@ -45,15 +47,20 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
         <div className="flex flex-wrap items-center gap-2">
           <AvailabilityBadge state={product.availability} />
           {/* Quantité restante : seulement la valeur réelle de la base, pendant une vente ouverte. */}
-          {product.unitsLeft !== null && canOrder && product.availability !== "sold_out" && (
+          {product.unitsLeft !== null && orderable && (
             <span className="text-encre-douce">
               {surplus ? "En surplus : " : "Reste "}
               {product.unitsLeft} {product.unitsLeft > 1 ? product.unitLabelPlural : product.unitLabel}
             </span>
           )}
         </div>
-        {/* Les formats et leurs prix figurent déjà dans le choix du format quand la commande est possible. */}
-        {!(canOrder && product.availability !== "sold_out") && (
+        {orderable ? (
+          from !== null && (
+            <p className="tabular-nums text-encre-douce">
+              dès <strong className="text-caramel-encre">{formatFcfa(from)}</strong>
+            </p>
+          )
+        ) : (
           <ul className="flex flex-wrap gap-x-4 gap-y-1">
             {variants.map((v) => (
               <li key={v.id} className="tabular-nums">
@@ -68,7 +75,21 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
           </p>
         )}
       </div>
-      <div className="sm:col-span-2 md:col-span-1">{canOrder && product.availability !== "sold_out" ? <AddToBox product={product} compact /> : null}</div>
+      {/* Le choix du format s'ouvre à la demande : la liste reste courte, l'ajout reste direct. */}
+      {orderable && (
+        <details className="group col-span-2 sm:col-start-2 sm:col-span-1">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border-2 border-chocolat bg-blanc-casse px-5 font-bold [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">Choisir le format</span>
+            <span className="hidden group-open:inline">Masquer les formats</span>
+            <span aria-hidden className="transition-transform duration-[var(--ohm-duree-courte)] group-open:rotate-180">
+              ⌄
+            </span>
+          </summary>
+          <div className="mt-3 max-w-md">
+            <AddToBox product={product} compact />
+          </div>
+        </details>
+      )}
     </li>
   );
 }
@@ -223,7 +244,7 @@ export function FourneePoster({
             products.length === 0 ? (
               <p className="mt-3">La composition de cette fournée sera publiée bientôt.</p>
             ) : (
-              <ul className="mt-2">
+              <ul className="mt-2 grid items-start lg:grid-cols-2 lg:gap-x-10">
                 {products.map((product) => (
                   <ProductRow key={product.id} product={product} canOrder={canOrder} surplus={surplus} />
                 ))}

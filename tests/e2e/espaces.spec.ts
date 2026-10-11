@@ -14,6 +14,8 @@ test.describe("Nos fournées — le journal du four", () => {
     await expect(page.getByText("Pas encore de date programmée.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Les fournées passées" })).toBeVisible();
     const cookies = page.locator("li").filter({ has: page.getByRole("heading", { name: "Cookies" }) });
+    // Le choix du format s'ouvre à la demande, puis l'ajout reste direct.
+    await cookies.getByText("Choisir le format").click();
     await cookies.getByRole("button", { name: /^Ajouter ·/ }).click();
     await expect(cookies.getByRole("button", { name: "Ajouté à Ma boîte" })).toBeVisible();
   });
