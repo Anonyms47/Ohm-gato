@@ -1,15 +1,17 @@
 import "server-only";
 import { getAutomationSettings } from "@/lib/admin/today";
+import { DEFAULT_EMAIL_FROM, parseSender } from "@/lib/email/sender";
 import { renderDigest, renderOrderEmail, type EmailTemplate, type RenderedEmail } from "@/lib/email/templates";
 import { serverEnv } from "@/lib/env";
 import { generateTrackingToken } from "@/lib/orders/tracking";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export type EmailChannel = "resend" | "test" | "none";
+export type EmailChannel = "brevo" | "resend" | "test" | "none";
 
-/** Service d'envoi disponible : Resend si configuré ; boîte de test hors production ; sinon aucun (rien n'est envoyé). */
+/** Service d'envoi disponible : Brevo, sinon Resend si configuré ; boîte de test hors production ; sinon aucun (rien n'est envoyé). */
 export function emailChannel(): EmailChannel {
   const env = serverEnv();
+  if (env.BREVO_API_KEY) return "brevo";
   if (env.RESEND_API_KEY && env.EMAIL_FROM) return "resend";
   if (env.APP_ENV !== "production") return "test";
   return "none";
@@ -61,6 +63,23 @@ async function deliver(channel: Exclude<EmailChannel, "none">, row: OutboxRow, e
     return;
   }
   const env = serverEnv();
+  if (channel === "brevo") {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": env.BREVO_API_KEY!, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        sender: parseSender(env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM),
+        to: [{ email: row.to_email }],
+        subject: email.subject,
+        htmlContent: email.html,
+        textContent: email.text,
+        // Brevo n'a pas de clé d'idempotence : la réservation de la ligne (attempts) évite le double envoi.
+        headers: { "X-Ohmegato-Email": row.idempotency_key },
+      }),
+    });
+    if (!response.ok) throw new Error(`Envoi refusé par Brevo (${response.status})`);
+    return;
+  }
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
