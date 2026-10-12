@@ -5,6 +5,7 @@ const messages: Record<string, string> = {
   CYCLE_EMPTY: "Ajoutez au moins un produit à la fournée avant de l'ouvrir.",
   CYCLE_DATES_PAST: "L'heure de clôture est déjà passée : modifiez les dates avant d'ouvrir.",
   CYCLE_NOT_FOUND: "Fournée introuvable.",
+  CYCLE_DATES_INVALID: "Dates invalides : la date limite doit suivre l'ouverture et la livraison suivre la production.",
   STOCK_INVALID: "Le stock doit être un nombre entier positif.",
   STOCK_BELOW_COMMITTED: "Impossible : des unités sont déjà réservées ou vendues au-delà de ce total.",
   NOT_IN_CYCLE: "Ce produit ne fait pas partie de la fournée.",

@@ -189,3 +189,45 @@ test.describe("Atelier — commandes et paiements", () => {
     await expect(page.getByText("Cliente prévenue par téléphone.").first()).toBeVisible();
   });
 });
+
+test.describe("Atelier — cockpit de fournée", () => {
+  test("parcours en étapes, création depuis la fournée précédente, impression tracée", async ({ page }) => {
+    test.slow();
+    const admin = testPhone();
+    await login(page, admin, "/admin");
+    await grantAdmin(e164(admin));
+
+    await page.goto("/admin/fournees/00000000-0000-4000-8000-000000000012");
+    await waitForHydration(page);
+    const steps = page.getByRole("navigation", { name: "Parcours de la fournée" });
+    await expect(steps.locator('[aria-current="step"]')).toHaveCount(1);
+    await expect(page.getByText("Étape 3 · Suivre les commandes")).toBeVisible();
+    await expect(page.getByText("← vous êtes ici")).toBeVisible();
+    await expect(page.getByText(/se fermeront automatiquement/)).toBeVisible();
+    await expect(page.getByText("Étape 7 · Terminer")).toBeVisible();
+
+    // Fiche de production : l'impression est tracée.
+    await page.goto("/admin/fournees/00000000-0000-4000-8000-000000000012/production");
+    await waitForHydration(page);
+    await page.evaluate(() => {
+      window.print = () => {};
+    });
+    await page.getByRole("button", { name: "Imprimer la fiche" }).click();
+    await expect(page.getByText(/Dernière impression :/)).toBeVisible();
+
+    // Nouvelle fournée depuis la n°12 : produits et créneaux repris, brouillon.
+    await page.goto("/admin/fournees/nouvelle");
+    await expect(page.getByRole("link", { name: /Reprendre la fournée n°12/ })).toBeVisible();
+    await page.goto("/admin/fournees/nouvelle?depuis=00000000-0000-4000-8000-000000000012");
+    await expect(page.getByRole("heading", { level: 1, name: "Nouvelle fournée depuis la n°12" })).toBeVisible();
+    const number = String(1000 + Math.floor(Math.random() * 8000));
+    await page.getByLabel("Numéro").fill(number);
+    await page.getByRole("button", { name: "Créer la fournée (brouillon)" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: `Fournée n°${number} · Brouillon` })).toBeVisible();
+    await expect(page.getByText("Au moins un produit proposé")).toBeVisible();
+    await expect(page.locator("li", { hasText: "Au moins un produit proposé" })).toContainText("✓");
+    await expect(page.locator("li", { hasText: "Au moins un créneau de retrait ou de livraison" })).toContainText("✓");
+    await page.goto("/admin/journal");
+    await expect(page.getByText("Fournée créée depuis la précédente").first()).toBeVisible();
+  });
+});

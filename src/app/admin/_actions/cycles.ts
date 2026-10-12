@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getCycleDemand, listProducts } from "@/lib/admin/data";
 import { adminErrorMessage, type AdminState } from "@/lib/admin/errors";
 import { requireAdmin } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -292,4 +293,53 @@ export async function withdrawSurplus(cycleId: string, productId: string): Promi
   revalidatePath("/admin", "layout");
   revalidatePath("/", "layout");
   return { ok: true, message: "Produit retiré du surplus." };
+}
+
+const duplicateSchema = z
+  .object({
+    sourceId: z.uuid(),
+    number: z.coerce.number().int().min(1, "Numéro invalide."),
+    opensAt: z.string().min(1, "Date d'ouverture requise."),
+    closesAt: z.string().min(1, "Date limite requise."),
+    productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Début de la production requis."),
+    fulfillmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Jour de livraison requis."),
+  })
+  .refine((v) => Date.parse(`${v.closesAt}Z`) > Date.parse(`${v.opensAt}Z`), { message: "La date limite doit suivre l'ouverture.", path: ["closesAt"] })
+  .refine((v) => v.fulfillmentDate >= v.productionDate, { message: "La livraison ne peut pas précéder la production.", path: ["fulfillmentDate"] });
+
+/**
+ * Nouvelle fournée en brouillon depuis une fournée existante : produits, formats, parfums et créneaux
+ * de précommande repris, décalés aux nouvelles dates. Rien n'est ouvert automatiquement.
+ */
+export async function duplicateCycle(_: AdminState, form: FormData): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const parsed = duplicateSchema.safeParse(Object.fromEntries(form.entries()));
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
+  const { data, error } = await supabaseAdmin().rpc("admin_duplicate_cycle", {
+    p_source: parsed.data.sourceId,
+    p_number: parsed.data.number,
+    p_opens_at: toIso(parsed.data.opensAt),
+    p_closes_at: toIso(parsed.data.closesAt),
+    p_production_date: parsed.data.productionDate,
+    p_fulfillment_date: parsed.data.fulfillmentDate,
+    p_actor: admin.id,
+  });
+  if (error) return { ok: false, message: error.code === "23505" ? "Ce numéro de fournée existe déjà." : adminErrorMessage(error) };
+  revalidatePath("/admin", "layout");
+  redirect(`/admin/fournees/${data as string}`);
+}
+
+/** Trace l'impression de la fiche de production avec les quantités affichées à cet instant. */
+export async function recordProductionPrint(cycleId: string): Promise<AdminState> {
+  const admin = await requireAdmin();
+  if (!z.uuid().safeParse(cycleId).success) return { ok: false, message: "Fournée introuvable." };
+  const products = await listProducts();
+  const demand = await getCycleDemand(cycleId, products);
+  const snapshot = demand.map((d) => ({ product: d.name, paid: d.paid, toVerify: d.toProduce - d.paid, extra: d.extra, total: d.toProduce + d.extra }));
+  const db = supabaseAdmin();
+  const { error } = await db.from("production_sheet_prints").insert({ cycle_id: cycleId, printed_by: admin.id, snapshot });
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.production_print", p_entity: "production_cycles", p_entity_id: cycleId, p_details: { lines: snapshot.length } });
+  revalidatePath(`/admin/fournees/${cycleId}`);
+  return { ok: true, message: "Impression enregistrée." };
 }

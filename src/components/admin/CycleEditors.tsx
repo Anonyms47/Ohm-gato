@@ -128,27 +128,48 @@ const TRANSITIONS: Record<string, { to: string; label: string; confirm?: string;
   ],
 };
 
-export function CycleStatusActions({ cycle }: { cycle: AdminCycle }) {
+/** Action principale de chaque étape : une seule à la fois, les autres restent accessibles à côté. */
+const PRIMARY: Record<string, string> = {
+  draft: "open",
+  scheduled: "open",
+  closed: "preparing",
+  preparing: "delivering",
+  delivering: "done",
+  surplus: "done",
+};
+
+export function CycleStatusActions({ cycle, deadlinePassed = false }: { cycle: AdminCycle; deadlinePassed?: boolean }) {
   const options = TRANSITIONS[cycle.status] ?? [];
   if (options.length === 0) return <p className="text-encre-douce">Aucune action possible : la fournée est {cycle.status === "done" ? "terminée" : "annulée"}.</p>;
+  // Fournée ouverte : la clôture ne devient l'action principale qu'après la date limite (avant, elle se fait toute seule).
+  const primaryTo = cycle.status === "open" ? (deadlinePassed ? "closed" : null) : (PRIMARY[cycle.status] ?? null);
+  const primary = options.find((t) => t.to === primaryTo) ?? null;
+  const others = options.filter((t) => t !== primary);
   const openNote =
     cycle.status === "draft" || cycle.status === "scheduled"
       ? "Avant d'ouvrir : vérifiez les produits, les formats, les parfums et les créneaux. La précommande est sans limite de quantité."
       : null;
+  const button = (t: (typeof options)[number], variant: "primary" | "secondary" | "destructive") => (
+    <ActionButton
+      key={t.to}
+      label={t.label}
+      variant={variant}
+      run={() => setCycleStatus(cycle.id, t.to)}
+      confirm={t.confirm ? { title: `${t.label} ?`, description: <p>{t.confirm}</p>, destructive: t.destructive } : undefined}
+    />
+  );
   return (
-    <div className="flex flex-col gap-2">
-    {openNote && <p className="text-encre-douce">{openNote}</p>}
-    <div className="flex flex-wrap gap-3">
-      {options.map((t) => (
-        <ActionButton
-          key={t.to}
-          label={t.label}
-          variant={t.destructive ? "destructive" : "secondary"}
-          run={() => setCycleStatus(cycle.id, t.to)}
-          confirm={t.confirm ? { title: `${t.label} ?`, description: <p>{t.confirm}</p>, destructive: t.destructive } : undefined}
-        />
-      ))}
-    </div>
+    <div className="flex flex-col gap-3">
+      {openNote && <p className="text-encre-douce">{openNote}</p>}
+      {primary && <div className="flex flex-wrap gap-3">{button(primary, "primary")}</div>}
+      {others.length > 0 && (
+        <details className="group" open={!primary}>
+          <summary className="min-h-11 cursor-pointer list-none font-bold underline decoration-caramel decoration-2 underline-offset-4 [&::-webkit-details-marker]:hidden">
+            {primary ? "Autres actions" : "Actions possibles"}
+          </summary>
+          <div className="mt-3 flex flex-wrap gap-3">{others.map((t) => button(t, t.destructive ? "destructive" : "secondary"))}</div>
+        </details>
+      )}
     </div>
   );
 }
