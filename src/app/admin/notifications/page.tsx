@@ -110,7 +110,7 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
           </li>
           <li>
             E-mails aux clientes :{" "}
-            {channel === "resend" ? "service d'envoi configuré." : channel === "test" ? "mode test (aucun e-mail réel n'est envoyé)." : <strong className="text-erreur">aucun service d&apos;envoi configuré : les e-mails restent en attente.</strong>}
+            {channel === "brevo" ? "envoyés par Brevo." : channel === "resend" ? "service d'envoi configuré." : channel === "test" ? "mode test (aucun e-mail réel n'est envoyé)." : <strong className="text-erreur">aucun service d&apos;envoi configuré : les e-mails restent en attente.</strong>}
           </li>
           <li>
             En attente : {pending.count ?? 0}
