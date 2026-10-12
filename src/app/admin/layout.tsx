@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getCurrentUser } from "@/lib/auth/session";
+import { navBadges } from "@/lib/admin/today";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: { default: "Administration", template: "%s · Admin OHMEGATO" }, robots: { index: false, follow: false } };
@@ -24,5 +25,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       </main>
     );
   }
-  return <AdminShell name={user.displayName}>{children}</AdminShell>;
+  const badges = await navBadges().catch(() => ({}));
+  return (
+    <AdminShell name={user.displayName} badges={badges}>
+      {children}
+    </AdminShell>
+  );
 }

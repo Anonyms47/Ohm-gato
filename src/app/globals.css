@@ -120,6 +120,52 @@
     animation: ohm-tampon 420ms var(--ohm-courbe) both;
   }
 
+  /* ——— Atelier (administration) : carnet, tickets de cuisine, étiquettes. ——— */
+
+  /* Page de carnet : marge rose à gauche, lignes discrètes. */
+  .atelier-carnet {
+    background-color: var(--ohm-blanc-casse);
+    background-image:
+      linear-gradient(90deg, transparent 22px, color-mix(in srgb, var(--ohm-rose-vif) 45%, transparent) 22px, color-mix(in srgb, var(--ohm-rose-vif) 45%, transparent) 24px, transparent 24px),
+      repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--ohm-grille) 70%, transparent) 31px 32px);
+  }
+
+  /* Ticket de cuisine : perforation en haut, festonné en bas. */
+  .atelier-ticket {
+    position: relative;
+    background: var(--ohm-blanc-casse);
+    border: 2px solid color-mix(in srgb, var(--ohm-chocolat) 18%, transparent);
+    border-top-style: dashed;
+    border-radius: 4px 4px 10px 10px;
+  }
+
+  /* Étiquette de pâtisserie : coin coupé, pastille de priorité. */
+  .atelier-etiquette {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+
+  /* Le ticket se déploie à son arrivée. */
+  .atelier-deploie {
+    transform-origin: top;
+    animation: atelier-deploie var(--ohm-duree-moyenne) var(--ohm-courbe) both;
+  }
+
+  /* Glissement doux lors d'un changement d'étape. */
+  .atelier-glisse {
+    animation: ohm-page var(--ohm-duree-moyenne) var(--ohm-courbe) both;
+  }
+
+  /* Écriture manuscrite d'Alima dans les marges. */
+  .atelier-annotation {
+    font-family: var(--ohm-font-script);
+    color: var(--ohm-rose-encre);
+    transform: rotate(-2deg);
+  }
+}
+
+@keyframes atelier-deploie {
+  from { opacity: 0; transform: scaleY(0.6) translateY(-6px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes ohm-tampon {

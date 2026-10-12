@@ -1,173 +1,105 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { StatCard } from "@/components/admin/AdminUi";
-import { dashboard } from "@/lib/admin/data";
-import { IDENTITY_ALERT, getLegalSettings, missingIdentityFields } from "@/lib/admin/legal";
+import { DaySummary, NextStepCard, TaskList, TodayHeader } from "@/components/admin/TodayParts";
+import { hoursSince } from "@/lib/admin/tasks";
+import { loadToday } from "@/lib/admin/today";
 import { requireAdmin } from "@/lib/auth/session";
 import { cyclePhase, cyclePhaseLabel } from "@/lib/cycle-status";
-import { formatDay, formatTime } from "@/lib/dates";
+import { formatDay } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
-import { statusHeadline } from "@/lib/order-status";
 
-export default async function AdminDashboard() {
-  await requireAdmin();
-  const [d, legal] = await Promise.all([dashboard(), getLegalSettings()]);
-  const identityMissing = missingIdentityFields(legal.identity).length > 0;
+export const metadata: Metadata = { title: "Aujourd'hui" };
+
+const VISIBLE_TASKS = 6;
+
+/** « Aujourd'hui chez OHMEGATO » : ce qu'il faut faire maintenant, avant tout chiffre. */
+export default async function AdminToday() {
+  const user = await requireAdmin();
+  const d = await loadToday();
+  // Nom affiché seulement s'il s'agit d'un vrai prénom (jamais un numéro ou une adresse e-mail).
+  const candidate = user.displayName.split(/\s+/)[0] ?? "";
+  const firstName = /\p{L}/u.test(candidate) && !candidate.includes("@") ? candidate : null;
+  const phase = d.cycle ? cyclePhase(d.cycle, d.now) : null;
+
   return (
-    <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Tableau de bord</h1>
-        <p className="text-encre-douce">Chiffres des produits uniquement : les frais de livraison sont réglés au livreur et n&apos;en font jamais partie.</p>
-      </header>
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
+      <TodayHeader firstName={firstName} cycle={d.cycle} now={d.now} />
 
-      {identityMissing && (
-        <section className="rounded-[12px] border-2 border-caramel-encre bg-blanc-casse p-4" data-testid="alerte-identite">
-          <p className="font-bold">{IDENTITY_ALERT}</p>
-          <Link href="/admin/documents" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-            Documents et règles
-          </Link>
-        </section>
-      )}
-
-      {d.attention.length > 0 && (
-        <section className="rounded-[12px] border-2 border-erreur bg-blanc-casse p-4">
-          <h2 className="font-bold text-erreur">À vérifier d&apos;urgence</h2>
-          <ul className="mt-2">
-            {d.attention.map((o) => (
-              <li key={o.id}>
-                <Link href={`/admin/commandes/${o.id}`} className="font-bold underline underline-offset-4">
-                  {o.reference}
-                </Link>{" "}
-                — {o.customer_name} : paiement reçu, commande à arbitrer (stock ou montant).
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {d.toVerify.length > 0 && (
-        <section className="rounded-[12px] border-2 border-wave-encre bg-blanc-casse p-4">
-          <h2 className="font-bold">Paiements Wave à vérifier ({d.toVerify.length})</h2>
-          <p className="text-encre-douce">Commandes confirmées : vérifiez la réception dans l&apos;application Wave, puis enregistrez-la ou annulez la commande.</p>
-          <ul className="mt-2">
-            {d.toVerify.map((o) => (
-              <li key={o.id}>
-                <Link href={`/admin/commandes/${o.id}`} className="font-bold underline underline-offset-4">
-                  {o.reference}
-                </Link>{" "}
-                — {o.customer_name} · {formatFcfa(o.total_fcfa)}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Commandes du jour" value={d.todayCount} hint={`${d.todayPaid} payée${d.todayPaid > 1 ? "s" : ""}`} />
-        <StatCard label="Encaissé aujourd'hui (produits)" value={formatFcfa(d.revenueTodayFcfa)} />
-        <StatCard label="Paiements en attente" value={d.pendingPayments} />
-        <StatCard label="Demandes sur-mesure à traiter" value={d.openRequests} hint={`${d.acceptedRequests} en cours de réalisation`} />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section aria-labelledby="fournee" className="rounded-[12px] border-2 border-chocolat/20 bg-blanc-casse p-5">
-          <h2 id="fournee" className="font-display text-[1.5rem]">
-            Fournée active
-          </h2>
-          {d.cycle ? (
-            <>
-              <p className="mt-1">
-                <Link href={`/admin/fournees/${d.cycle.id}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-                  n°{d.cycle.number} — {d.cycle.title}
-                </Link>{" "}
-                · {cyclePhaseLabel[cyclePhase(d.cycle)]}
-              </p>
-              <p className="text-encre-douce">
-                Clôture {formatDay(d.cycle.closesAt)}, {formatTime(d.cycle.closesAt)} · livraison {formatDay(d.cycle.fulfillmentDate)}
-              </p>
-              {d.inventory.length > 0 && (
-                <table className="mt-4 w-full text-left tabular-nums">
-                  <caption className="sr-only">Stock de la fournée</caption>
-                  <thead>
-                    <tr className="border-b-2 border-chocolat/20">
-                      <th className="py-1">Produit</th>
-                      <th className="py-1 text-right">Dispo</th>
-                      <th className="py-1 text-right">Réservé</th>
-                      <th className="py-1 text-right">Vendu</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {d.inventory.map((i) => (
-                      <tr key={i.product_id} className="border-b border-dashed border-chocolat/15">
-                        <td className="py-1">{i.product_name}</td>
-                        <td className={`py-1 text-right ${d.lowStock.some((l) => l.product_id === i.product_id) ? "font-bold text-erreur" : ""}`}>
-                          {d.cycle?.status === "surplus" ? `${i.available_units}/${i.total_units}` : "Sans limite"}
-                        </td>
-                        <td className="py-1 text-right">{i.reserved_units}</td>
-                        <td className="py-1 text-right">{i.sold_units}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-8">
+          <section aria-labelledby="a-faire" className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="a-faire" className="font-display text-[1.7rem]">
+                À faire maintenant
+              </h2>
+              {d.tasks.length > VISIBLE_TASKS && (
+                <Link href="/admin/actions" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                  Voir les {d.tasks.length} actions
+                </Link>
               )}
-            </>
-          ) : (
-            <p className="mt-2">
-              Aucune fournée en cours.{" "}
-              <Link href="/admin/fournees/nouvelle" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-                Créer une fournée
+            </div>
+            <TaskList tasks={d.tasks.slice(0, VISIBLE_TASKS)} emptyText="Aucune action n'attend : profitez-en pour préparer la prochaine fournée." />
+          </section>
+
+          {d.wave.length > 0 && (
+            <section aria-labelledby="wave" className="flex flex-col gap-3">
+              <h2 id="wave" className="font-display text-[1.5rem]">
+                Paiements Wave à vérifier ({d.wave.length})
+              </h2>
+              <p className="text-encre-douce">Vérifiez la réception dans l&apos;application Wave, puis enregistrez-la. Rien n&apos;est validé automatiquement.</p>
+              <ul className="flex flex-col divide-y-2 divide-dashed divide-chocolat/15 rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse">
+                {d.wave.slice(0, 5).map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+                    <Link href={`/admin/commandes/${o.id}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                      {o.reference}
+                    </Link>
+                    <span>{o.customerName}</span>
+                    <span className="font-bold tabular-nums">{formatFcfa(o.totalFcfa)}</span>
+                    <span className="text-encre-douce">en attente depuis {Math.floor(hoursSince(o.createdAt, d.now))} h</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/admin/paiements" className="self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                Ouvrir la file des paiements
               </Link>
-            </p>
+            </section>
           )}
-        </section>
 
-        <section aria-labelledby="preparer" className="rounded-[12px] border-2 border-chocolat/20 bg-blanc-casse p-5">
-          <h2 id="preparer" className="font-display text-[1.5rem]">
-            À préparer ({d.toPrepare.length})
-          </h2>
-          <p className="text-encre-douce">
-            {d.deliveries} livraison{d.deliveries > 1 ? "s" : ""} ·{" "}
-            <Link href="/admin/livraisons" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
-              carte des livraisons
-            </Link>{" "}
-            · {d.pickups} retrait{d.pickups > 1 ? "s" : ""}
-          </p>
-          {d.toPrepare.length === 0 ? (
-            <p className="mt-3">Rien à préparer pour le moment.</p>
-          ) : (
-            <ul className="mt-3 flex flex-col divide-y divide-dashed divide-chocolat/20">
-              {d.toPrepare.slice(0, 12).map((o) => (
-                <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <Link href={`/admin/commandes/${o.id}`} className="font-bold underline underline-offset-4">
-                    {o.reference}
+          <section aria-labelledby="resume" className="flex flex-col gap-3">
+            <h2 id="resume" className="font-display text-[1.5rem]">
+              Résumé du jour
+            </h2>
+            <DaySummary summary={d.summary} />
+          </section>
+        </div>
+
+        <aside className="flex flex-col gap-6">
+          <NextStepCard step={d.next} />
+          <section aria-labelledby="fournee" className="rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse p-5">
+            <h2 id="fournee" className="font-display text-[1.3rem]">
+              Fournée active
+            </h2>
+            {d.cycle && phase ? (
+              <>
+                <p className="mt-1">
+                  <Link href={`/admin/fournees/${d.cycle.id}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                    n°{d.cycle.number} — {d.cycle.title}
                   </Link>
-                  <span>{o.customer_name}</span>
-                  <span className="text-encre-douce">
-                    {o.fulfillment === "delivery" ? "Livraison" : "Retrait"} · {statusHeadline[o.status]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                </p>
+                <p className="mt-2 inline-block rounded-full bg-rose/60 px-3 py-0.5 font-bold">{cyclePhaseLabel[phase]}</p>
+                <p className="mt-2 text-encre-douce">Livraison et retrait : {formatDay(d.cycle.fulfillmentDate)}</p>
+              </>
+            ) : (
+              <p className="mt-2">
+                Aucune fournée en cours.{" "}
+                <Link href="/admin/fournees/nouvelle" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                  Créer une fournée
+                </Link>
+              </p>
+            )}
+          </section>
+        </aside>
       </div>
-
-      {d.lowStock.length > 0 && (
-        <section aria-labelledby="faible" className="rounded-[12px] border-2 border-orange-encre bg-blanc-casse p-5">
-          <h2 id="faible" className="font-display text-[1.4rem]">
-            Produits épuisés ou presque
-          </h2>
-          <ul className="mt-2">
-            {d.lowStock.map((i) => (
-              <li key={i.product_id}>
-                {i.product_name} : {i.available_units} {i.unit_label_plural} disponibles sur {i.total_units}
-              </li>
-            ))}
-          </ul>
-          <Link href="/admin/stock" className="mt-2 inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
-            Ajuster le stock
-          </Link>
-        </section>
-      )}
     </div>
   );
 }
