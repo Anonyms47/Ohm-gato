@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { acceptTermsAndContinue, addToBox, e164, fillPickupCheckout, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, e164, fillPickupCheckout, freshIp, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Atelier — navigation et accueil", () => {
   test("« Aujourd'hui » répond à : que faire maintenant ? Recherche et navigation", async ({ page }) => {
@@ -96,6 +96,8 @@ async function confirmCheckout(page: import("@playwright/test").Page) {
 
 /** Commande au retrait payée par le prestataire de test ; renvoie sa référence. */
 async function paidPickupOrder(page: import("@playwright/test").Page): Promise<string> {
+  // Adresse distincte : ces commandes ne doivent pas épuiser la limite par adresse des autres tests.
+  await freshIp(page);
   await addToBox(page, "cookies", "Box de 3");
   await fillPickupCheckout(page);
   await confirmCheckout(page);
@@ -108,6 +110,7 @@ async function paidPickupOrder(page: import("@playwright/test").Page): Promise<s
 
 /** Commande au retrait « payer avec Wave » (paiement à vérifier) ; renvoie sa référence. */
 async function waveOrder(page: import("@playwright/test").Page): Promise<string> {
+  await freshIp(page);
   await addToBox(page, "cake-orange", "4 tranches");
   await fillPickupCheckout(page);
   await confirmCheckout(page);
@@ -217,7 +220,7 @@ test.describe("Atelier — cockpit de fournée", () => {
 
     // Nouvelle fournée depuis la n°12 : produits et créneaux repris, brouillon.
     await page.goto("/admin/fournees/nouvelle");
-    await expect(page.getByRole("link", { name: /Reprendre la fournée n°12/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Reprendre la fournée n°12 ·/ })).toBeVisible();
     await page.goto("/admin/fournees/nouvelle?depuis=00000000-0000-4000-8000-000000000012");
     await expect(page.getByRole("heading", { level: 1, name: "Nouvelle fournée depuis la n°12" })).toBeVisible();
     const number = String(1000 + Math.floor(Math.random() * 8000));
