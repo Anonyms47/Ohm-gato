@@ -187,3 +187,40 @@ export async function listWaveToVerify(): Promise<WaveToVerify[]> {
 export function serverNow(): number {
   return Date.now();
 }
+
+export interface VerifiedPayment {
+  orderId: string;
+  reference: string;
+  customerName: string;
+  totalFcfa: number;
+  verifiedAt: string;
+  verifiedBy: string | null;
+}
+
+/** Paiements Wave vérifiés aujourd'hui (journal d'audit : qui et quand). */
+export async function listVerifiedToday(): Promise<VerifiedPayment[]> {
+  const { start, end } = dakarDayBounds();
+  const { data, error } = await db()
+    .from("audit_logs")
+    .select("entity_id, actor_id, created_at")
+    .eq("action", "order.payment_recorded")
+    .gte("created_at", start)
+    .lt("created_at", end)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as { entity_id: string; actor_id: string | null; created_at: string }[];
+  if (rows.length === 0) return [];
+  const [orders, profiles] = await Promise.all([
+    db().from("orders").select("id, reference, customer_name, total_fcfa").in("id", rows.map((r) => r.entity_id)),
+    db().from("profiles").select("id, full_name, phone").in("id", rows.map((r) => r.actor_id).filter((x): x is string => Boolean(x))),
+  ]);
+  if (orders.error) throw orders.error;
+  const byId = new Map(((orders.data ?? []) as { id: string; reference: string; customer_name: string; total_fcfa: number }[]).map((o) => [o.id, o]));
+  const names = new Map(((profiles.data ?? []) as { id: string; full_name: string | null; phone: string | null }[]).map((p) => [p.id, p.full_name || (p.phone ? `+${p.phone}` : "Équipe")]));
+  return rows
+    .filter((r) => byId.has(r.entity_id))
+    .map((r) => {
+      const o = byId.get(r.entity_id)!;
+      return { orderId: o.id, reference: o.reference, customerName: o.customer_name, totalFcfa: o.total_fcfa, verifiedAt: r.created_at, verifiedBy: r.actor_id ? (names.get(r.actor_id) ?? "Équipe") : null };
+    });
+}

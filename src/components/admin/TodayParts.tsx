@@ -100,9 +100,9 @@ export function DaySummary({ summary }: { summary: TodaySummary }) {
   const items = [
     { value: summary.newOrders, label: summary.newOrders > 1 ? "nouvelles commandes" : "nouvelle commande", href: "/admin/commandes?jour=aujourdhui" },
     { value: summary.waveToVerify, label: summary.waveToVerify > 1 ? "paiements à vérifier" : "paiement à vérifier", href: "/admin/paiements" },
-    { value: summary.confirmedFcfa, label: "confirmés aujourd'hui (produits)", href: "/admin/paiements?vue=verifies", money: true },
-    { value: summary.toPrepare, label: summary.toPrepare > 1 ? "commandes à préparer" : "commande à préparer", href: "/admin/commandes?vue=simple#a-preparer" },
-    { value: summary.pickupsToday, label: summary.pickupsToday > 1 ? "retraits aujourd'hui" : "retrait aujourd'hui", href: "/admin/commandes?vue=simple#prete" },
+    { value: summary.confirmedFcfa, label: "confirmés aujourd'hui (produits)", href: "/admin/paiements#verifies", money: true },
+    { value: summary.toPrepare, label: summary.toPrepare > 1 ? "commandes à préparer" : "commande à préparer", href: "/admin/commandes?vue=besoin#payees" },
+    { value: summary.pickupsToday, label: summary.pickupsToday > 1 ? "retraits aujourd'hui" : "retrait aujourd'hui", href: "/admin/commandes?vue=besoin#prete" },
     { value: summary.deliveriesToday, label: summary.deliveriesToday > 1 ? "livraisons aujourd'hui" : "livraison aujourd'hui", href: "/admin/livraisons" },
   ].filter((i) => i.value > 0);
   if (items.length === 0) {

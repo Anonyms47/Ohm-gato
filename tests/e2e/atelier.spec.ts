@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { e164, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, e164, fillPickupCheckout, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Atelier — navigation et accueil", () => {
   test("« Aujourd'hui » répond à : que faire maintenant ? Recherche et navigation", async ({ page }) => {
@@ -84,4 +84,108 @@ test.describe("Atelier — navigation et accueil", () => {
       await context.close();
     });
   }
+});
+
+/** Le récapitulatif n'est imprimé qu'une fois par session : on ne clique que s'il est proposé. */
+async function confirmCheckout(page: import("@playwright/test").Page) {
+  await expect(page.getByRole("heading", { name: /5\. Vérification/ })).toBeVisible();
+  const print = page.getByRole("button", { name: "Imprimer mon récapitulatif" });
+  if (await print.isVisible()) await print.click();
+  await acceptTermsAndContinue(page);
+}
+
+/** Commande au retrait payée par le prestataire de test ; renvoie sa référence. */
+async function paidPickupOrder(page: import("@playwright/test").Page): Promise<string> {
+  await addToBox(page, "cookies", "Box de 3");
+  await fillPickupCheckout(page);
+  await confirmCheckout(page);
+  await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
+  await expect(page).toHaveURL(/\/paiement-test\//);
+  await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
+  return (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
+}
+
+/** Commande au retrait « payer avec Wave » (paiement à vérifier) ; renvoie sa référence. */
+async function waveOrder(page: import("@playwright/test").Page): Promise<string> {
+  await addToBox(page, "cake-orange", "4 tranches");
+  await fillPickupCheckout(page);
+  await confirmCheckout(page);
+  await page.getByRole("button", { name: "Payer avec Wave" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Commande confirmée");
+  return (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
+}
+
+test.describe("Atelier — commandes et paiements", () => {
+  test("actions groupées confirmées : préparation, prêtes, retrait effectué", async ({ page }) => {
+    test.slow();
+    const first = await paidPickupOrder(page);
+    const second = await paidPickupOrder(page);
+    const admin = testPhone();
+    await login(page, admin, "/admin/commandes");
+    await grantAdmin(e164(admin));
+
+    for (const [action, confirm] of [
+      ["Passer en préparation", "Passer en préparation"],
+      ["Marquer prêtes", "Marquer prêtes"],
+      ["Retrait effectué", "Retrait effectué"],
+    ] as const) {
+      await page.goto("/admin/commandes?vue=besoin");
+      await waitForHydration(page);
+      for (const ref of [first, second]) await page.getByRole("checkbox", { name: `Sélectionner ${ref}` }).first().check();
+      const bar = page.getByRole("region", { name: "Actions sur la sélection" });
+      await bar.getByRole("button", { name: new RegExp(`^${action} \\(2\\)`) }).click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toContainText(first);
+      await expect(dialog).toContainText(second);
+      await dialog.getByRole("button", { name: confirm, exact: true }).click();
+      await expect(page.getByText(/^2 commandes :/)).toBeVisible();
+    }
+    await page.goto(`/admin/commandes?q=${first}`);
+    await page.getByRole("link", { name: first }).first().click();
+    await expect(page.getByText("Remise au client").first()).toBeVisible();
+    await expect(page.getByText(/Action groupée/).first()).toBeVisible();
+  });
+
+  test("paiement Wave : introuvable, puis vérifié avec résumé et tampon ; annulation motivée ; note interne", async ({ page }) => {
+    test.slow();
+    const toVerify = await waveOrder(page);
+    const toCancel = await waveOrder(page);
+    const admin = testPhone();
+    await login(page, admin, "/admin/paiements");
+    await grantAdmin(e164(admin));
+    await page.goto("/admin/paiements");
+    await waitForHydration(page);
+
+    const ticket = page.locator("li", { has: page.getByRole("link", { name: toVerify, exact: true }) });
+    await ticket.getByRole("button", { name: "Introuvable pour le moment" }).click();
+    await expect(page.getByText(/Déjà cherché sans succès/).first()).toBeVisible();
+    await expect(ticket.getByRole("link", { name: /Contacter la cliente/ })).toHaveAttribute("href", /^https:\/\/wa\.me\/221\d+\?text=/);
+
+    await ticket.getByLabel(/Référence de la transaction Wave/).fill("TX-9");
+    await ticket.getByRole("button", { name: "Paiement Wave reçu" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(toVerify);
+    await expect(dialog).toContainText("TX-9");
+    await dialog.getByRole("button", { name: "Oui, paiement reçu" }).click();
+    await expect(page.getByText("Paiement enregistré : la commande est payée.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Vérifiés aujourd'hui" })).toBeVisible();
+    await expect(page.locator("#verifies").getByRole("link", { name: toVerify })).toBeVisible();
+
+    // Annulation : le motif est obligatoire et reste dans l'historique.
+    await page.goto(`/admin/commandes?q=${toCancel}`);
+    await page.getByRole("link", { name: toCancel }).first().click();
+    await waitForHydration(page);
+    await page.getByRole("button", { name: "Annuler la commande" }).click();
+    const cancel = page.getByRole("dialog");
+    await cancel.getByRole("button", { name: "Annuler la commande" }).click();
+    await expect(cancel.getByText("Indiquez le motif de l'annulation.")).toBeVisible();
+    await cancel.getByLabel("Motif de l'annulation").fill("Paiement jamais reçu");
+    await cancel.getByRole("button", { name: "Annuler la commande" }).click();
+    await expect(page.getByText(/Motif : Paiement jamais reçu/).first()).toBeVisible();
+
+    await page.getByLabel("Nouvelle note interne").fill("Cliente prévenue par téléphone.");
+    await page.getByRole("button", { name: "Ajouter la note" }).click();
+    await expect(page.getByText("Cliente prévenue par téléphone.").first()).toBeVisible();
+  });
 });

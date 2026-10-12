@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AtelierIcon } from "@/components/admin/AtelierIcons";
 import { CommandPalette } from "@/components/admin/CommandPalette";
 import { MOBILE_TABS, NAV_GROUPS, isActive } from "@/components/admin/nav";
+import { ToastProvider } from "@/components/admin/Toast";
 import { cn } from "@/lib/cn";
 
 const STORAGE_KEY = "ohm-atelier-groupes-replies";
@@ -169,7 +170,7 @@ export function AdminShell({ name, badges, children }: { name: string; badges?: 
       </nav>
 
       <main id="admin-contenu" className="min-w-0 px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-12">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </main>
 
       {/* Téléphone : barre du bas, atteignable au pouce. */}

@@ -85,7 +85,7 @@ export const QUICK_ACTIONS: { label: string; href: string; keywords: string }[] 
   { label: "Créer une fournée", href: "/admin/fournees/nouvelle", keywords: "nouvelle fournee creer" },
   { label: "Imprimer la fiche de production", href: "/admin/production", keywords: "production imprimer fiche quantites" },
   { label: "Livraisons et retraits du jour", href: "/admin/livraisons", keywords: "livraison retrait livreur carte" },
-  { label: "Commandes à préparer", href: "/admin/commandes?vue=simple#a-preparer", keywords: "preparer commandes" },
+  { label: "Commandes à préparer", href: "/admin/commandes?vue=besoin#payees", keywords: "preparer commandes" },
   { label: "Ajouter un produit", href: "/admin/produits#nouveau", keywords: "produit ajouter nouveau" },
   { label: "Demandes sur mesure", href: "/admin/sur-mesure", keywords: "sur mesure devis gateau" },
   { label: "Ouvrir les réglages", href: "/admin/reglages", keywords: "reglages parametres" },

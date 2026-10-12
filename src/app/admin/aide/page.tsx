@@ -40,6 +40,7 @@ const GUIDES: { title: string; steps: string[]; href: string; link: string }[] =
     title: "Marquer une commande prête",
     steps: [
       "Ouvrez la commande, puis « Passer en préparation » et « Marquer prête ».",
+      "Plusieurs commandes à la fois : cochez-les dans Commandes, puis choisissez l’action dans la barre qui apparaît (une confirmation est demandée).",
       "Retrait : « Retrait effectué » quand la cliente repart avec sa boîte. Livraison : passez par Livraisons.",
     ],
     href: "/admin/commandes",

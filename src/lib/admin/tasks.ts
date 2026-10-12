@@ -64,7 +64,7 @@ export function buildTasks(input: TaskInput): AdminTask[] {
       title: `${n} ${plural(n, "commande payée demande", "commandes payées demandent")} une décision`,
       detail: "Paiement reçu mais montant ou quantités à arbitrer.",
       count: n,
-      href: "/admin/commandes?statut=needs_attention",
+      href: "/admin/commandes?vue=besoin#a-verifier",
       action: "Arbitrer",
     });
   }
@@ -115,7 +115,7 @@ export function buildTasks(input: TaskInput): AdminTask[] {
       priority: "today",
       title: `${n} ${plural(n, "commande payée doit", "commandes payées doivent")} être ${plural(n, "préparée", "préparées")}`,
       count: n,
-      href: "/admin/commandes?vue=simple#a-preparer",
+      href: "/admin/commandes?vue=besoin#payees",
       action: "Préparer",
     });
   }
@@ -132,7 +132,7 @@ export function buildTasks(input: TaskInput): AdminTask[] {
       title: `${readyTotal} ${plural(readyTotal, "commande prête attend", "commandes prêtes attendent")} d'être ${plural(readyTotal, "remise", "remises")}`,
       detail: parts.join(" · "),
       count: readyTotal,
-      href: input.ready.delivery ? "/admin/livraisons" : "/admin/commandes?vue=simple#prete",
+      href: input.ready.delivery ? "/admin/livraisons" : "/admin/commandes?vue=besoin#prete",
       action: input.ready.delivery ? "Organiser" : "Remettre",
     });
   }

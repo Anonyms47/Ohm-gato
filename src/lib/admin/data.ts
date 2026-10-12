@@ -437,7 +437,24 @@ export interface OrderFilter {
   fulfillment?: string;
   cycle?: string;
   today?: boolean;
+  /** Étape de travail de l'atelier (voir order-stage.ts). */
+  stage?: string;
+  /** Pagination (50 par page) ; sans page, les 200 plus récentes. */
+  page?: number;
 }
+
+export const ORDERS_PAGE_SIZE = 50;
+
+/** Filtre PostgREST d'une étape de travail (mêmes règles que orderStage). */
+const STAGE_FILTERS: Record<string, string> = {
+  "a-verifier": "status.in.(pending_payment,awaiting_validation,needs_attention),and(status.eq.confirmed,payment_status.neq.paid)",
+  payees: "and(status.eq.confirmed,payment_status.eq.paid)",
+  "a-preparer": "status.in.(preparing,finishing)",
+  prete: "status.eq.ready",
+  "a-remettre": "status.eq.out_for_delivery",
+  terminees: "status.in.(delivered,picked_up)",
+  annulees: "status.in.(cancelled,expired,refunded)",
+};
 
 export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> {
   let query = db()
@@ -445,8 +462,12 @@ export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> 
     .select(
       "id, reference, status, payment_status, fulfillment, customer_name, customer_phone, total_fcfa, created_at, district, custom_request_id, production_cycles(number), delivery_slots(starts_at)",
     )
-    .order("created_at", { ascending: false })
-    .limit(200);
+    .order("created_at", { ascending: false });
+  if (filter.page && filter.page > 0) {
+    const from = (filter.page - 1) * ORDERS_PAGE_SIZE;
+    query = query.range(from, from + ORDERS_PAGE_SIZE); // une de plus : indique s'il reste une page
+  } else query = query.limit(200);
+  if (filter.stage && STAGE_FILTERS[filter.stage]) query = query.or(STAGE_FILTERS[filter.stage]!);
   if (filter.status) query = query.eq("status", filter.status);
   if (filter.payment) query = query.eq("payment_status", filter.payment);
   if (filter.fulfillment) query = query.eq("fulfillment", filter.fulfillment);
@@ -776,4 +797,28 @@ export async function getSettings(): Promise<Record<string, { value: unknown; is
   const { data, error } = await db().from("site_settings").select("key, value, is_public");
   if (error) throw error;
   return Object.fromEntries((data ?? []).map((s) => [s.key as string, { value: s.value, isPublic: s.is_public as boolean }]));
+}
+
+export interface OrderNote {
+  id: number;
+  kind: "note" | "payment_not_found";
+  body: string;
+  author: string | null;
+  createdAt: string;
+}
+
+/** Notes internes d'une ou plusieurs commandes (jamais visibles des clientes). */
+export async function listOrderNotes(orderIds: string[]): Promise<Map<string, OrderNote[]>> {
+  const result = new Map<string, OrderNote[]>();
+  if (orderIds.length === 0) return result;
+  const { data, error } = await db().from("order_notes").select("id, order_id, kind, body, author_id, created_at").in("order_id", orderIds).order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as { id: number; order_id: string; kind: OrderNote["kind"]; body: string; author_id: string | null; created_at: string }[];
+  const names = await actorNames(rows.map((r) => r.author_id));
+  for (const r of rows) {
+    const list = result.get(r.order_id) ?? [];
+    list.push({ id: r.id, kind: r.kind, body: r.body, author: r.author_id ? (names.get(r.author_id) ?? "Équipe") : null, createdAt: r.created_at });
+    result.set(r.order_id, list);
+  }
+  return result;
 }

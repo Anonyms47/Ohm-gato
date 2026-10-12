@@ -52,17 +52,22 @@ export function OrderStatusActions({ orderId, status, fulfillment, paymentStatus
   const [courier, setCourier] = useState({ name: "", phone: "" });
   const [state, setState] = useState<AdminState>(null);
   const [busy, setBusy] = useState<OrderStatus | null>(null);
+  const [reason, setReason] = useState("");
   const options = nextStatuses(status, fulfillment, paymentStatus);
   if (options.length === 0) return <p className="text-encre-douce">Aucun changement possible depuis « {statusHeadline[status]} ».</p>;
 
   const run = async (to: OrderStatus) => {
     if (busy) return null;
+    // Une annulation est toujours motivée : le motif reste dans l'historique et le journal.
+    if (to === "cancelled" && !reason.trim()) return { ok: false, message: "Indiquez le motif de l'annulation." };
     setBusy(to);
-    const result = to === "out_for_delivery" ? await handToCourier(orderId, courier.name, courier.phone) : await setOrderStatus(orderId, to, note);
+    const fullNote = to === "cancelled" ? `Motif : ${reason.trim()}${note.trim() ? ` · ${note.trim()}` : ""}` : note;
+    const result = to === "out_for_delivery" ? await handToCourier(orderId, courier.name, courier.phone) : await setOrderStatus(orderId, to, fullNote);
     setBusy(null);
     setState(result);
     if (result?.ok) {
       setNote("");
+      setReason("");
       router.refresh();
     }
     return result;
@@ -101,7 +106,15 @@ export function OrderStatusActions({ orderId, status, fulfillment, paymentStatus
               }
               confirmLabel={label[to]!}
               onConfirm={() => run(to)}
-            />
+            >
+              {to === "cancelled" && (
+                <div className="mt-4">
+                  <Field label="Motif de l'annulation">
+                    {({ id }) => <TextInput id={id} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="Ex. paiement jamais reçu, demande de la cliente" />}
+                  </Field>
+                </div>
+              )}
+            </ConfirmDialog>
           ) : (
             <Button
               key={to}

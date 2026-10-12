@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RecordPayment } from "@/components/admin/RecordPayment";
-import { hoursSince } from "@/lib/admin/tasks";
-import { getAutomationSettings, listWaveToVerify, serverNow } from "@/lib/admin/today";
+import { listOrderNotes } from "@/lib/admin/data";
+import { hoursSince, humanDuration } from "@/lib/admin/tasks";
+import { getAutomationSettings, listVerifiedToday, listWaveToVerify, serverNow } from "@/lib/admin/today";
 import { telLink, whatsappLink, whatsappMessage } from "@/lib/admin/whatsapp";
 import { requireAdmin } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
@@ -14,7 +15,8 @@ export const metadata: Metadata = { title: "Paiements Wave à vérifier" };
 /** File des paiements Wave : chaque paiement est constaté par Alima dans l'application Wave, jamais automatiquement. */
 export default async function WaveQueue() {
   await requireAdmin();
-  const [queue, settings] = await Promise.all([listWaveToVerify(), getAutomationSettings()]);
+  const [queue, settings, verified] = await Promise.all([listWaveToVerify(), getAutomationSettings(), listVerifiedToday()]);
+  const notes = await listOrderNotes(queue.map((o) => o.id));
   const now = serverNow();
   const total = queue.reduce((s, o) => s + o.totalFcfa, 0);
 
@@ -55,7 +57,7 @@ export default async function WaveQueue() {
                   <p className="text-[1.05rem] font-bold">{o.customerName}</p>
                   <p className="text-encre-douce">
                     Commande du {formatDay(o.createdAt)} à {formatTime(o.createdAt)} ·{" "}
-                    <span className={cn(late && "font-bold text-erreur")}>en attente depuis {Math.floor(waited)} h</span>
+                    <span className={cn(late && "font-bold text-erreur")}>en attente depuis {humanDuration(now - Date.parse(o.createdAt))}</span>
                   </p>
                   <div className="mt-1 flex flex-wrap gap-2">
                     <a
@@ -71,12 +73,47 @@ export default async function WaveQueue() {
                     </a>
                   </div>
                 </div>
-                <RecordPayment orderId={o.id} reference={o.reference} amountFcfa={o.totalFcfa} />
+                <RecordPayment
+                  orderId={o.id}
+                  reference={o.reference}
+                  amountFcfa={o.totalFcfa}
+                  customerName={o.customerName}
+                  notFoundAt={(() => {
+                    const n = notes.get(o.id)?.find((x) => x.kind === "payment_not_found");
+                    return n ? `${formatDay(n.createdAt)} à ${formatTime(n.createdAt)}` : null;
+                  })()}
+                />
               </li>
             );
           })}
         </ol>
       )}
+
+      <section id="verifies" aria-labelledby="titre-verifies" className="flex scroll-mt-24 flex-col gap-3">
+        <h2 id="titre-verifies" className="font-display text-[1.5rem]">
+          Vérifiés aujourd&apos;hui
+        </h2>
+        {verified.length === 0 ? (
+          <p className="text-encre-douce">Aucun paiement vérifié aujourd&apos;hui.</p>
+        ) : (
+          <ul className="flex flex-col divide-y-2 divide-dashed divide-chocolat/15 rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse">
+            {verified.map((v) => (
+              <li key={`${v.orderId}-${v.verifiedAt}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+                <span className="ohm-tampon text-[0.8rem] text-succes">Vérifié</span>
+                <Link href={`/admin/commandes/${v.orderId}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                  {v.reference}
+                </Link>
+                <span>{v.customerName}</span>
+                <span className="font-bold tabular-nums">{formatFcfa(v.totalFcfa)}</span>
+                <span className="text-encre-douce">
+                  à {formatTime(v.verifiedAt)}
+                  {v.verifiedBy ? ` par ${v.verifiedBy}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

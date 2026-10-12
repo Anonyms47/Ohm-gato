@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DaySummary, NextStepCard, TaskList, TodayHeader } from "@/components/admin/TodayParts";
-import { hoursSince } from "@/lib/admin/tasks";
+import { humanDuration } from "@/lib/admin/tasks";
 import { loadToday } from "@/lib/admin/today";
 import { requireAdmin } from "@/lib/auth/session";
 import { cyclePhase, cyclePhaseLabel } from "@/lib/cycle-status";
@@ -55,7 +55,7 @@ export default async function AdminToday() {
                     </Link>
                     <span>{o.customerName}</span>
                     <span className="font-bold tabular-nums">{formatFcfa(o.totalFcfa)}</span>
-                    <span className="text-encre-douce">en attente depuis {Math.floor(hoursSince(o.createdAt, d.now))} h</span>
+                    <span className="text-encre-douce">en attente depuis {humanDuration(d.now - Date.parse(o.createdAt))}</span>
                   </li>
                 ))}
               </ul>
