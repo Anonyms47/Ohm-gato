@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { AdminState } from "@/lib/admin/errors";
@@ -29,8 +29,20 @@ export function AdminForm({
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
+  const [dirty, setDirty] = useState(false);
+  // Changements non enregistrés : le navigateur prévient avant de quitter la page.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- enregistrement réussi : plus rien à protéger
+    if (state?.ok) setDirty(false);
+  }, [state]);
   return (
-    <form action={formAction} className={cn("flex flex-col gap-4", className)}>
+    <form action={formAction} onChange={() => setDirty(true)} className={cn("flex flex-col gap-4", className)}>
       {children}
       <StateMessage state={state} />
       <Button type="submit" state={pending ? "loading" : state?.ok ? "success" : "idle"} loadingLabel="Enregistrement…" className="self-start">

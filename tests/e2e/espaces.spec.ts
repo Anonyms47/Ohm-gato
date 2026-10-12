@@ -249,7 +249,7 @@ test.describe("Administration d'Alima", () => {
 
     await grantAdmin(e164(phone));
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /^Bonjour/ })).toBeVisible();
     await expect(page.getByText("Fournée active")).toBeVisible();
   });
 

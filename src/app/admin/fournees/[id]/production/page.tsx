@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { PrintButton } from "@/components/admin/PrintButton";
+import { ProductionPrintButton } from "@/components/admin/ProductionPrintButton";
+import { lastProductionPrint } from "@/lib/admin/cycle-report";
 import { getCycle, getCycleDemand, listProducts } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
 import { productionLabel } from "@/lib/cycle-status";
@@ -13,7 +14,7 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
   const { id } = await params;
   const cycle = await getCycle(id);
   if (!cycle) notFound();
-  const demand = await getCycleDemand(id, await listProducts());
+  const [demand, lastPrint] = await Promise.all([getCycleDemand(id, await listProducts()), lastProductionPrint(id)]);
   return (
     <div className="flex max-w-4xl flex-col gap-6 print:max-w-none">
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -24,8 +25,14 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
             {formatTime(cycle.closesAt)}.
           </p>
           <p className="text-encre-douce">Éditée le {formatDay(new Date())} à {formatTime(new Date())}.</p>
+          {lastPrint && (
+            <p className="text-encre-douce print:hidden">
+              Dernière impression : {formatDay(lastPrint.printedAt)} à {formatTime(lastPrint.printedAt)}
+              {lastPrint.printedBy ? ` par ${lastPrint.printedBy}` : ""}.
+            </p>
+          )}
         </div>
-        <PrintButton label="Imprimer la fiche" />
+        <ProductionPrintButton cycleId={cycle.id} />
       </header>
       <table className="w-full border-collapse text-left tabular-nums" data-testid="fiche-production">
         <caption className="sr-only">Quantités à produire par produit</caption>

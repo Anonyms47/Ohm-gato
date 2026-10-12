@@ -12,15 +12,20 @@ export function QueryFilters({
   filters,
   searchLabel = "Recherche",
   withSearch = true,
+  collapsible = false,
 }: {
   filters: { name: string; label: string; options: SelectOption[] }[];
   searchLabel?: string;
   withSearch?: boolean;
+  /** Sur téléphone, les filtres se rangent dans un panneau à ouvrir. */
+  collapsible?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
+  const [open, setOpen] = useState(false);
+  const active = filters.filter((f) => params.get(f.name)).length + (params.get("q") ? 1 : 0);
   const apply = (patch: Record<string, string>) => {
     const next = new URLSearchParams(params.toString());
     for (const [key, value] of Object.entries(patch)) {
@@ -30,8 +35,22 @@ export function QueryFilters({
     router.push(`${pathname}?${next.toString()}`);
   };
   return (
+    <div className="flex flex-col gap-2">
+    {collapsible && (
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="panneau-filtres"
+        onClick={() => setOpen((o) => !o)}
+        className="flex min-h-12 items-center justify-between rounded-[10px] border-2 border-chocolat/30 bg-blanc-casse px-4 font-bold lg:hidden"
+      >
+        <span>Filtres et recherche{active ? ` (${active} actif${active > 1 ? "s" : ""})` : ""}</span>
+        <span aria-hidden>{open ? "▴" : "▾"}</span>
+      </button>
+    )}
     <form
-      className="grid gap-3 rounded-[12px] bg-blanc-casse p-4 sm:grid-cols-2 lg:grid-cols-[2fr_repeat(4,1fr)_auto] lg:items-end"
+      id="panneau-filtres"
+      className={`${collapsible && !open ? "hidden lg:grid" : "grid"} gap-3 rounded-[12px] bg-blanc-casse p-4 sm:grid-cols-2 lg:grid-cols-[2fr_repeat(4,1fr)_auto] lg:items-end`}
       onSubmit={(e) => {
         e.preventDefault();
         apply({ q });
@@ -55,5 +74,6 @@ export function QueryFilters({
         </Button>
       )}
     </form>
+    </div>
   );
 }

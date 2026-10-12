@@ -43,6 +43,11 @@ const schema = z.object({
   /** Modèle « authentification » approuvé par Meta (paramètre unique : le code). */
   WHATSAPP_OTP_TEMPLATE: z.string().min(1).optional(),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().min(2).default("fr"),
+  /** E-mails transactionnels (Resend) : clé API et expéditeur vérifié, ex. « OHMEGATO <commandes@ohmegato.com> ». À RENSEIGNER. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(3).optional(),
+  /** Secret du passage quotidien des automatisations (planificateur Vercel). */
+  CRON_SECRET: z.string().min(16).optional(),
   /** Recherche d'adresse (API compatible Nominatim). */
   GEOCODER_URL: z.url().default("https://nominatim.openstreetmap.org"),
 });

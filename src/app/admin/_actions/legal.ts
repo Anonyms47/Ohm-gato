@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { processOutbox } from "@/lib/email/outbox";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { AdminState } from "@/lib/admin/errors";
@@ -246,6 +248,7 @@ export async function recordRefund(orderId: string, _: AdminState, form: FormDat
     .select("id")
     .single();
   if (error || !created) return { ok: false, message: "Enregistrement impossible." };
+  after(() => processOutbox().catch(() => undefined));
   await audit(admin.id, "refund.record", "orders", orderId, { amount_fcfa: parsed.data.amountFcfa, method: parsed.data.method });
   revalidatePath(`/admin/commandes/${orderId}`);
   return { ok: true, message: "Remboursement enregistré." };
