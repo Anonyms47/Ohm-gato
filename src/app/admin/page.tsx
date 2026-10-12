@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OnboardingGuide } from "@/components/admin/OnboardingGuide";
 import { DaySummary, NextStepCard, TaskList, TodayHeader } from "@/components/admin/TodayParts";
 import { humanDuration } from "@/lib/admin/tasks";
 import { loadToday } from "@/lib/admin/today";
@@ -24,6 +25,7 @@ export default async function AdminToday() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
       <TodayHeader firstName={firstName} cycle={d.cycle} now={d.now} />
+      <OnboardingGuide />
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="flex min-w-0 flex-col gap-8">

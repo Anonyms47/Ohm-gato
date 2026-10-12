@@ -15,7 +15,11 @@ const empty: TaskInput = {
   toPrepare: 0,
   ready: { pickup: 0, delivery: 0 },
   incompleteAddresses: 0,
-  customToAnswer: 0,
+  customToAnswer: { overdue: 0, fresh: 0 },
+  customAnswerHours: 48,
+  slotSoonNotReady: 0,
+  slotReminderHours: 24,
+  readyWithoutSlot: 0,
   allergensToVerify: 0,
   identityMissing: false,
 };
@@ -103,5 +107,19 @@ describe("outils de l'atelier", () => {
     expect(parseAutomationSettings(undefined).paymentAlertHours).toBe(24);
     expect(parseAutomationSettings({ paymentAlertHours: 6 }).paymentAlertHours).toBe(6);
     expect(parseAutomationSettings({ paymentAlertHours: -1 }).paymentAlertHours).toBe(24);
+  });
+});
+
+describe("alertes réglables", () => {
+  it("demandes sur mesure : en retard selon le délai réglé, sinon simple information", () => {
+    const tasks = buildTasks({ ...empty, customToAnswer: { overdue: 2, fresh: 1 }, customAnswerHours: 12 });
+    expect(tasks.find((t) => t.key === "custom-overdue")?.title).toBe("2 demandes sur mesure attendent une réponse depuis plus de 12 h");
+    expect(tasks.find((t) => t.key === "custom-new")?.priority).toBe("info");
+  });
+
+  it("créneau proche et commande prête sans créneau", () => {
+    const tasks = buildTasks({ ...empty, slotSoonNotReady: 1, slotReminderHours: 6, readyWithoutSlot: 1 });
+    expect(tasks.find((t) => t.key === "slot-soon")?.title).toBe("1 commande payée doit être remise dans moins de 6 h");
+    expect(tasks.find((t) => t.key === "ready-without-slot")?.title).toBe("1 commande prête n'a pas de créneau");
   });
 });

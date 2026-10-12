@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ReopenGuide } from "@/components/admin/OnboardingGuide";
 import { requireAdmin } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Aide" };
@@ -66,6 +67,9 @@ export default async function AdminHelp() {
       <header>
         <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Aide de l&apos;atelier</h1>
         <p className="text-encre-douce">Les gestes du quotidien, en quelques lignes. Ce qui est visible des clientes est toujours précisé.</p>
+        <div className="mt-3">
+          <ReopenGuide />
+        </div>
       </header>
       <ol className="grid gap-5 md:grid-cols-2">
         {GUIDES.map((g, i) => (

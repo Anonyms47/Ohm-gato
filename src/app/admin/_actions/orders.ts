@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { processOutbox } from "@/lib/email/outbox";
 import { z } from "zod";
 import { BULK_ACTIONS, bulkEligible, type BulkTarget } from "@/lib/admin/order-stage";
 import type { Fulfillment, OrderStatus, PaymentStatus } from "@/lib/order-status";
@@ -10,6 +12,8 @@ import { normalizeSenegalPhone } from "@/lib/phone";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function refresh(orderId: string) {
+  // E-mails mis en file par la base au changement d'étape : envoyés juste après la réponse.
+  after(() => processOutbox().catch(() => undefined));
   revalidatePath("/admin", "layout");
   revalidatePath(`/admin/commandes/${orderId}`);
 }
@@ -137,6 +141,7 @@ export async function bulkSetStatus(ids: string[], target: BulkTarget): Promise<
     await db.rpc("write_audit", { p_actor: admin.id, p_action: "order.bulk_status", p_entity: "orders", p_entity_id: null, p_details: { target: parsed.data.target, orders: done } });
   }
   revalidatePath("/admin", "layout");
+  after(() => processOutbox().catch(() => undefined));
   const label = BULK_ACTIONS[parsed.data.target].label.toLowerCase();
   return {
     ok: done.length > 0,

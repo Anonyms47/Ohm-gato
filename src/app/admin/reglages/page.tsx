@@ -1,5 +1,7 @@
 import { RemoveMedia, RolesEditor, StoryMediaUpload, TextSetting } from "@/components/admin/SettingsEditors";
 import { WorkshopTracesEditor } from "@/components/admin/WorkshopTracesEditor";
+import { AutomationSettingsForm } from "@/components/admin/AutomationEditors";
+import { getAutomationSettings } from "@/lib/admin/today";
 import { getSettings, getWorkshopTraces, listAllergens, listStaff } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
 
@@ -7,7 +9,7 @@ export const metadata = { title: "Réglages et rôles" };
 
 export default async function AdminReglages() {
   const admin = await requireAdmin();
-  const [settings, staff, workshop, allergens] = await Promise.all([getSettings(), listStaff(), getWorkshopTraces(), listAllergens()]);
+  const [settings, staff, workshop, allergens, automation] = await Promise.all([getSettings(), listStaff(), getWorkshopTraces(), listAllergens(), getAutomationSettings()]);
   const text = (key: string) => (typeof settings[key]?.value === "string" ? (settings[key]!.value as string) : "");
   const archives = Array.isArray(settings["story.archive_photos"]?.value) ? (settings["story.archive_photos"]!.value as { url: string; alt: string }[]) : [];
   const alima = settings["story.alima_photo"]?.value as { url: string; alt: string } | undefined;
@@ -50,7 +52,17 @@ export default async function AdminReglages() {
         </ul>
         <StoryMediaUpload />
       </section>
-      <section className="flex flex-col gap-4">
+      <section id="automatisations" aria-labelledby="titre-automatisations" className="flex scroll-mt-24 flex-col gap-4">
+        <h2 id="titre-automatisations" className="font-display text-[1.5rem]">
+          Automatisations et alertes
+        </h2>
+        <p className="text-encre-douce">
+          Délais internes de l&apos;atelier : ils déclenchent des rappels pour l&apos;équipe, jamais un engagement affiché aux clientes. Les paiements,
+          remboursements, annulations et la publication du surplus restent toujours manuels.
+        </p>
+        <AutomationSettingsForm settings={automation} />
+      </section>
+      <section id="roles" className="flex scroll-mt-24 flex-col gap-4">
         <h2 className="font-display text-[1.5rem]">Rôles administrateurs</h2>
         <RolesEditor staff={staff} currentUserId={admin.id} />
       </section>

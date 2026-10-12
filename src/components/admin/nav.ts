@@ -20,6 +20,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "Tableau de bord", icon: "jour" },
       { href: "/admin/actions", label: "Actions à traiter", icon: "liste" },
+      { href: "/admin/notifications", label: "Notifications", icon: "cloche" },
     ],
   },
   {
@@ -90,4 +91,6 @@ export const QUICK_ACTIONS: { label: string; href: string; keywords: string }[] 
   { label: "Demandes sur mesure", href: "/admin/sur-mesure", keywords: "sur mesure devis gateau" },
   { label: "Ouvrir les réglages", href: "/admin/reglages", keywords: "reglages parametres" },
   { label: "Journal d'activité", href: "/admin/journal", keywords: "journal audit historique" },
+  { label: "Notifications de l'atelier", href: "/admin/notifications", keywords: "notifications alertes rappels" },
+  { label: "Aide de l'atelier", href: "/admin/aide", keywords: "aide guide comment" },
 ];

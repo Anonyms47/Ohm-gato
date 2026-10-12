@@ -37,7 +37,14 @@ export interface TaskInput {
   toPrepare: number;
   ready: { pickup: number; delivery: number };
   incompleteAddresses: number;
-  customToAnswer: number;
+  /** Demandes sur mesure sans réponse : au-delà du délai réglé, puis plus récentes. */
+  customToAnswer: { overdue: number; fresh: number };
+  customAnswerHours: number;
+  /** Commandes payées pas encore prêtes dont le créneau commence bientôt. */
+  slotSoonNotReady: number;
+  slotReminderHours: number;
+  /** Commandes prêtes sans créneau choisi. */
+  readyWithoutSlot: number;
   allergensToVerify: number;
   identityMissing: boolean;
 }
@@ -150,15 +157,52 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     });
   }
 
-  if (input.customToAnswer > 0) {
-    const n = input.customToAnswer;
+  if (input.slotSoonNotReady > 0) {
+    const n = input.slotSoonNotReady;
     tasks.push({
-      key: "custom-to-answer",
+      key: "slot-soon",
+      priority: "today",
+      title: `${n} ${plural(n, "commande payée doit", "commandes payées doivent")} être ${plural(n, "remise", "remises")} dans moins de ${input.slotReminderHours} h`,
+      detail: "Elles ne sont pas encore marquées prêtes.",
+      count: n,
+      href: "/admin/commandes?vue=creneau",
+      action: "Voir les créneaux",
+    });
+  }
+
+  if (input.readyWithoutSlot > 0) {
+    const n = input.readyWithoutSlot;
+    tasks.push({
+      key: "ready-without-slot",
       priority: "soon",
-      title: `${n} ${plural(n, "demande sur mesure attend", "demandes sur mesure attendent")} votre réponse`,
+      title: `${n} ${plural(n, "commande prête n'a", "commandes prêtes n'ont")} pas de créneau`,
+      detail: "Convenez d'un moment de remise avec la cliente.",
+      count: n,
+      href: "/admin/commandes?vue=creneau#jour-sans-creneau",
+      action: "Organiser",
+    });
+  }
+
+  if (input.customToAnswer.overdue > 0) {
+    const n = input.customToAnswer.overdue;
+    tasks.push({
+      key: "custom-overdue",
+      priority: "soon",
+      title: `${n} ${plural(n, "demande sur mesure attend", "demandes sur mesure attendent")} une réponse depuis plus de ${input.customAnswerHours} h`,
       count: n,
       href: "/admin/sur-mesure",
       action: "Répondre",
+    });
+  }
+  if (input.customToAnswer.fresh > 0) {
+    const n = input.customToAnswer.fresh;
+    tasks.push({
+      key: "custom-new",
+      priority: "info",
+      title: `${n} ${plural(n, "nouvelle demande sur mesure", "nouvelles demandes sur mesure")} à étudier`,
+      count: n,
+      href: "/admin/sur-mesure",
+      action: "Étudier",
     });
   }
 

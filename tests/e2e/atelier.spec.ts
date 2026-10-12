@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { acceptTermsAndContinue, addToBox, e164, fillPickupCheckout, freshIp, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
+import { acceptTermsAndContinue, addToBox, db, e164, fillPickupCheckout, freshIp, grantAdmin, localEnv, login, testPhone, waitForHydration } from "./helpers";
 
 test.describe("Atelier — navigation et accueil", () => {
   test("« Aujourd'hui » répond à : que faire maintenant ? Recherche et navigation", async ({ page }) => {
@@ -232,5 +232,65 @@ test.describe("Atelier — cockpit de fournée", () => {
     await expect(page.locator("li", { hasText: "Au moins un créneau de retrait ou de livraison" })).toContainText("✓");
     await page.goto("/admin/journal");
     await expect(page.getByText("Fournée créée depuis la précédente").first()).toBeVisible();
+  });
+});
+
+test.describe("Atelier — automatisations", () => {
+  test("e-mail transactionnel envoyé une seule fois (boîte de test), notifications, réglages et passage planifié protégé", async ({ page, playwright }) => {
+    test.slow();
+    const reference = await paidPickupOrder(page);
+    const [order] = (await db(`orders?select=id&reference=eq.${reference}`)) as { id: string }[];
+    const email = `cliente-${Date.now()}@example.com`;
+    await db(`orders?id=eq.${order!.id}`, { method: "PATCH", body: JSON.stringify({ customer_email: email }) });
+
+    const admin = testPhone();
+    await login(page, admin, "/admin");
+    await grantAdmin(e164(admin));
+    await page.goto(`/admin/commandes/${order!.id}`);
+    await waitForHydration(page);
+    await page.getByRole("button", { name: "Passer en préparation" }).click();
+    await expect(page.getByText("Statut mis à jour.")).toBeVisible();
+
+    // L'e-mail part juste après l'action, dans la boîte de test (aucun envoi réel hors production).
+    await expect
+      .poll(async () => ((await db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`)) as { body: string }[]).length, { timeout: 20_000 })
+      .toBe(1);
+    const [message] = (await db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`)) as { body: string }[];
+    expect(message!.body).toContain(`${reference} : en préparation`);
+
+    // Mise à jour manuelle : idempotente, aucun second e-mail pour la même étape.
+    await page.goto("/admin/notifications");
+    await waitForHydration(page);
+    await page.getByRole("button", { name: "Mettre l'atelier à jour maintenant" }).click();
+    await expect(page.getByText(/Atelier à jour/)).toBeVisible();
+    await page.getByRole("button", { name: "Mettre l'atelier à jour maintenant" }).click();
+    expect(((await db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`)) as unknown[]).length).toBe(1);
+    const outbox = (await db(`email_outbox?select=status&order_id=eq.${order!.id}`)) as { status: string }[];
+    expect(outbox.filter((o) => o.status === "sent").length).toBe(outbox.length);
+
+    // Notifications : actions réelles, menant à l'élément concerné.
+    await page.reload();
+    await expect(page.getByText(/informations allergènes restent à vérifier/).first()).toBeVisible();
+    await expect(page.getByText(/mode test/)).toBeVisible();
+
+    // Réglages des délais : enregistrés et journalisés.
+    await page.goto("/admin/reglages#automatisations");
+    await waitForHydration(page);
+    await page.getByLabel("Paiement Wave en attente (heures)").fill("24");
+    await page.getByRole("button", { name: "Enregistrer les réglages" }).click();
+    await expect(page.getByText("Réglages des automatisations enregistrés.")).toBeVisible();
+
+    // Passage planifié : refusé sans le secret.
+    const anonymous = await playwright.request.newContext({ baseURL: "http://localhost:3000" });
+    expect([401, 503]).toContain((await anonymous.get("/api/cron/atelier")).status());
+    expect([401, 503]).toContain((await anonymous.get("/api/cron/atelier", { headers: { Authorization: "Bearer faux-secret-0000000000" } })).status());
+    // Avec le secret : deux passages de suite ne créent rien en double.
+    const auth = { Authorization: `Bearer ${localEnv("CRON_SECRET")}` };
+    const first = await anonymous.get("/api/cron/atelier", { headers: auth });
+    expect(first.status()).toBe(200);
+    const second = (await (await anonymous.get("/api/cron/atelier", { headers: auth })).json()) as { result: { notifications: { opened: number }; emails: { sent: number } } };
+    expect(second.result.notifications.opened).toBe(0);
+    expect(second.result.emails.sent).toBe(0);
+    await anonymous.dispose();
   });
 });

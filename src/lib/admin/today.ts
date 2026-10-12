@@ -75,7 +75,7 @@ export async function loadToday(): Promise<TodayData> {
       .in("status", ACTIVE)
       .is("latitude", null)
       .or("landmark.is.null,landmark.eq."),
-    db().from("custom_requests").select("id", head).in("status", ["received", "studying"]),
+    db().from("custom_requests").select("created_at").in("status", ["received", "studying"]),
     db().from("orders").select("id", head).gte("created_at", start).lt("created_at", end),
     db().from("payments").select("amount_fcfa").eq("status", "paid").gte("paid_at", start).lt("paid_at", end),
     db()
@@ -89,6 +89,21 @@ export async function loadToday(): Promise<TodayData> {
       : Promise.resolve({ count: 0, error: null }),
   ]);
   for (const r of [attention, wave, prepare, ready, incomplete, custom, todayOrders, paidToday, slotsToday, produced]) if (r.error) throw r.error;
+  const reminderEnd = new Date(now + settings.slotReminderHours * 3_600_000).toISOString();
+  const [soon, noSlot] = await Promise.all([
+    db()
+      .from("orders")
+      .select("id, delivery_slots!inner(starts_at)", head)
+      .eq("payment_status", "paid")
+      .in("status", ["confirmed", "preparing", "finishing"])
+      .gte("delivery_slots.starts_at", new Date(now).toISOString())
+      .lt("delivery_slots.starts_at", reminderEnd),
+    db().from("orders").select("id", head).eq("status", "ready").is("slot_id", null),
+  ]);
+  if (soon.error) throw soon.error;
+  if (noSlot.error) throw noSlot.error;
+  const customRows = (custom.data ?? []) as { created_at: string }[];
+  const customOverdue = customRows.filter((r) => now - Date.parse(r.created_at) >= settings.customAnswerHours * 3_600_000).length;
 
   const waveRows: WaveToVerify[] = ((wave.data ?? []) as { id: string; reference: string; customer_name: string; customer_phone: string; total_fcfa: number; created_at: string }[]).map((o) => ({
     id: o.id,
@@ -124,7 +139,11 @@ export async function loadToday(): Promise<TodayData> {
     toPrepare: prepare.count ?? 0,
     ready: { pickup: readyRows.filter((r) => r.fulfillment === "pickup").length, delivery: readyRows.filter((r) => r.fulfillment === "delivery").length },
     incompleteAddresses: incomplete.count ?? 0,
-    customToAnswer: custom.count ?? 0,
+    customToAnswer: { overdue: customOverdue, fresh: customRows.length - customOverdue },
+    customAnswerHours: settings.customAnswerHours,
+    slotSoonNotReady: soon.count ?? 0,
+    slotReminderHours: settings.slotReminderHours,
+    readyWithoutSlot: noSlot.count ?? 0,
     allergensToVerify: toVerifyCount(activeProducts),
     identityMissing: missingIdentityFields(legal.identity).length > 0,
   });
@@ -149,10 +168,11 @@ export async function loadToday(): Promise<TodayData> {
 /** Pastilles de navigation : quelques comptes légers, recalculés à chaque page. */
 export async function navBadges(): Promise<Record<string, number>> {
   const head = { count: "exact" as const, head: true };
-  const [wave, attention, custom] = await Promise.all([
+  const [wave, attention, custom, unread] = await Promise.all([
     db().from("orders").select("id", head).eq("payment_status", "pending").not("status", "in", "(pending_payment,cancelled,expired,refunded)"),
     db().from("orders").select("id", head).eq("status", "needs_attention"),
     db().from("custom_requests").select("id", head).in("status", ["received", "studying"]),
+    db().from("admin_notifications").select("id", head).is("done_at", null).is("read_at", null),
   ]);
   const waveCount = wave.count ?? 0;
   const attentionCount = attention.count ?? 0;
@@ -161,6 +181,7 @@ export async function navBadges(): Promise<Record<string, number>> {
     "/admin/paiements": waveCount,
     "/admin/commandes": attentionCount,
     "/admin/sur-mesure": custom.count ?? 0,
+    "/admin/notifications": unread.count ?? 0,
   };
 }
 
