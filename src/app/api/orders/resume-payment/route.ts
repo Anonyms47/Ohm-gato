@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { processOutbox } from "@/lib/email/outbox";
 import { z } from "zod";
 import { clientIp, isSameOriginJson, jsonError, rateLimit } from "@/lib/http";
 import { getOrderByToken } from "@/lib/orders/get-order";
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
   }
   try {
     const checkoutUrl = await startPayment(order.id, parsed.data.provider, parsed.data.token);
+    // E-mail de la cliente mis en file par la base : envoyé juste après la réponse.
+    after(() => processOutbox().catch(() => undefined));
     return NextResponse.json({ ok: true, checkoutUrl });
   } catch (error) {
     if (error instanceof PaymentUnavailableError) {

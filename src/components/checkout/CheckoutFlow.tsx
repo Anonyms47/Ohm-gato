@@ -46,7 +46,7 @@ const STEPS: { id: StepId; title: string }[] = [
 ];
 
 const STEP_FIELDS: Partial<Record<StepId, FieldPath<CheckoutFormValues>[]>> = {
-  coordonnees: ["contact.name", "contact.phone"],
+  coordonnees: ["contact.name", "contact.phone", "contact.email"],
   reception: [
     "fulfillment",
     "delivery.district",
@@ -315,7 +315,7 @@ export function CheckoutFlow({
   };
 
   const stepSummary: Partial<Record<StepId, string>> = {
-    coordonnees: values.contact.name ? `${values.contact.name} · ${phoneDisplay(values.contact.phone)}` : undefined,
+    coordonnees: values.contact.name ? [values.contact.name, phoneDisplay(values.contact.phone), values.contact.email].filter(Boolean).join(" · ") : undefined,
     reception:
       values.fulfillment === "pickup"
         ? `Retrait — ${brand.pickupAddress}`
@@ -396,6 +396,24 @@ export function CheckoutFlow({
                               aria-describedby={describedBy}
                               aria-invalid={invalid}
                               {...register("contact.phone")}
+                            />
+                          )}
+                        </Field>
+                        <Field
+                          id="contact.email"
+                          label="E-mail (facultatif)"
+                          hint="Pour recevoir la confirmation et le suivi de votre commande."
+                          error={formState.errors.contact?.email?.message}
+                        >
+                          {({ id, describedBy, invalid }) => (
+                            <TextInput
+                              id={id}
+                              type="email"
+                              inputMode="email"
+                              autoComplete="email"
+                              aria-describedby={describedBy}
+                              aria-invalid={invalid}
+                              {...register("contact.email")}
                             />
                           )}
                         </Field>

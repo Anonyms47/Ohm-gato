@@ -40,6 +40,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/commandes", label: "Commandes", icon: "commande" },
       { href: "/admin/paiements", label: "Paiements", icon: "paiement" },
       { href: "/admin/livraisons", label: "Livraisons", icon: "livraison" },
+      { href: "/admin/chiffres", label: "Chiffres", icon: "chiffres" },
     ],
   },
   {
@@ -90,6 +91,7 @@ export const QUICK_ACTIONS: { label: string; href: string; keywords: string }[] 
   { label: "Ajouter un produit", href: "/admin/produits#nouveau", keywords: "produit ajouter nouveau" },
   { label: "Demandes sur mesure", href: "/admin/sur-mesure", keywords: "sur mesure devis gateau" },
   { label: "Ouvrir les réglages", href: "/admin/reglages", keywords: "reglages parametres" },
+  { label: "Voir les chiffres (total encaissé)", href: "/admin/chiffres", keywords: "chiffres total argent ventes bilan resume montant" },
   { label: "Journal d'activité", href: "/admin/journal", keywords: "journal audit historique" },
   { label: "Notifications de l'atelier", href: "/admin/notifications", keywords: "notifications alertes rappels" },
   { label: "Aide de l'atelier", href: "/admin/aide", keywords: "aide guide comment" },

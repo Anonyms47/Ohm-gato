@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { processOutbox } from "@/lib/email/outbox";
 import { clientIp, isSameOriginJson, jsonError } from "@/lib/http";
 import { rememberOwnership } from "@/lib/orders/owner-cookie";
 import { placeOrder } from "@/lib/orders/place-order";
@@ -22,6 +23,8 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return jsonError(result.status, result.code, result.message, result.fieldErrors ? { fieldErrors: result.fieldErrors } : undefined);
   }
+  // E-mail de la cliente mis en file par la base : envoyé juste après la réponse.
+  after(() => processOutbox().catch(() => undefined));
   const response = NextResponse.json(result, { status: 201 });
   await rememberOwnership(response, "commandes", result.reference);
   return response;

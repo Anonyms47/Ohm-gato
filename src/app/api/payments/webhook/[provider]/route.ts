@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { processOutbox } from "@/lib/email/outbox";
 import { handlePaymentWebhook } from "@/lib/orders/webhook";
 import type { ProviderId } from "@/lib/payments/types";
 
@@ -14,5 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   if (rawBody.length > 64_000) return NextResponse.json({ ok: false }, { status: 413 });
 
   const { httpStatus, outcome } = await handlePaymentWebhook(provider as ProviderId, rawBody, request.headers);
+  // E-mail « paiement confirmé » mis en file par la base : envoyé juste après la réponse.
+  after(() => processOutbox().catch(() => undefined));
   return NextResponse.json({ ok: httpStatus === 200, outcome }, { status: httpStatus });
 }

@@ -75,7 +75,7 @@ test.describe("Atelier — navigation et accueil", () => {
       const admin = testPhone();
       await login(page, admin, "/admin");
       await grantAdmin(e164(admin));
-      for (const path of ["/admin", "/admin/paiements", "/admin/actions", "/admin/aide", "/admin/commandes"]) {
+      for (const path of ["/admin", "/admin/paiements", "/admin/actions", "/admin/aide", "/admin/commandes", "/admin/chiffres?periode=tout"]) {
         await page.goto(path);
         await waitForHydration(page);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -106,6 +106,12 @@ async function paidPickupOrder(page: import("@playwright/test").Page): Promise<s
   await page.getByRole("button", { name: "Simuler un paiement réussi" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("C'est noté.");
   return (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
+}
+
+/** Annule une commande de test (stock rendu) pour ne pas peser sur les autres parcours. */
+async function cancelTestOrder(reference: string) {
+  const [order] = (await db(`orders?select=id&reference=eq.${reference}`)) as { id: string }[];
+  await db("rpc/admin_set_order_status", { method: "POST", body: JSON.stringify({ p_order_id: order!.id, p_status: "cancelled", p_note: "Test terminé", p_actor: null }) });
 }
 
 /** Commande au retrait « payer avec Wave » (paiement à vérifier) ; renvoie sa référence. */
@@ -235,7 +241,75 @@ test.describe("Atelier — cockpit de fournée", () => {
   });
 });
 
+test.describe("Atelier — chiffres", () => {
+  test("résumé des ventes : seules les commandes payées comptent, par produit et par fournée", async ({ page }) => {
+    test.slow();
+    const reference = await paidPickupOrder(page);
+    const [order] = (await db(`orders?select=total_fcfa&reference=eq.${reference}`)) as { total_fcfa: number }[];
+    const wave = await waveOrder(page); // paiement Wave non vérifié : jamais compté dans le total
+    const admin = testPhone();
+    await login(page, admin, "/admin");
+    await grantAdmin(e164(admin));
+
+    await page.goto("/admin/chiffres?periode=tout");
+    await expect(page.getByRole("heading", { level: 1, name: "Chiffres" })).toBeVisible();
+    const paid = (await db("orders?select=total_fcfa&payment_status=eq.paid")) as { total_fcfa: number }[];
+    const refunds = (await db("order_refunds?select=amount_fcfa")) as { amount_fcfa: number }[];
+    const expected = paid.reduce((s, o) => s + o.total_fcfa, 0) - refunds.reduce((s, r) => s + r.amount_fcfa, 0);
+    const digits = (text: string | null) => Number((text ?? "").replace(/\D/g, ""));
+    expect(digits(await page.getByTestId("chiffres-net").textContent())).toBe(expected);
+    expect(order!.total_fcfa).toBeGreaterThan(0);
+    await expect(page.getByRole("region", { name: "Par produit" }).getByRole("rowheader", { name: "Cookies" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Par fournée" }).getByText("Fournée n°12")).toBeVisible();
+    await expect(page.getByText(/paiements? Wave à vérifier/)).toBeVisible();
+
+    // Accessible depuis le menu « Ventes » (panneau « Plus » sur petit écran).
+    await page.goto("/admin");
+    await waitForHydration(page);
+    if ((page.viewportSize()?.width ?? 1200) < 1024) {
+      await page.getByRole("navigation", { name: "Accès rapides" }).getByRole("button", { name: "Plus" }).click();
+      await page.getByRole("dialog", { name: "Toutes les rubriques" }).getByRole("link", { name: "Chiffres" }).click();
+    } else {
+      await page.getByRole("link", { name: "Chiffres", exact: true }).first().click();
+    }
+    await expect(page).toHaveURL(/\/admin\/chiffres/);
+    await cancelTestOrder(wave);
+    await cancelTestOrder(reference);
+  });
+});
+
 test.describe("Atelier — automatisations", () => {
+  test("e-mail facultatif à la commande : « commande enregistrée » envoyé sans passage par l'atelier", async ({ page }) => {
+    await freshIp(page);
+    await addToBox(page, "cake-orange", "4 tranches");
+    await page.goto("/commande");
+    await waitForHydration(page);
+    const email = `sans-compte-${Date.now()}@example.com`;
+    await page.getByLabel("Nom").fill("Awa Diop");
+    await page.getByLabel(/Téléphone/).fill(testPhone());
+    await page.getByLabel("E-mail (facultatif)").fill("pas-une-adresse");
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await expect(page.getByText("Cette adresse e-mail n'est pas valide.").first()).toBeVisible();
+    await page.getByLabel("E-mail (facultatif)").fill(email);
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await page.getByRole("radio", { name: /^Retrait/ }).check();
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await page.getByLabel("Créneau de retrait").click();
+    await page.getByRole("option").first().click();
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await page.getByRole("button", { name: "Continuer" }).click();
+    await confirmCheckout(page);
+    await page.getByRole("button", { name: "Payer avec Wave" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Commande confirmée");
+    const reference = (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
+
+    // Aucune visite de l'atelier : l'e-mail part juste après la commande (boîte de test hors production).
+    const messages = () => db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`) as Promise<{ body: string }[]>;
+    await expect.poll(async () => (await messages()).length, { timeout: 20_000 }).toBe(1);
+    expect((await messages())[0]!.body).toMatch(/enregistrée/i);
+    await cancelTestOrder(reference);
+  });
+
   test("e-mail transactionnel envoyé une seule fois (boîte de test), notifications, réglages et passage planifié protégé", async ({ page, playwright }) => {
     test.slow();
     const reference = await paidPickupOrder(page);
