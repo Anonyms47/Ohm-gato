@@ -20,7 +20,8 @@ type IconName =
   | "plus"
   | "recherche"
   | "cloche"
-  | "aide";
+  | "aide"
+  | "chiffres";
 
 const paths: Record<IconName, string> = {
   jour: "M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0",
@@ -38,6 +39,7 @@ const paths: Record<IconName, string> = {
   reglage: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2.1-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2.1 1.2l-2.3-.9-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2.1 1.2L10 21h4l.5-2.6a7 7 0 0 0 2.1-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z",
   equipe: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c.7-3 3-5 6-5s5.3 2 6 5M16 5a3 3 0 0 1 0 6M17 15c2 .4 3.5 2.2 4 5",
   journal: "M5 4h13v16H5zM5 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2M9 8h6M9 12h6M9 16h4",
+  chiffres: "M4 20h16M7 16v-5M12 16V6M17 16v-8",
   plus: "M5 12h.01M12 12h.01M19 12h.01",
   recherche: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4",
   cloche: "M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4",

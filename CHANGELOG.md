@@ -9,6 +9,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Page « Chiffres » de l'atelier : net encaissé, payé, remboursé, commandes payées et panier moyen par période (mois, mois précédent, année, depuis le début), avec répartition par moyen de paiement, mode de remise, fournée, mois et produit ; seuls les paiements réels comptent, les paiements Wave à vérifier sont signalés à part.
 - Champ « E-mail (facultatif) » dans le bon de fournée : les clientes sans compte reçoivent aussi la confirmation et le suivi ; les e-mails partent dès la commande ou le paiement.
 - E-mails de commande envoyés par Brevo (`BREVO_API_KEY`, prioritaire sur Resend), expéditeur par défaut `commandes@ohmegato.com`.
 - Atelier OHMEGATO (refonte de `/admin`) : navigation regroupée et repliable, barre du bas sur téléphone, page « Aujourd'hui chez OHMEGATO » (tâches par priorité réelle, résumé du jour sans chiffres vides, prochaine étape guidée, compte à rebours à l'heure du serveur), recherche globale et palette Ctrl+K, commandes par besoin / par créneau / en liste avec actions groupées confirmées, file des paiements Wave (résumé, tampon « Paiement vérifié », « Introuvable pour le moment »), fiche commande en sections avec notes internes et motif d'annulation obligatoire, cockpit de fournée en sept étapes avec bilan réel, création d'une fournée depuis la précédente, impressions de la fiche de production tracées, livraisons par quartier et retraits, aide et guide de prise en main.
