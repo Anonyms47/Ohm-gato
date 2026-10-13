@@ -108,6 +108,12 @@ async function paidPickupOrder(page: import("@playwright/test").Page): Promise<s
   return (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
 }
 
+/** Annule une commande de test (stock rendu) pour ne pas peser sur les autres parcours. */
+async function cancelTestOrder(reference: string) {
+  const [order] = (await db(`orders?select=id&reference=eq.${reference}`)) as { id: string }[];
+  await db("rpc/admin_set_order_status", { method: "POST", body: JSON.stringify({ p_order_id: order!.id, p_status: "cancelled", p_note: "Test terminé", p_actor: null }) });
+}
+
 /** Commande au retrait « payer avec Wave » (paiement à vérifier) ; renvoie sa référence. */
 async function waveOrder(page: import("@playwright/test").Page): Promise<string> {
   await freshIp(page);
@@ -240,7 +246,7 @@ test.describe("Atelier — chiffres", () => {
     test.slow();
     const reference = await paidPickupOrder(page);
     const [order] = (await db(`orders?select=total_fcfa&reference=eq.${reference}`)) as { total_fcfa: number }[];
-    await waveOrder(page); // paiement Wave non vérifié : jamais compté dans le total
+    const wave = await waveOrder(page); // paiement Wave non vérifié : jamais compté dans le total
     const admin = testPhone();
     await login(page, admin, "/admin");
     await grantAdmin(e164(admin));
@@ -267,6 +273,8 @@ test.describe("Atelier — chiffres", () => {
       await page.getByRole("link", { name: "Chiffres", exact: true }).first().click();
     }
     await expect(page).toHaveURL(/\/admin\/chiffres/);
+    await cancelTestOrder(wave);
+    await cancelTestOrder(reference);
   });
 });
 
@@ -293,11 +301,13 @@ test.describe("Atelier — automatisations", () => {
     await confirmCheckout(page);
     await page.getByRole("button", { name: "Payer avec Wave" }).click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Commande confirmée");
+    const reference = (await page.getByText(/^Commande OHM12-/).first().textContent())!.replace("Commande ", "").trim();
 
     // Aucune visite de l'atelier : l'e-mail part juste après la commande (boîte de test hors production).
     const messages = () => db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`) as Promise<{ body: string }[]>;
     await expect.poll(async () => (await messages()).length, { timeout: 20_000 }).toBe(1);
     expect((await messages())[0]!.body).toMatch(/enregistrée/i);
+    await cancelTestOrder(reference);
   });
 
   test("e-mail transactionnel envoyé une seule fois (boîte de test), notifications, réglages et passage planifié protégé", async ({ page, playwright }) => {
