@@ -279,6 +279,59 @@ test.describe("Atelier — chiffres", () => {
 });
 
 test.describe("Atelier — automatisations", () => {
+  test("état des e-mails : test de connexion, message en pause repris une seule fois, commande sans e-mail", async ({ page }) => {
+    test.slow();
+    const reference = await paidPickupOrder(page);
+    const [order] = (await db(`orders?select=id&reference=eq.${reference}`)) as { id: string }[];
+    const admin = testPhone();
+    await login(page, admin, "/admin");
+    await grantAdmin(e164(admin));
+
+    // Sans e-mail : rien à envoyer, ce n'est pas une panne.
+    await page.goto(`/admin/commandes/${order!.id}`);
+    await expect(page.getByTestId("sans-email")).toContainText("Aucun e-mail fourni");
+    expect(((await db(`email_outbox?select=id&order_id=eq.${order!.id}`)) as unknown[]).length).toBe(0);
+
+    // Un message mis en pause par une erreur de configuration.
+    const email = `pause-${Date.now()}@example.com`;
+    const key = `e2e:held:${Date.now()}`;
+    await db(`orders?id=eq.${order!.id}`, { method: "PATCH", body: JSON.stringify({ customer_email: email }) });
+    await db("email_outbox", {
+      method: "POST",
+      body: JSON.stringify({ idempotency_key: key, template: "payment_confirmed", order_id: order!.id, to_email: email, status: "held", attempts: 1, error_category: "key_invalid", last_error: "La clé Brevo n'est pas reconnue" }),
+    });
+
+    await page.goto("/admin/notifications");
+    await waitForHydration(page);
+    const block = page.getByRole("region", { name: "État des e-mails" });
+    await expect(block.getByText(/En pause : [1-9]/)).toBeVisible();
+    await block.getByRole("button", { name: "Tester la connexion" }).click();
+    await expect(block.getByText("Mode test : aucun service réel n'est utilisé ici.")).toBeVisible();
+
+    const issue = block.getByRole("listitem").filter({ hasText: reference });
+    await expect(issue).toContainText("La clé Brevo n'est pas reconnue");
+    await issue.getByRole("checkbox").check();
+    await block.getByRole("button", { name: "Réessayer les messages sélectionnés" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Renvoyer" }).click();
+
+    // Envoyé une seule fois, même ligne, même clé d'idempotence.
+    const sent = () => db(`test_messages?select=body&channel=eq.email&destination=eq.${encodeURIComponent(email)}`) as Promise<{ body: string }[]>;
+    await expect.poll(async () => (await sent()).length, { timeout: 20_000 }).toBe(1);
+    const rows = (await db(`email_outbox?select=status,idempotency_key,attempts&order_id=eq.${order!.id}`)) as { status: string; idempotency_key: string; attempts: number }[];
+    expect(rows).toEqual([{ status: "sent", idempotency_key: key, attempts: 2 }]);
+    await page.getByRole("button", { name: "Mettre l'atelier à jour maintenant" }).click();
+    await expect(page.getByText(/Atelier à jour/)).toBeVisible();
+    expect((await sent()).length).toBe(1);
+    await cancelTestOrder(reference);
+  });
+
+  test("état des e-mails réservé à l'équipe", async ({ page }) => {
+    await login(page, testPhone(), "/compte");
+    await page.goto("/admin/notifications");
+    await expect(page.getByRole("heading", { name: "Accès réservé" })).toBeVisible();
+    await expect(page.getByText("État des e-mails")).toHaveCount(0);
+  });
+
   test("e-mail facultatif à la commande : « commande enregistrée » envoyé sans passage par l'atelier", async ({ page }) => {
     await freshIp(page);
     await addToBox(page, "cake-orange", "4 tranches");

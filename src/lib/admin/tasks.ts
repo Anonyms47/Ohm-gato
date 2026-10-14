@@ -47,6 +47,8 @@ export interface TaskInput {
   readyWithoutSlot: number;
   allergensToVerify: number;
   identityMissing: boolean;
+  /** E-mails aux clientes : envois suspendus (message lisible) et messages en pause ou en échec. */
+  emails?: { blockedLabel: string | null; toReview: number };
 }
 
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
@@ -203,6 +205,29 @@ export function buildTasks(input: TaskInput): AdminTask[] {
       count: n,
       href: "/admin/sur-mesure",
       action: "Étudier",
+    });
+  }
+
+  if (input.emails?.blockedLabel) {
+    tasks.push({
+      key: "emails-blocked",
+      priority: "urgent",
+      title: "Les e-mails aux clientes ne partent plus",
+      detail: `${input.emails.blockedLabel}. Les messages attendent : rien n'est perdu.`,
+      count: 1,
+      href: "/admin/notifications#emails",
+      action: "Voir l'état des e-mails",
+    });
+  } else if (input.emails && input.emails.toReview > 0) {
+    const n = input.emails.toReview;
+    tasks.push({
+      key: "emails-review",
+      priority: "today",
+      title: `${n} ${plural(n, "e-mail à vérifier", "e-mails à vérifier")}`,
+      detail: "En pause ou en échec : à reprendre ou à abandonner.",
+      count: n,
+      href: "/admin/notifications#emails",
+      action: "Vérifier",
     });
   }
 

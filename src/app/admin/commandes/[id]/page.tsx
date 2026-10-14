@@ -173,10 +173,14 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
               {order.customerName}
             </Link>
           </p>
-          <p>
-            {formatSenegalPhone(order.customerPhone)}
-            {order.customerEmail ? ` · ${order.customerEmail}` : ""}
-          </p>
+          <p>{formatSenegalPhone(order.customerPhone)}</p>
+          {order.customerEmail ? (
+            <p className="break-words">{order.customerEmail}</p>
+          ) : (
+            <p className="text-encre-douce" data-testid="sans-email">
+              Aucun e-mail fourni : pas d&apos;e-mail automatique. La cliente garde son lien personnel de suivi ; contactez-la par téléphone ou WhatsApp.
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <a href={telLink(order.customerPhone)} className={linkButton}>
               Appeler

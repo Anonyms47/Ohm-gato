@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MarkAllRead, NotificationLink, RunAutomationsButton } from "@/components/admin/AutomationEditors";
+import { EmailIssueList, MarkAllRead, NotificationLink, RunAutomationsButton, TestEmailConnectionButton } from "@/components/admin/AutomationEditors";
 import { requireAdmin } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 import { formatShortDay, formatTime } from "@/lib/dates";
-import { emailChannel } from "@/lib/email/outbox";
+import { getEmailHealth, templateLabel } from "@/lib/email/health";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Notifications" };
@@ -39,15 +39,14 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
   if (tab === "non-lues") query = query.is("done_at", null).is("read_at", null);
   if (tab === "importantes") query = query.is("done_at", null).in("priority", ["urgent", "today"]);
   if (tab === "terminees") query = query.not("done_at", "is", null);
-  const [list, pending, failed, lastRun] = await Promise.all([
+  const [list, health, lastRun] = await Promise.all([
     query,
-    db.from("email_outbox").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    db.from("email_outbox").select("id", { count: "exact", head: true }).eq("status", "failed"),
+    getEmailHealth(),
     db.from("automation_runs").select("started_at, trigger").eq("job", "atelier").order("started_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (list.error) throw list.error;
   const rows = (list.data ?? []) as NotificationRow[];
-  const channel = emailChannel();
+  const when = (iso: string | null) => (iso ? `${formatShortDay(iso)} à ${formatTime(iso)}` : "jamais");
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -98,28 +97,68 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
         </ul>
       )}
 
-      <section aria-labelledby="automatismes" className="flex flex-col gap-3 rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse p-5">
-        <h2 id="automatismes" className="font-display text-[1.4rem]">
-          Automatisations
+      <section id="emails" aria-labelledby="titre-emails" className="flex scroll-mt-24 flex-col gap-4 rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse p-5">
+        <h2 id="titre-emails" className="font-display text-[1.4rem]">
+          État des e-mails
         </h2>
-        <ul className="flex flex-col gap-1">
-          <li>
-            Dernier passage :{" "}
-            {lastRun.data ? `${formatShortDay(lastRun.data.started_at as string)} ${formatTime(lastRun.data.started_at as string)}` : "jamais"}
-            {" · "}chaque jour à 6 h (heure de Dakar), à chaque visite de l&apos;atelier et après chaque action.
-          </li>
-          <li>
-            E-mails aux clientes :{" "}
-            {channel === "brevo" ? "envoyés par Brevo." : channel === "resend" ? "service d'envoi configuré." : channel === "test" ? "mode test (aucun e-mail réel n'est envoyé)." : <strong className="text-erreur">aucun service d&apos;envoi configuré : les e-mails restent en attente.</strong>}
-          </li>
-          <li>
-            En attente : {pending.count ?? 0}
-            {(failed.count ?? 0) > 0 && <strong className="text-erreur"> · en échec : {failed.count}</strong>}
-          </li>
+        {health.blocked && (
+          <p role="alert" className="rounded-[10px] border-l-[6px] border-l-erreur bg-erreur/10 p-3 font-bold">
+            Les e-mails aux clientes ne partent plus : {health.blocked.label}. Les messages attendent, rien n&apos;est perdu.
+          </p>
+        )}
+        {health.channel === "test" ? (
+          <p>Service d&apos;envoi : mode test (aucun e-mail réel n&apos;est envoyé, boîte de test).</p>
+        ) : (
+          <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2" data-testid="etat-emails">
+            <div>
+              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">API Brevo configurée</dt>
+              <dd>{health.channel === "brevo" ? "Oui" : health.channel === "resend" ? "Non (service de secours utilisé)" : "Non"}</dd>
+            </div>
+            <div>
+              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Expéditeur</dt>
+              <dd className="break-words">{health.sender}</dd>
+            </div>
+            <div>
+              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier test réussi</dt>
+              <dd>{when(health.lastTestOkAt)}</dd>
+            </div>
+            <div>
+              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier envoi réussi</dt>
+              <dd>{when(health.lastSentAt)}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier échec</dt>
+              <dd>{health.lastFailure ? `${when(health.lastFailure.at)} : ${health.lastFailure.label}` : "aucun"}</dd>
+            </div>
+          </dl>
+        )}
+        <ul className="flex flex-wrap gap-x-6 gap-y-1 font-bold">
+          <li>En attente : {health.waiting}</li>
+          <li>En pause : {health.held}</li>
+          <li className={cn(health.failed > 0 && "text-erreur")}>Échecs définitifs : {health.failed}</li>
         </ul>
-        <div>
+        <div className="flex flex-wrap items-start gap-3">
+          <TestEmailConnectionButton />
           <RunAutomationsButton />
         </div>
+        {health.issues.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h3 className="font-bold">Messages à reprendre ou abandonner</h3>
+            <EmailIssueList
+              issues={health.issues.map((i) => ({
+                id: i.id,
+                title: `${templateLabel(i.template)}${i.orderReference ? ` · ${i.orderReference}` : ""}`,
+                detail: `${i.status === "held" ? "En pause" : "Échec"} : ${i.label} (créé ${when(i.createdAt)}).`,
+                href: i.orderId ? `/admin/commandes/${i.orderId}` : null,
+              }))}
+            />
+          </div>
+        )}
+        <p className="text-encre-douce">
+          Dernier passage automatique : {lastRun.data ? when(lastRun.data.started_at as string) : "jamais"} · chaque jour à 6 h (heure de Dakar), à chaque visite de
+          l&apos;atelier et après chaque action. Les e-mails ne sont envoyés qu&apos;aux clientes qui ont donné leur adresse ; les autres gardent leur lien
+          personnel de suivi.
+        </p>
         <Link href="/admin/reglages#automatisations" className="self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
           Régler les délais et les e-mails
         </Link>

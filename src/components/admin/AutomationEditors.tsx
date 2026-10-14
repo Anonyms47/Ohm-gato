@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { markNotificationsRead, runAutomationsNow, saveAutomationSettings } from "@/app/admin/_actions/automations";
+import { markNotificationsRead, retryEmails, runAutomationsNow, saveAutomationSettings, skipEmails, testEmailConnectionAction } from "@/app/admin/_actions/automations";
 import { ActionButton, AdminForm } from "@/components/admin/AdminUi";
 import { Field, TextInput } from "@/components/ui/Field";
 import type { AutomationSettings } from "@/lib/admin/automation-settings";
@@ -61,5 +61,85 @@ export function NotificationLink({ id, href, children, unread }: { id: number; h
     >
       {children}
     </Link>
+  );
+}
+
+export function TestEmailConnectionButton() {
+  return <ActionButton label="Tester la connexion" run={testEmailConnectionAction} />;
+}
+
+export interface EmailIssueRow {
+  id: number;
+  title: string;
+  detail: string;
+  href: string | null;
+}
+
+/** Messages en pause ou en échec : reprise ou abandon, uniquement sur sélection et après confirmation. */
+export function EmailIssueList({ issues }: { issues: EmailIssueRow[] }) {
+  const [selected, setSelected] = useState<number[]>([]);
+  const toggle = (id: number) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const n = selected.length;
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-2">
+        {issues.map((issue) => (
+          <li key={issue.id} className="flex items-start gap-3 rounded-[10px] border border-chocolat/15 bg-creme/60 p-3">
+            <input
+              type="checkbox"
+              id={`email-${issue.id}`}
+              checked={selected.includes(issue.id)}
+              onChange={() => toggle(issue.id)}
+              className="mt-1 size-5 shrink-0 accent-chocolat"
+            />
+            <label htmlFor={`email-${issue.id}`} className="min-w-0 flex-1">
+              <span className="block font-bold">{issue.title}</span>
+              <span className="block text-encre-douce">{issue.detail}</span>
+            </label>
+            {issue.href && (
+              <Link href={issue.href} className="shrink-0 font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                Commande
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="text-encre-douce" aria-live="polite">
+        {n === 0 ? "Cochez les messages à reprendre ou à abandonner." : `${n} message${n > 1 ? "s" : ""} sélectionné${n > 1 ? "s" : ""}.`}
+      </p>
+      {n > 0 && (
+        <div className="flex flex-wrap gap-3">
+          <ActionButton
+            label="Réessayer les messages sélectionnés"
+            variant="primary"
+            run={async () => {
+              const r = await retryEmails(selected);
+              if (r?.ok) setSelected([]);
+              return r;
+            }}
+            confirm={{
+              title: `Renvoyer ${n} message${n > 1 ? "s" : ""} ?`,
+              description: "Chaque message part une seule fois, avec son identifiant d'origine. Vérifiez d'abord que le service d'envoi fonctionne (« Tester la connexion »).",
+              confirmLabel: "Renvoyer",
+            }}
+          />
+          <ActionButton
+            label="Ne pas envoyer"
+            variant="text"
+            run={async () => {
+              const r = await skipEmails(selected);
+              if (r?.ok) setSelected([]);
+              return r;
+            }}
+            confirm={{
+              title: `Abandonner ${n} message${n > 1 ? "s" : ""} ?`,
+              description: "Ils ne partiront jamais. La cliente garde son lien personnel de suivi ; contactez-la par téléphone ou WhatsApp si besoin.",
+              confirmLabel: "Abandonner",
+              destructive: true,
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 }
