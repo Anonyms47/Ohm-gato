@@ -1,7 +1,7 @@
-/** Expéditeur par défaut des e-mails de commande (adresse du domaine, à valider dans le service d'envoi). */
-export const DEFAULT_EMAIL_FROM = "OHMEGATO <commandes@ohmegato.com>";
+/** Expéditeur par défaut des e-mails de commande : adresse du domaine autorisée dans Brevo (modifiable par EMAIL_FROM). */
+export const DEFAULT_EMAIL_FROM = "OHMEGATO <contact@ohmegato.com>";
 
-/** « OHMEGATO <commandes@ohmegato.com> » ou « commandes@ohmegato.com » → nom et adresse séparés. */
+/** « OHMEGATO <contact@ohmegato.com> » ou « contact@ohmegato.com » → nom et adresse séparés. */
 export function parseSender(raw: string): { name?: string; email: string } {
   const match = raw.trim().match(/^(.*?)\s*<([^<>\s]+@[^<>\s]+)>$/);
   if (match) {

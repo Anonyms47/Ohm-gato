@@ -129,6 +129,8 @@ export async function loadToday(): Promise<TodayData> {
       }
     : null;
   const activeProducts = products.filter((p) => p.isActive);
+  // Import différé : le module des e-mails dépend lui-même des réglages de l'atelier.
+  const emails = await (await import("@/lib/email/health")).getEmailAlertState().catch(() => undefined);
 
   const tasks = buildTasks({
     now,
@@ -146,6 +148,7 @@ export async function loadToday(): Promise<TodayData> {
     readyWithoutSlot: noSlot.count ?? 0,
     allergensToVerify: toVerifyCount(activeProducts),
     identityMissing: missingIdentityFields(legal.identity).length > 0,
+    emails,
   });
 
   return {
