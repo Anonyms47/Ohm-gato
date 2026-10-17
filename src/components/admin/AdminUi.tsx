@@ -28,7 +28,14 @@ export function AdminForm({
   children: ReactNode;
   className?: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  // Envoi interrompu (fichier trop lourd, connexion coupée) : message dans le formulaire, qui reste affiché.
+  const [state, formAction, pending] = useActionState(async (previous: AdminState, form: FormData): Promise<AdminState> => {
+    try {
+      return await action(previous, form);
+    } catch {
+      return { ok: false, message: "Envoi impossible (fichier trop lourd ou connexion interrompue). Vérifiez puis réessayez." };
+    }
+  }, null);
   const [dirty, setDirty] = useState(false);
   // Changements non enregistrés : le navigateur prévient avant de quitter la page.
   useEffect(() => {

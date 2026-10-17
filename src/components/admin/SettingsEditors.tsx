@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { grantRole, removeStoryMedia, revokeRole, saveTextSetting, uploadStoryMedia } from "@/app/admin/_actions/settings";
 import { ActionButton, AdminForm, StateMessage } from "@/components/admin/AdminUi";
+import { UploadInput } from "@/components/admin/UploadInput";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
@@ -49,8 +50,8 @@ export function StoryMediaUpload() {
           { value: "audio", label: "Court audio (avec transcription)" },
         ]}
       />
-      <Field label="Fichier" hint={kind === "audio" ? "MP3, M4A ou OGG, 10 Mo maximum. Jamais de lecture automatique." : "WebP, PNG ou JPEG, 10 Mo maximum."}>
-        {({ id }) => <input id={id} name="file" type="file" required accept={kind === "audio" ? "audio/mpeg,audio/mp4,audio/ogg" : "image/webp,image/png,image/jpeg"} className="min-h-11" />}
+      <Field label="Fichier" hint={kind === "audio" ? "MP3, M4A ou OGG, 4 Mo maximum. Jamais de lecture automatique." : "WebP, PNG ou JPEG. Les photos du téléphone sont allégées automatiquement."}>
+        {({ id }) => <UploadInput key={kind} id={id} required accept={kind === "audio" ? "audio/mpeg,audio/mp4,audio/ogg" : "image/webp,image/png,image/jpeg"} />}
       </Field>
       {kind === "audio" ? (
         <Field label="Transcription">{({ id }) => <TextArea id={id} name="transcript" rows={4} required />}</Field>

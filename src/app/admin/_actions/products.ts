@@ -187,7 +187,7 @@ export async function uploadProductImage(_: AdminState, form: FormData): Promise
   const role = String(form.get("role") ?? "cutout");
   const file = form.get("file");
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choisissez une photo." };
-  if (file.size > 5 * 1024 * 1024) return { ok: false, message: "La photo dépasse 5 Mo." };
+  if (file.size > 4 * 1024 * 1024) return { ok: false, message: "La photo dépasse 4 Mo." };
   if (alt.length < 5) return { ok: false, message: "Décrivez la photo (texte alternatif) pour les lecteurs d'écran." };
   if (!["cutout", "scene", "detail"].includes(role)) return { ok: false, message: "Rôle de photo invalide." };
   const bytes = new Uint8Array(await file.arrayBuffer());
