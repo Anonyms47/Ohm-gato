@@ -86,9 +86,13 @@ export function productionLabel(cycle: Pick<CycleSummary, "productionDate" | "pr
   return `Production pendant la semaine du ${week}.`;
 }
 
-/** Message officiel de la phase de précommande. */
-export function preorderMessage(cycle: Pick<CycleSummary, "closesAt" | "fulfillmentDate">): string {
-  return `Commandez avant le ${formatDay(cycle.closesAt)} à ${formatTime(cycle.closesAt)}. Votre commande sera préparée pendant la semaine et livrée ou retirée le ${formatDay(cycle.fulfillmentDate)}.`;
+type PreorderInput = Pick<CycleSummary, "closesAt" | "fulfillmentDate"> & Partial<Pick<CycleSummary, "productionDates">>;
+
+/** Message officiel de la phase de précommande (jour de préparation seulement s'il est saisi). */
+export function preorderMessage(cycle: PreorderInput): string {
+  const dates = [...(cycle.productionDates ?? [])].sort().map((d) => formatDay(d));
+  const prepared = dates.length === 0 ? "pendant la semaine" : `le ${dates.length === 1 ? dates[0] : `${dates.slice(0, -1).join(", ")} et ${dates.at(-1)}`}`;
+  return `Commandez avant le ${formatDay(cycle.closesAt)} à ${formatTime(cycle.closesAt)}. Votre commande sera préparée ${prepared} et livrée ou retirée le ${formatDay(cycle.fulfillmentDate)}.`;
 }
 
 export const PREORDER_CLOSED_MESSAGE =
@@ -100,7 +104,7 @@ export const DONE_MESSAGE = "Cette fournée est terminée. Consultez Nos fourné
 export const COME_BACK_MESSAGE = "Revenez après la fournée pour vérifier les disponibilités.";
 
 /** Message public de la phase (null si la phase n'en appelle pas). */
-export function phaseMessage(phase: CyclePhase, cycle: Pick<CycleSummary, "closesAt" | "fulfillmentDate">): string | null {
+export function phaseMessage(phase: CyclePhase, cycle: PreorderInput): string | null {
   switch (phase) {
     case "open":
       return preorderMessage(cycle);
