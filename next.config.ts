@@ -16,6 +16,8 @@ const config: NextConfig = {
   reactStrictMode: true,
   agentRules: false,
   poweredByHeader: false,
+  // Photos et documents envoyés depuis l'atelier (allégés dans le navigateur ; Vercel refuse au-delà de 4,5 Mo).
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
   images: {
     formats: ["image/avif", "image/webp"],
     maximumRedirects: 0,

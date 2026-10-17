@@ -48,7 +48,7 @@ export async function uploadStoryMedia(_: AdminState, form: FormData): Promise<A
   const caption = String(form.get("caption") ?? "").trim().slice(0, 160);
   const transcript = String(form.get("transcript") ?? "").trim().slice(0, 5000);
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choisissez un fichier." };
-  if (file.size > 10 * 1024 * 1024) return { ok: false, message: "Le fichier dépasse 10 Mo." };
+  if (file.size > 4 * 1024 * 1024) return { ok: false, message: "Le fichier dépasse 4 Mo." };
   const bytes = new Uint8Array(await file.arrayBuffer());
   const db = supabaseAdmin();
 

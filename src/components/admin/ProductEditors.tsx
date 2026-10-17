@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createProduct, deleteProductImage, saveFlavors, saveVariant, updateProduct, uploadProductImage } from "@/app/admin/_actions/products";
 import { ActionButton, AdminForm, StateMessage } from "@/components/admin/AdminUi";
+import { UploadInput } from "@/components/admin/UploadInput";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import { OhmegatoCombobox, OhmegatoMultiSelect } from "@/components/ui/select/OhmegatoCombobox";
@@ -187,8 +188,8 @@ export function ImagesEditor({ product, imageUrl }: { product: AdminProduct; ima
       <AdminForm action={uploadProductImage} submitLabel="Ajouter la photo" className="rounded-[12px] border-2 border-dashed border-chocolat/30 p-4">
         <input type="hidden" name="productId" value={product.id} />
         <input type="hidden" name="role" value={role} />
-        <Field label="Photo réelle du produit" hint="WebP, PNG ou JPEG, 5 Mo maximum.">
-          {({ id }) => <input id={id} name="file" type="file" required accept="image/webp,image/png,image/jpeg" className="min-h-11" />}
+        <Field label="Photo réelle du produit" hint="WebP, PNG ou JPEG. Les photos du téléphone sont allégées automatiquement.">
+          {({ id }) => <UploadInput id={id} required accept="image/webp,image/png,image/jpeg" />}
         </Field>
         <Field label="Description de la photo (texte alternatif)">{({ id }) => <TextInput id={id} name="alt" required maxLength={200} />}</Field>
         <OhmegatoSelect

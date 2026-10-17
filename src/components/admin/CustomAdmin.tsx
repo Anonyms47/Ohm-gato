@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { addProposal, saveInternalNote, sendStaffMessage, setRequestStatus } from "@/app/admin/_actions/custom";
 import { ActionButton, AdminForm, StateMessage } from "@/components/admin/AdminUi";
+import { UploadInput } from "@/components/admin/UploadInput";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import type { AdminState } from "@/lib/admin/errors";
@@ -15,8 +16,8 @@ export function StaffMessageForm({ requestId }: { requestId: string }) {
     <AdminForm action={sendStaffMessage} submitLabel="Envoyer au client">
       <input type="hidden" name="requestId" value={requestId} />
       <Field label="Message">{({ id }) => <TextArea id={id} name="body" rows={4} maxLength={2000} />}</Field>
-      <Field label="Document joint" optional hint="Image ou PDF, 5 Mo maximum.">
-        {({ id }) => <input id={id} name="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="min-h-11" />}
+      <Field label="Document joint" optional hint="Image ou PDF, 4 Mo maximum (photos allégées automatiquement).">
+        {({ id }) => <UploadInput id={id} accept="image/jpeg,image/png,image/webp,application/pdf" />}
       </Field>
       <label className="flex min-h-11 items-center gap-3">
         <input type="checkbox" name="askQuestion" className="size-5 accent-[var(--ohm-chocolat)]" />
