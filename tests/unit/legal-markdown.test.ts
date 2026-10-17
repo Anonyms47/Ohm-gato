@@ -59,7 +59,7 @@ describe("documents de lancement (content/legal)", () => {
   });
 
   it("présente OHMEGATO comme une activité en cours de formalisation, jamais comme une société", () => {
-    expect(all).toContain("OHMEGATO est une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.");
+    expect(all).toContain("OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.");
     expect(all).not.toMatch(/\b(SARL|SUARL|SAS|SASU|SA au capital)\b/);
     expect(all).not.toMatch(/à compléter|\[à |XXX|TODO/i);
   });

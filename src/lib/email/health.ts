@@ -29,6 +29,37 @@ export interface EmailHealth {
   held: number;
   failed: number;
   issues: EmailIssue[];
+  login: LoginEmailHealth;
+}
+
+/** Codes de connexion par e-mail (Supabase Auth → SMTP Brevo) : dates seulement. */
+export interface LoginEmailHealth {
+  /** true : dernier code parti ; false : dernier essai refusé ; null : aucun code demandé. */
+  operational: boolean | null;
+  lastSentAt: string | null;
+  lastValidatedAt: string | null;
+  lastFailure: { at: string; label: string } | null;
+}
+
+const LOGIN_FAILURE_LABELS: Record<string, string> = {
+  smtp_failed: "Supabase n'a pas pu envoyer le code (réglages SMTP Brevo dans Supabase à vérifier)",
+  rate_limited: "Limite d'envoi de codes atteinte (réglage Supabase), nouvel essai possible plus tard",
+};
+
+async function getLoginEmailHealth(): Promise<LoginEmailHealth> {
+  const db = supabaseAdmin();
+  const [sent, validated, failure] = await Promise.all([
+    db.from("otp_requests").select("created_at").eq("channel", "email").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("otp_requests").select("consumed_at").eq("channel", "email").not("consumed_at", "is", null).order("consumed_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("login_email_failures").select("created_at, category").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  for (const r of [sent, validated, failure]) if (r.error) throw r.error;
+  const lastSentAt = (sent.data?.created_at as string | undefined) ?? null;
+  const lastFailure = failure.data
+    ? { at: failure.data.created_at as string, label: LOGIN_FAILURE_LABELS[failure.data.category as string] ?? "Envoi du code refusé" }
+    : null;
+  const operational = !lastSentAt && !lastFailure ? null : !lastFailure || (lastSentAt !== null && Date.parse(lastSentAt) > Date.parse(lastFailure.at));
+  return { operational, lastSentAt, lastValidatedAt: (validated.data?.consumed_at as string | undefined) ?? null, lastFailure };
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -54,7 +85,7 @@ export async function getEmailHealth(): Promise<EmailHealth> {
   const db = supabaseAdmin();
   const channel = emailChannel();
   const provider = providerOf(channel);
-  const [lastTest, lastSent, lastFailure, waiting, held, failed, issues, block] = await Promise.all([
+  const [lastTest, lastSent, lastFailure, waiting, held, failed, issues, block, login] = await Promise.all([
     db.from("email_provider_checks").select("created_at").eq("kind", "test").eq("ok", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("email_outbox").select("sent_at").eq("status", "sent").order("sent_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("email_provider_checks").select("created_at, category").eq("ok", false).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -68,6 +99,7 @@ export async function getEmailHealth(): Promise<EmailHealth> {
       .order("created_at", { ascending: false })
       .limit(50),
     provider ? providerBlock(provider) : Promise.resolve(null),
+    getLoginEmailHealth(),
   ]);
   for (const r of [lastTest, lastSent, lastFailure, issues]) if (r.error) throw r.error;
 
@@ -102,6 +134,7 @@ export async function getEmailHealth(): Promise<EmailHealth> {
       createdAt: i.created_at,
       attempts: i.attempts,
     })),
+    login,
   };
 }
 

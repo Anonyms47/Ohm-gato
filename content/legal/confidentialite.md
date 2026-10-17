@@ -1,6 +1,6 @@
 ## Qui traite vos données
 
-Le responsable du traitement est OHMEGATO, activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.
+Le responsable du traitement est OHMEGATO. OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
 
 Pour toute question ou demande sur vos données personnelles : {{email}}.
 

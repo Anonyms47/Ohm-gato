@@ -12,9 +12,9 @@ insert into public.legal_documents (slug, title, description, sort_order) values
 on conflict (slug) do nothing;
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'conditions-generales', '1.0', 'published', 'Conditions générales', $md$## Présentation
+select 'conditions-generales', '1.1', 'published', 'Conditions générales', $md$## Présentation
 
-OHMEGATO est une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
 
 OHMEGATO prépare des pâtisseries maison (cookies, brownies, moelleux, muffins, cake, choux, verrines…) par cycles de production appelés « fournées ». Le site ohmegato.com permet de découvrir les produits, de passer commande, de payer les produits, de suivre ses commandes et d'envoyer des demandes sur mesure pour un événement.
 
@@ -143,7 +143,7 @@ Les marques et logos des prestataires cités sur le site restent la propriété 
 
 Ces conditions sont soumises au droit sénégalais, notamment aux règles applicables aux transactions électroniques et à la protection des données personnelles.
 
-En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'conditions-generales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
@@ -240,9 +240,9 @@ Chaque remboursement est enregistré : date, montant, raison, moyen utilisé et 
 where not exists (select 1 from public.legal_document_versions where document_slug = 'annulation-remboursement');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'confidentialite', '1.0', 'published', 'Confidentialité', $md$## Qui traite vos données
+select 'confidentialite', '1.1', 'published', 'Confidentialité', $md$## Qui traite vos données
 
-Le responsable du traitement est OHMEGATO, activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.
+Le responsable du traitement est OHMEGATO. OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
 
 Pour toute question ou demande sur vos données personnelles : {{email}}.
 
@@ -343,7 +343,7 @@ Nous envoyons les e-mails nécessaires à vos commandes et à votre connexion. L
 
 ## Modifications
 
-La date et la version de cette politique sont indiquées en haut de la page. En cas de changement important, nous vous en informons lorsque c'est raisonnablement possible.$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+La date et la version de cette politique sont indiquées en haut de la page. En cas de changement important, nous vous en informons lorsque c'est raisonnablement possible.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'confidentialite');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
@@ -380,9 +380,9 @@ Si un outil de mesure d'audience ou de publicité était un jour ajouté, il ne 
 where not exists (select 1 from public.legal_document_versions where document_slug = 'cookies');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'mentions-legales', '1.0', 'published', 'Mentions légales', $md$## Éditeur du site
+select 'mentions-legales', '1.1', 'published', 'Mentions légales', $md$## Éditeur du site
 
-OHMEGATO est une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
 
 - Site : ohmegato.com
 - E-mail : {{email}}
@@ -405,7 +405,7 @@ Pour signaler un contenu, une erreur ou un problème de sécurité : {{email}}.
 
 ## Droit applicable
 
-Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'mentions-legales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)

@@ -132,6 +132,27 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
             </div>
           </dl>
         )}
+        <h3 className="font-bold">Codes de connexion par e-mail (Supabase, SMTP Brevo)</h3>
+        <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2" data-testid="etat-codes-connexion">
+          <div>
+            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">SMTP de connexion</dt>
+            <dd className={cn(health.login.operational === false && "font-bold text-erreur")}>
+              {health.login.operational === null ? "Aucun code demandé pour l'instant" : health.login.operational ? "Opérationnel" : "En échec"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code envoyé</dt>
+            <dd>{when(health.login.lastSentAt)}</dd>
+          </div>
+          <div>
+            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code validé</dt>
+            <dd>{when(health.login.lastValidatedAt)}</dd>
+          </div>
+          <div>
+            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier refus</dt>
+            <dd>{health.login.lastFailure ? `${when(health.login.lastFailure.at)} : ${health.login.lastFailure.label}` : "aucun"}</dd>
+          </div>
+        </dl>
         <ul className="flex flex-wrap gap-x-6 gap-y-1 font-bold">
           <li>En attente : {health.waiting}</li>
           <li>En pause : {health.held}</li>

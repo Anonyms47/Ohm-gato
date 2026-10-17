@@ -248,7 +248,7 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     tasks.push({
       key: "identity",
       priority: "info",
-      title: "L'identité légale d'OHMEGATO est incomplète",
+      title: "Formalisation d'OHMEGATO en cours (NINEA, RCCM, adresse administrative)",
       count: 1,
       href: "/admin/documents",
       action: "Compléter",

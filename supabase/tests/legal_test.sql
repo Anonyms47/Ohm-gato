@@ -16,7 +16,7 @@ select throws_ok($$ select public.admin_publish_legal_version(gen_random_uuid(),
 select is((select count(*)::int from public.site_settings where key = 'legal.identity'), 0, 'l''identité légale reste privée');
 reset role;
 
--- Une commande accepte la version 1.0 des conditions générales
+-- Une commande accepte la version en ligne des conditions générales
 set local role service_role;
 create temp table v1 as select
   (select id from public.legal_document_versions where document_slug = 'conditions-generales' and status = 'published') as terms,
@@ -37,21 +37,21 @@ select (select id from o), terms, cancel,
   (select content_hash from public.legal_document_versions where id = cancel)
 from v1;
 
--- Brouillon puis publication de la version 1.1
+-- Brouillon puis publication de la version 1.2
 insert into public.legal_document_versions (document_slug, version, title, content)
-values ('conditions-generales', '1.1', 'Conditions générales', 'Nouveau texte');
-select is((select content_hash from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.1'),
+values ('conditions-generales', '1.2', 'Conditions générales', 'Nouveau texte');
+select is((select content_hash from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'),
   encode(sha256(convert_to('Nouveau texte', 'UTF8')), 'hex'), 'l''empreinte du texte est calculée automatiquement');
 
 set local role anon;
-select is((select count(*)::int from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.1'), 0, 'un brouillon n''est jamais visible du public');
+select is((select count(*)::int from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'), 0, 'un brouillon n''est jamais visible du public');
 reset role;
 set local role service_role;
 
 select lives_ok($$ select public.admin_publish_legal_version(
-  (select id from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.1'), null) $$,
-  'publication de la version 1.1');
-select is((select version from public.legal_document_versions where document_slug = 'conditions-generales' and status = 'published'), '1.1',
+  (select id from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'), null) $$,
+  'publication de la version 1.2');
+select is((select version from public.legal_document_versions where document_slug = 'conditions-generales' and status = 'published'), '1.2',
   'une seule version publiée : la nouvelle');
 select is((select status::text from public.legal_document_versions where id = (select terms from v1)), 'archived', 'l''ancienne version est archivée');
 select is((select terms_version_id from public.order_acceptances where order_id = (select id from o)), (select terms from v1),

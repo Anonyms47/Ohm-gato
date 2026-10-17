@@ -13,8 +13,13 @@ const documents = [
 ];
 
 // Version publiée de chaque texte de content/legal (les autres restent en 1.0 du 10 octobre 2026).
+// 1.1 du 17 octobre 2026 : identité officielle de l'exploitante (Madame Alimatou Sadiya Thiam).
+const identity = { version: "1.1", publishedAt: "2026-10-17 08:00:00+00", effectiveAt: "2026-10-17" };
 const versions = {
   "allergenes-conservation": { version: "1.1", publishedAt: "2026-10-10 14:00:00+00" },
+  "conditions-generales": identity,
+  confidentialite: identity,
+  "mentions-legales": identity,
 };
 
 const q = (s) => `'${s.replaceAll("'", "''")}'`;
@@ -28,10 +33,10 @@ on conflict (slug) do nothing;
 for (const [slug, title] of documents) {
   const content = readFileSync(`content/legal/${slug}.md`, "utf8").trim();
   if (content.includes("$md$")) throw new Error(`${slug} contient $md$`);
-  const { version, publishedAt } = versions[slug] ?? { version: "1.0", publishedAt: "2026-10-10 08:00:00+00" };
+  const { version, publishedAt, effectiveAt = "2026-10-10" } = versions[slug] ?? { version: "1.0", publishedAt: "2026-10-10 08:00:00+00" };
   sql += `
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select ${q(slug)}, '${version}', 'published', ${q(title)}, $md$${content}$md$, date '2026-10-10', timestamptz '${publishedAt}'
+select ${q(slug)}, '${version}', 'published', ${q(title)}, $md$${content}$md$, date '${effectiveAt}', timestamptz '${publishedAt}'
 where not exists (select 1 from public.legal_document_versions where document_slug = ${q(slug)});
 `;
 }

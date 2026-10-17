@@ -131,7 +131,13 @@ export async function requestLoginCode(channel: Channel, raw: string, ip: string
     testCode = data.properties.email_otp;
   } else {
     const { error } = await authClient().auth.signInWithOtp({ email: destination, options: { shouldCreateUser: true } });
-    if (error) return { ok: false, code: error.status === 429 ? "RATE_LIMITED" : "SEND_FAILED" };
+    if (error) {
+      // Visible dans l'atelier (État des e-mails) : date, catégorie et code HTTP seulement.
+      await supabaseAdmin()
+        .from("login_email_failures")
+        .insert({ category: error.status === 429 ? "rate_limited" : "smtp_failed", http_status: error.status ?? null });
+      return { ok: false, code: error.status === 429 ? "RATE_LIMITED" : "SEND_FAILED" };
+    }
   }
 
   const { error: insertError } = await supabaseAdmin().from("otp_requests").insert({ channel, destination_hash: hash });

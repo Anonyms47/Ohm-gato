@@ -1,6 +1,6 @@
 ## Présentation
 
-OHMEGATO est une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
 
 OHMEGATO prépare des pâtisseries maison (cookies, brownies, moelleux, muffins, cake, choux, verrines…) par cycles de production appelés « fournées ». Le site ohmegato.com permet de découvrir les produits, de passer commande, de payer les produits, de suivre ses commandes et d'envoyer des demandes sur mesure pour un événement.
 

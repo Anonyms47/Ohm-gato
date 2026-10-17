@@ -51,6 +51,7 @@ export default async function FourneePage() {
     email: brand.email,
     address: { "@type": "PostalAddress", addressLocality: brand.city, addressCountry: "SN" },
     areaServed: { "@type": "City", name: brand.city },
+    founder: { "@type": "Person", name: brand.operator },
     sameAs: [brand.instagramUrl],
   };
 
