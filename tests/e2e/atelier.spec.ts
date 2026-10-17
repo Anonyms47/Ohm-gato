@@ -305,6 +305,9 @@ test.describe("Atelier — automatisations", () => {
     await waitForHydration(page);
     const block = page.getByRole("region", { name: "État des e-mails" });
     await expect(block.getByText(/En pause : [1-9]/)).toBeVisible();
+    // Codes de connexion (SMTP Supabase) suivis à part, sans aucun secret.
+    await expect(block.getByTestId("etat-codes-connexion")).toContainText("SMTP de connexion");
+    await expect(block).not.toContainText(/xkeysib|xsmtpsib|api-key/i);
     await block.getByRole("button", { name: "Tester la connexion" }).click();
     await expect(block.getByText("Mode test : aucun service réel n'est utilisé ici.")).toBeVisible();
 

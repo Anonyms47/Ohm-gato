@@ -26,7 +26,7 @@ test.describe("Pages légales", () => {
 
   test("informations publiques : statut d'activité, coordonnées, livraison payée au livreur", async ({ page }) => {
     await page.goto("/mentions-legales");
-    await expect(page.getByText("OHMEGATO est une activité de pâtisserie maison exploitée par Alima à Dakar, actuellement en cours de formalisation.")).toBeVisible();
+    await expect(page.getByText("OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.")).toBeVisible();
     await expect(page.getByText("contact@ohmegato.com").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/SARL|SUARL|NINEA|RCCM/);
     await page.goto("/livraison-retrait");
@@ -131,7 +131,7 @@ test.describe("Administration des documents", () => {
     await grantAdmin(e164(admin));
     await page.goto("/admin/documents");
     await expect(page.getByRole("heading", { name: "Documents et règles", level: 1 })).toBeVisible();
-    await expect(page.getByTestId("alerte-identite")).toContainText("Identité légale incomplète");
+    await expect(page.getByTestId("alerte-identite")).toContainText("Formalisation d'OHMEGATO en cours");
 
     await page.goto("/admin/documents/cookies");
     await waitForHydration(page);

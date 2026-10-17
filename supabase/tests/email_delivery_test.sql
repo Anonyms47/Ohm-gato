@@ -2,15 +2,17 @@
 -- journal du prestataire inaccessible aux clientes.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(21);
 
 -- Aucun accès client.
 set local role anon;
 select throws_ok($$ select * from public.email_provider_checks $$, '42501', null, 'anon : journal du prestataire inaccessible');
 select throws_ok($$ select public.claim_email_outbox(10) $$, '42501', null, 'anon : réservation interdite');
+select throws_ok($$ select * from public.login_email_failures $$, '42501', null, 'anon : refus des codes de connexion inaccessibles');
 reset role;
 set local role authenticated;
 select throws_ok($$ select * from public.email_provider_checks $$, '42501', null, 'cliente connectée : journal inaccessible');
+select throws_ok($$ insert into public.login_email_failures (category) values ('smtp_failed') $$, '42501', null, 'cliente connectée : aucun refus inventé');
 select throws_ok($$ select public.admin_retry_emails(array[1]::bigint[], null) $$, '42501', null, 'cliente connectée : reprise interdite');
 select throws_ok($$ select public.admin_skip_emails(array[1]::bigint[], null) $$, '42501', null, 'cliente connectée : abandon interdit');
 reset role;

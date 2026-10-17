@@ -18,7 +18,7 @@ export const IDENTITY_FIELDS: { key: keyof LegalIdentity; label: string }[] = [
 ];
 
 export const IDENTITY_ALERT =
-  "Identité légale incomplète : renseigner le nom civil complet de l'exploitante, le NINEA, le RCCM et l'adresse administrative dès la formalisation d'OHMEGATO.";
+  "Formalisation d'OHMEGATO en cours : renseigner le NINEA, le RCCM et l'adresse administrative dès qu'ils seront attribués.";
 
 export interface Retention {
   orders: string | null;
