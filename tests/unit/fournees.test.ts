@@ -49,6 +49,9 @@ describe("fournée de la semaine du 19 octobre", () => {
     expect(preorderMessage(first)).toBe(
       "Commandez avant le dimanche 18 octobre à 23 h 59. Votre commande sera préparée pendant la semaine et livrée ou retirée le vendredi 23 octobre.",
     );
+    expect(preorderMessage({ ...first, productionDates: ["2026-10-19"] })).toBe(
+      "Commandez avant le dimanche 18 octobre à 23 h 59. Votre commande sera préparée le lundi 19 octobre et livrée ou retirée le vendredi 23 octobre.",
+    );
     expect(productionLabel(first)).toBe("Production organisée sur trois jours pendant la semaine du 19 octobre.");
     expect(productionLabel({ ...first, productionDates: ["2026-10-21", "2026-10-19"] })).toBe("Production le lundi 19 octobre et mercredi 21 octobre.");
     expect(phaseMessage("closed", first)).toBe(PREORDER_CLOSED_MESSAGE);

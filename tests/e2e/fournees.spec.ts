@@ -22,7 +22,7 @@ async function patchCycle(values: Record<string, unknown>) {
 test.describe("Fournées : précommande, clôture et surplus", () => {
   test("précommandes ouvertes : message officiel, frise en quatre moments, bouton adapté", async ({ page }) => {
     await page.goto("/fournees");
-    await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée pendant la semaine/);
+    await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée (pendant la semaine|le )/);
     const frise = page.getByRole("list", { name: "Les quatre moments de la fournée" });
     await expect(frise.getByRole("listitem")).toHaveCount(4);
     await expect(frise.getByText("Alima prépare votre fournée")).toBeVisible();
