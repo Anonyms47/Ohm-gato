@@ -1,6 +1,7 @@
+import { brand } from "@/config/brand";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EmailIssueList, MarkAllRead, NotificationLink, RunAutomationsButton, TestEmailConnectionButton } from "@/components/admin/AutomationEditors";
+import { EmailIssueList, MarkAllRead, NotificationLink, RunAutomationsButton, SendTestEmailButton, TestEmailConnectionButton } from "@/components/admin/AutomationEditors";
 import { requireAdmin } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 import { formatShortDay, formatTime } from "@/lib/dates";
@@ -160,6 +161,7 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
         </ul>
         <div className="flex flex-wrap items-start gap-3">
           <TestEmailConnectionButton />
+          {health.channel !== "none" && <SendTestEmailButton to={brand.email} />}
           <RunAutomationsButton />
         </div>
         {health.issues.length > 0 && (

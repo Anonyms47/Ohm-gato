@@ -66,11 +66,11 @@ export default async function FourneePage() {
               <span aria-hidden className={cycle?.isOpen ? "size-2.5 rounded-full bg-succes" : "size-2.5 rounded-full bg-encre-douce"} />
               {phase ? cyclePhaseLabel[phase] : "Fournée fermée"}
             </p>
-            <BrandHeading as="h1" size="affiche" id="couverture">
+            {/* Ordinateur et tablette : « La fournée n°1 » sur une seule ligne ; téléphone : deux lignes. */}
+            <BrandHeading as="h1" size="affiche" id="couverture" className={cycle ? "md:whitespace-nowrap md:text-[clamp(2.75rem,6vw,5rem)]" : undefined}>
               {cycle ? (
                 <>
-                  La fournée
-                  <br />
+                  La fournée <br className="md:hidden" />
                   <span className="text-caramel-encre">n°{cycle.number}</span>
                 </>
               ) : (

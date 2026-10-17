@@ -1,6 +1,9 @@
 import "server-only";
 import { brevoCheck, errorLabel, type EmailErrorCategory } from "@/lib/email/delivery";
-import { emailChannel, emailSender, providerBlock, recordProviderCheck, type EmailChannel } from "@/lib/email/outbox";
+import { deliver, emailChannel, emailSender, providerBlock, recordProviderCheck, type EmailChannel } from "@/lib/email/outbox";
+import { renderTestEmail } from "@/lib/email/templates";
+import { brand } from "@/config/brand";
+import { formatDay, formatTime } from "@/lib/dates";
 import { serverEnv } from "@/lib/env";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -69,6 +72,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   order_ready: "Prête",
   pickup_ready: "Prête au retrait",
   out_for_delivery: "En route",
+  order_delivered: "Livrée ou retirée",
   order_cancelled: "Annulation",
   refund_recorded: "Remboursement",
   admin_digest: "Résumé quotidien",
@@ -181,3 +185,23 @@ export async function testEmailConnection(actor: string): Promise<ConnectionTest
   return { mode: "real", configured: failure.category !== "key_missing", ok: false, category: failure.category, label: errorLabel(failure.category), testedAt };
 }
 
+
+/**
+ * Envoi réel d'un e-mail d'essai à l'adresse de la marque (contact@ohmegato.com) : prouve que les
+ * e-mails de commande partent. Jamais envoyé à une cliente ; résultat noté sans aucun secret.
+ */
+export async function sendTestEmail(actor: string): Promise<ConnectionTestResult & { to?: string }> {
+  const channel = emailChannel();
+  const testedAt = new Date().toISOString();
+  if (channel === "none") return { mode: "real", configured: false, ok: false, category: "key_missing", label: errorLabel("key_missing"), testedAt };
+  const email = renderTestEmail(`${formatDay(testedAt)} à ${formatTime(testedAt)}`);
+  const result = await deliver(channel, { to_email: brand.email, idempotency_key: `test:${testedAt}` }, email);
+  if (channel === "test") return { mode: "test" };
+  const provider = channel;
+  if (result.ok) {
+    await recordProviderCheck({ kind: "test", provider, ok: true, actor, template: "test" });
+    return { mode: "real", configured: true, ok: true, category: null, label: `E-mail d'essai envoyé à ${brand.email}`, testedAt, to: brand.email };
+  }
+  await recordProviderCheck({ kind: "test", provider, ok: false, actor, template: "test", category: result.category, httpStatus: result.httpStatus, providerCode: result.providerCode, message: result.message });
+  return { mode: "real", configured: result.category !== "key_missing", ok: false, category: result.category, label: errorLabel(result.category), testedAt };
+}
