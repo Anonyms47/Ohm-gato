@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { after } from "next/server";
 import { runAutomations } from "@/lib/admin/automations";
-import { testEmailConnection } from "@/lib/email/health";
+import { sendTestEmail, testEmailConnection } from "@/lib/email/health";
 import { processOutbox } from "@/lib/email/outbox";
 import { rateLimit } from "@/lib/http";
 import { AUTOMATION_SETTINGS_KEY, automationSettingsSchema } from "@/lib/admin/automation-settings";
@@ -75,6 +75,18 @@ export async function testEmailConnectionAction(): Promise<AdminState> {
   revalidatePath("/admin", "layout");
   if (result.mode === "test") return { ok: true, message: "Mode test : aucun service réel n'est utilisé ici." };
   return { ok: result.ok, message: result.ok ? result.label : `${result.label}.` };
+}
+
+/** Envoi réel d'un e-mail d'essai à l'adresse de la marque. Réservé à l'équipe, limité à 3 essais par 10 minutes. */
+export async function sendTestEmailAction(): Promise<AdminState> {
+  const admin = await requireAdmin();
+  if (!(await rateLimit(`email-send-test:${admin.id}`, 3, 600)) || !(await rateLimit("email-send-test", 10, 3600))) {
+    return { ok: false, message: "Trop d'essais rapprochés. Réessayez dans quelques minutes." };
+  }
+  const result = await sendTestEmail(admin.id);
+  revalidatePath("/admin", "layout");
+  if (result.mode === "test") return { ok: true, message: "Mode test : l'e-mail d'essai est dans la boîte de test." };
+  return { ok: result.ok, message: result.ok ? `${result.label} : vérifiez la boîte de réception (et les indésirables).` : `${result.label}.` };
 }
 
 const idsSchema = z.array(z.number().int().positive()).min(1, "Sélectionnez au moins un message.").max(50);

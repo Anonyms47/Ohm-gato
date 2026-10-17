@@ -123,7 +123,8 @@ async function render(row: OutboxRow): Promise<RenderedEmail | null> {
   });
 }
 
-async function deliver(channel: Exclude<EmailChannel, "none">, row: OutboxRow, email: RenderedEmail): Promise<DeliveryResult> {
+/** Envoi d'un message rendu (file d'envoi ou e-mail d'essai de l'atelier). */
+export async function deliver(channel: Exclude<EmailChannel, "none">, row: Pick<OutboxRow, "to_email" | "idempotency_key">, email: RenderedEmail): Promise<DeliveryResult> {
   if (channel === "test") {
     const { error } = await supabaseAdmin().from("test_messages").insert({ channel: "email", destination: row.to_email, body: `${email.subject}\n\n${email.text}` });
     if (error) throw error;

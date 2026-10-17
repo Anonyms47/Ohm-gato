@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ProductionPrintButton } from "@/components/admin/ProductionPrintButton";
+import { PrintLogo } from "@/components/brand/PrintLogo";
 import { lastProductionPrint } from "@/lib/admin/cycle-report";
 import { getCycle, getCycleDemand, listProducts } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
@@ -17,6 +18,7 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
   const [demand, lastPrint] = await Promise.all([getCycleDemand(id, await listProducts()), lastProductionPrint(id)]);
   return (
     <div className="flex max-w-4xl flex-col gap-6 print:max-w-none">
+      <PrintLogo />
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Fiche de production · fournée n°{cycle.number}</h1>

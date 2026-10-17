@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { PrintLogo } from "@/components/brand/PrintLogo";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { CartAnnouncer, MobileNav, ResumeBanner, SiteHeader } from "@/components/layout/SiteChrome";
@@ -21,6 +22,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
         <SiteHeader account={account} />
         <ResumeBanner />
         <main id="contenu" className="flex-1">
+          <PrintLogo />
           {children}
         </main>
         <SiteFooter />

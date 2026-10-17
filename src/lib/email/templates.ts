@@ -14,8 +14,12 @@ export type EmailTemplate =
   | "pickup_ready"
   | "out_for_delivery"
   | "order_cancelled"
+  | "order_delivered"
   | "refund_recorded"
   | "admin_digest";
+
+/** Logo servi par le site (adresse publique, lisible par les messageries). */
+const LOGO_URL = "https://ohmegato.com/brand/logo-ohmegato.png";
 
 export interface OrderEmailData {
   customerName: string;
@@ -41,7 +45,7 @@ function wrap(subject: string, paragraphs: string[], link: { label: string; url:
   const text = [...paragraphs, link ? `${link.label} : ${link.url}` : null, "", `${brand.name} · ${brand.phoneDisplay} · ohmegato.com`].filter((l) => l !== null).join("\n\n");
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5e9d6;font-family:Arial,sans-serif;color:#4a2a1c">
 <div style="max-width:560px;margin:0 auto;padding:24px">
-<p style="font-family:Georgia,serif;font-size:24px;margin:0 0 16px">${brand.name}</p>
+<p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="88" height="88" style="display:inline-block;width:88px;height:88px;border:0"></p>
 <div style="background:#fbf6ee;border-radius:12px;padding:20px">
 ${paragraphs.map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escape(p)}</p>`).join("\n")}
 ${link ? `<p style="margin:16px 0 0"><a href="${escape(link.url)}" style="display:inline-block;background:#4a2a1c;color:#f5e9d6;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${escape(link.label)}</a></p>` : ""}
@@ -92,6 +96,13 @@ export function renderOrderEmail(template: Exclude<EmailTemplate, "admin_digest"
         `Votre commande ${d.reference} a été annulée.`,
         `Pour toute question, écrivez-nous ou appelez le ${brand.phoneDisplay}.`,
       ], follow);
+    case "order_delivered":
+      return wrap(d.fulfillment === "pickup" ? `${d.reference} : commande retirée` : `${d.reference} : commande livrée`, [
+        hello,
+        d.fulfillment === "pickup" ? `Votre commande ${d.reference} a bien été retirée.` : `Votre commande ${d.reference} a bien été livrée.`,
+        "Merci pour votre confiance et bonne dégustation !",
+        d.receiptUrl ? "Votre reçu reste disponible depuis la page de suivi." : "",
+      ].filter(Boolean), follow);
     case "refund_recorded":
       return wrap(`Remboursement de ${d.reference}`, [
         hello,
@@ -105,4 +116,13 @@ export function renderDigest(date: string, lines: string[], adminUrl: string): R
     label: "Ouvrir l'atelier",
     url: adminUrl,
   });
+}
+
+/** E-mail d'essai envoyé depuis l'atelier à l'adresse de la marque (jamais à une cliente). */
+export function renderTestEmail(sentAt: string): RenderedEmail {
+  return wrap("Essai d'envoi OHMEGATO", [
+    "Bonjour,",
+    `Cet e-mail d'essai a été envoyé depuis l'atelier le ${sentAt}.`,
+    "S'il est arrivé, les e-mails de commande partent correctement vers les clientes.",
+  ], null);
 }

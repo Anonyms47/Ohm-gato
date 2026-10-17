@@ -14,7 +14,7 @@ const data: OrderEmailData = {
 
 describe("e-mails transactionnels", () => {
   it("chaque étape a son objet et le lien de suivi", () => {
-    for (const template of ["order_registered", "payment_confirmed", "order_preparing", "order_ready", "pickup_ready", "out_for_delivery", "order_cancelled", "refund_recorded"] as const) {
+    for (const template of ["order_registered", "payment_confirmed", "order_preparing", "order_ready", "pickup_ready", "out_for_delivery", "order_delivered", "order_cancelled", "refund_recorded"] as const) {
       const email = renderOrderEmail(template, data);
       expect(email.subject).toContain("OHM1-0001");
       expect(email.text).toContain("Bonjour Awa,");
@@ -31,6 +31,12 @@ describe("e-mails transactionnels", () => {
   it("le reçu n'est mentionné qu'une fois le paiement vérifié", () => {
     expect(renderOrderEmail("payment_confirmed", data).text).not.toContain("reçu est disponible");
     expect(renderOrderEmail("payment_confirmed", { ...data, receiptUrl: "https://ohmegato.com/suivi/abc/recu" }).text).toContain("reçu est disponible");
+  });
+
+  it("commande remise : livrée ou retirée, avec le logo OHMEGATO", () => {
+    expect(renderOrderEmail("order_delivered", data).subject).toContain("retirée");
+    expect(renderOrderEmail("order_delivered", { ...data, fulfillment: "delivery" }).subject).toContain("livrée");
+    expect(renderOrderEmail("order_delivered", data).html).toContain("https://ohmegato.com/brand/logo-ohmegato.png");
   });
 
   it("le HTML échappe les données saisies", () => {

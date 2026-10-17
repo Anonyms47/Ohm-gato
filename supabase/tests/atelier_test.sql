@@ -2,7 +2,7 @@
 -- fournée créée depuis la précédente.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(21);
 
 -- Aucun accès client aux tables internes de l'atelier.
 set local role anon;
@@ -70,6 +70,10 @@ select is((select count(*)::int from public.email_outbox where order_id = (selec
 insert into public.order_refunds (order_id, amount_fcfa, reason, method, refunded_at) values ((select id from o), 1000, 'Geste commercial', 'Wave', current_date);
 select is((select count(*)::int from public.email_outbox where order_id = (select id from o) and template = 'refund_recorded'), 1, 'remboursement : un e-mail');
 select is((select status from public.email_outbox where order_id = (select id from o) limit 1), 'pending', 'les e-mails attendent l''envoi par le serveur');
+
+-- Commande remise : un e-mail « retirée », même si l'étape est rejouée.
+select public.admin_set_order_status((select id from o), 'picked_up', '', null);
+select is((select count(*)::int from public.email_outbox where order_id = (select id from o) and template = 'order_delivered'), 1, 'commande remise : un e-mail');
 
 -- Notifications : la clé de déduplication interdit les doublons.
 insert into public.admin_notifications (dedupe_key, kind, priority, title, href) values ('task:wave-to-verify', 'task', 'today', '1 paiement', '/admin/paiements');

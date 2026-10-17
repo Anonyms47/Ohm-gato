@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { markNotificationsRead, retryEmails, runAutomationsNow, saveAutomationSettings, skipEmails, testEmailConnectionAction } from "@/app/admin/_actions/automations";
+import { markNotificationsRead, retryEmails, runAutomationsNow, saveAutomationSettings, sendTestEmailAction, skipEmails, testEmailConnectionAction } from "@/app/admin/_actions/automations";
 import { ActionButton, AdminForm } from "@/components/admin/AdminUi";
 import { Field, TextInput } from "@/components/ui/Field";
 import type { AutomationSettings } from "@/lib/admin/automation-settings";
@@ -66,6 +66,17 @@ export function NotificationLink({ id, href, children, unread }: { id: number; h
 
 export function TestEmailConnectionButton() {
   return <ActionButton label="Tester la connexion" run={testEmailConnectionAction} />;
+}
+
+/** Envoi réel d'un e-mail d'essai à l'adresse de la marque, après confirmation. */
+export function SendTestEmailButton({ to }: { to: string }) {
+  return (
+    <ActionButton
+      label="Envoyer un e-mail d'essai"
+      run={sendTestEmailAction}
+      confirm={{ title: "Envoyer un e-mail d'essai ?", description: <p>Un e-mail d&apos;essai part vers {to}. Aucune cliente ne le reçoit.</p>, confirmLabel: "Envoyer" }}
+    />
+  );
 }
 
 export interface EmailIssueRow {
