@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { insideDakar, parsePlaces, shortLabel } = await import("@/lib/geo/search");
+const { insideDakar, parsePlaces, parseReverse, shortLabel } = await import("@/lib/geo/search");
 
 describe("recherche d'adresse", () => {
   it("limite à la région de Dakar", () => {
@@ -23,5 +23,19 @@ describe("recherche d'adresse", () => {
     ]);
     expect(places).toEqual([{ label: "Mermoz, Dakar", lat: 14.7089, lng: -17.4767 }]);
     expect(parsePlaces({ error: "x" })).toEqual([]);
+  });
+});
+
+describe("adresse d'une position", () => {
+  it("rue et numéro, puis quartier", () => {
+    expect(parseReverse({ name: "", address: { house_number: "24", road: "Rue MZ-12", neighbourhood: "Mermoz", city: "Dakar" } })).toEqual({
+      addressLine: "24 Rue MZ-12",
+      district: "Mermoz",
+    });
+  });
+
+  it("sans rue connue : le lieu ; rien d'inventé si OpenStreetMap ne sait pas", () => {
+    expect(parseReverse({ name: "Pharmacie Mame Diarra", address: { suburb: "Sacré-Cœur" } })).toEqual({ addressLine: "Pharmacie Mame Diarra", district: "Sacré-Cœur" });
+    expect(parseReverse({ error: "Unable to geocode" })).toEqual({ addressLine: "", district: "" });
   });
 });

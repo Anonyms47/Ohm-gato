@@ -7,7 +7,7 @@ import { generateTrackingToken } from "@/lib/orders/tracking";
 import { getProvider } from "@/lib/payments";
 import { PaymentUnavailableError, type ProviderId } from "@/lib/payments/types";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { placeOrderSchema } from "@/lib/validation/checkout";
+import { deliveryAddressLine, placeOrderSchema } from "@/lib/validation/checkout";
 
 export type PlaceOrderResult =
   | {
@@ -95,9 +95,9 @@ export async function placeOrder(
       notes: data.notes ?? null,
       customer: { name: data.contact.name, phone: data.contact.phone, email: data.contact.email ?? null },
       delivery: delivery && {
-        address_line: delivery.addressLine,
-        district: delivery.district,
-        landmark: delivery.landmark,
+        address_line: deliveryAddressLine(delivery),
+        district: delivery.district || null,
+        landmark: delivery.landmark || null,
         floor_door: delivery.floorDoor ?? null,
         recipient_name: delivery.recipientName,
         recipient_phone: delivery.recipientPhone,

@@ -25,6 +25,7 @@ export const metadata = { title: "Commande" };
 
 const card = "rounded-[12px] border-2 border-chocolat/10 bg-blanc-casse p-5";
 const h2 = "font-display text-[1.4rem]";
+const summary = "flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-display text-[1.25rem] after:content-['+'] after:font-sans after:text-[1.4rem] group-open:after:content-['−']";
 const linkButton = "inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold hover:bg-creme";
 
 export default async function AdminCommande({ params }: { params: Promise<{ id: string }> }) {
@@ -282,10 +283,8 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
         </section>
 
         {/* 7. Reçu */}
-        <section aria-labelledby="recu" className={card}>
-          <h2 id="recu" className={h2}>
-            Reçu
-          </h2>
+        <details className={`${card} group`}>
+          <summary className={summary}>Reçu</summary>
           {order.paymentStatus === "paid" ? (
             <p className="mt-2 text-encre-douce">Disponible pour la cliente depuis la vérification du paiement.</p>
           ) : (
@@ -304,13 +303,11 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
               Page de suivi client
             </Link>
           </div>
-        </section>
+        </details>
 
         {/* 8. Notes internes */}
-        <section aria-labelledby="notes" className={`${card} flex flex-col gap-3`}>
-          <h2 id="notes" className={h2}>
-            Notes internes
-          </h2>
+        <details className={`${card} group flex flex-col gap-3`}>
+          <summary className={summary}>{`Notes internes${notes.length ? ` (${notes.length})` : ""}`}</summary>
           {notes.length > 0 ? (
             <ul className="flex flex-col gap-2">
               {notes.map((n) => (
@@ -327,13 +324,11 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
             <p className="text-encre-douce">Aucune note pour cette commande.</p>
           )}
           <OrderNoteForm orderId={order.id} />
-        </section>
+        </details>
 
         {/* 9. Remboursement */}
-        <section aria-labelledby="remboursements" className={`${card} flex flex-col gap-3`}>
-          <h2 id="remboursements" className={h2}>
-            Remboursements
-          </h2>
+        <details className={`${card} group flex flex-col gap-3`}>
+          <summary className={summary}>{`Remboursements${refunds.length ? ` (${refunds.length})` : ""}`}</summary>
           {refunds.length > 0 ? (
             <ul className="flex flex-col gap-1">
               {refunds.map((r) => (
@@ -356,13 +351,11 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
           ) : (
             <p className="text-encre-douce">Un remboursement s&apos;enregistre une fois le paiement reçu.</p>
           )}
-        </section>
+        </details>
       </div>
 
-      <section aria-labelledby="conditions" className={card} data-testid="acceptation-commande">
-        <h2 id="conditions" className={h2}>
-          Conditions acceptées
-        </h2>
+      <details className={`${card} group`} data-testid="acceptation-commande">
+          <summary className={summary}>Conditions acceptées</summary>
         {acceptance ? (
           <p className="mt-2">
             {acceptance.terms ? `Conditions générales v${acceptance.terms.version}` : "Conditions générales"} ·{" "}
@@ -372,7 +365,7 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
         ) : (
           <p className="mt-2 text-encre-douce">Aucune acceptation enregistrée (commande antérieure aux conditions versionnées ou sur mesure).</p>
         )}
-      </section>
+      </details>
     </div>
   );
 }

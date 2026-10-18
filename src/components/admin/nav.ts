@@ -12,57 +12,50 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** Navigation de l'atelier, regroupée par moment de travail. */
+/**
+ * Navigation de l'atelier : le quotidien d'abord, la fournée ensuite, le reste à part
+ * (replié par défaut sur ordinateur). Une rubrique n'apparaît qu'une fois.
+ */
 export const NAV_GROUPS: NavGroup[] = [
   {
-    id: "aujourdhui",
-    label: "Aujourd'hui",
+    id: "quotidien",
+    label: "Au quotidien",
     items: [
-      { href: "/admin", label: "Tableau de bord", icon: "jour" },
-      { href: "/admin/actions", label: "Actions à traiter", icon: "liste" },
-      { href: "/admin/notifications", label: "Notifications", icon: "cloche" },
-    ],
-  },
-  {
-    id: "production",
-    label: "Production",
-    items: [
-      { href: "/admin/fournees", label: "Fournées", icon: "fournee" },
-      { href: "/admin/production", label: "Fiche de production", icon: "fiche" },
-      { href: "/admin/produits", label: "Produits", icon: "produit" },
-      { href: "/admin/stock", label: "Stock et surplus", icon: "stock" },
-    ],
-  },
-  {
-    id: "ventes",
-    label: "Ventes",
-    items: [
+      { href: "/admin", label: "Aujourd'hui", icon: "jour" },
       { href: "/admin/commandes", label: "Commandes", icon: "commande" },
-      { href: "/admin/paiements", label: "Paiements", icon: "paiement" },
+      { href: "/admin/paiements", label: "Paiements Wave", icon: "paiement" },
       { href: "/admin/livraisons", label: "Livraisons", icon: "livraison" },
-      { href: "/admin/chiffres", label: "Chiffres", icon: "chiffres" },
     ],
   },
   {
-    id: "clients",
-    label: "Relation client",
+    id: "fournee",
+    label: "La fournée",
     items: [
+      { href: "/admin/fournee", label: "Fournée en cours", icon: "fournee" },
+      { href: "/admin/production", label: "Fiche de production", icon: "fiche" },
+      { href: "/admin/stock", label: "Stock et surplus", icon: "stock" },
+      { href: "/admin/produits", label: "Produits", icon: "produit" },
+    ],
+  },
+  {
+    id: "plus",
+    label: "Le reste",
+    items: [
+      { href: "/admin/chiffres", label: "Chiffres", icon: "chiffres" },
       { href: "/admin/clients", label: "Clients", icon: "client" },
       { href: "/admin/sur-mesure", label: "Demandes sur mesure", icon: "surmesure" },
-    ],
-  },
-  {
-    id: "gestion",
-    label: "Gestion",
-    items: [
+      { href: "/admin/notifications", label: "Notifications", icon: "cloche" },
+      { href: "/admin/fournees", label: "Toutes les fournées", icon: "liste" },
       { href: "/admin/documents", label: "Documents et règles", icon: "document" },
-      { href: "/admin/reglages", label: "Réglages", icon: "reglage" },
-      { href: "/admin/reglages#roles", label: "Équipe et rôles", icon: "equipe" },
+      { href: "/admin/reglages", label: "Réglages et équipe", icon: "reglage" },
       { href: "/admin/journal", label: "Journal d'activité", icon: "journal" },
       { href: "/admin/aide", label: "Aide", icon: "aide" },
     ],
   },
 ];
+
+/** Groupes repliés tant que la personne n'a rien choisi. */
+export const DEFAULT_COLLAPSED = ["plus"];
 
 /** Barre du bas sur téléphone : quatre accès directs et « Plus ». */
 export const MOBILE_TABS: NavItem[] = [
@@ -77,6 +70,7 @@ export function isActive(pathname: string, href: string): boolean {
   if (href.includes("#")) return false;
   if (path === "/admin") return pathname === "/admin";
   if (path === "/admin/fournee") return pathname.startsWith("/admin/fournee");
+  if (path === "/admin/fournees") return pathname === "/admin/fournees";
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 

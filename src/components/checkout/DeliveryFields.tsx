@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { PositionPicker } from "@/components/checkout/PositionPicker";
@@ -25,6 +26,7 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
   const {
     register,
     setValue,
+    getValues,
     watch,
     formState: { errors },
   } = useFormContext<{ delivery: CheckoutFormValues["delivery"] }>();
@@ -40,6 +42,39 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
     setValue("delivery.latitude", Math.round(next.lat * 1e6) / 1e6, options);
     setValue("delivery.longitude", Math.round(next.lng * 1e6) / 1e6, options);
   };
+
+  // Adresse et quartier pré-remplis depuis la position (sans jamais écraser ce que la personne a écrit).
+  const autoFilled = useRef({ addressLine: "", district: "" });
+  useEffect(() => {
+    if (latitude === null || longitude === null) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/adresse/inverse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: latitude, lng: longitude }),
+          signal: controller.signal,
+        });
+        const body = (await response.json().catch(() => null)) as { place?: { addressLine: string; district: string } } | null;
+        if (!response.ok || !body?.place) return;
+        for (const field of ["addressLine", "district"] as const) {
+          const current = getValues(`delivery.${field}`).trim();
+          const next = body.place[field];
+          if (next && (current === "" || current === autoFilled.current[field])) {
+            setValue(`delivery.${field}`, next, { shouldDirty: true });
+            autoFilled.current[field] = next;
+          }
+        }
+      } catch {
+        // Adresse indisponible : la position exacte suffit, les champs restent facultatifs.
+      }
+    }, 700);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [latitude, longitude, getValues, setValue]);
 
   const applySaved = (id: string) => {
     const saved = savedAddresses.find((a) => a.id === id);
@@ -74,13 +109,16 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
         />
       )}
 
-      <Field id="delivery.addressLine" label="Adresse" hint="Rue, numéro de villa, immeuble…" error={deliveryErrors?.addressLine?.message}>
+      <PositionPicker id="delivery.latitude" position={position} onChange={setPosition} error={positionError} />
+
+      <p className="text-encre-douce">Les champs ci-dessous sont facultatifs : ils se remplissent depuis la position quand c&apos;est possible. Complétez-les si besoin.</p>
+      <Field id="delivery.addressLine" label="Adresse" optional hint="Rue, numéro de villa, immeuble…" error={deliveryErrors?.addressLine?.message}>
         {({ id, describedBy, invalid }) => (
           <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="street-address" {...register("delivery.addressLine")} />
         )}
       </Field>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="delivery.district" label="Quartier" error={deliveryErrors?.district?.message}>
+        <Field id="delivery.district" label="Quartier" optional error={deliveryErrors?.district?.message}>
           {({ id, describedBy, invalid }) => (
             <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="address-level3" {...register("delivery.district")} />
           )}
@@ -91,13 +129,11 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
           )}
         </Field>
       </div>
-      <Field id="delivery.landmark" label="Point de repère" hint="Ex. en face de la pharmacie, à côté de la mosquée…" error={deliveryErrors?.landmark?.message}>
+      <Field id="delivery.landmark" label="Point de repère" optional hint="Ex. en face de la pharmacie, à côté de la mosquée…" error={deliveryErrors?.landmark?.message}>
         {({ id, describedBy, invalid }) => (
           <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} {...register("delivery.landmark")} />
         )}
       </Field>
-
-      <PositionPicker id="delivery.latitude" position={position} onChange={setPosition} error={positionError} />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="delivery.recipientName" label="Qui réceptionne ?" error={deliveryErrors?.recipientName?.message}>

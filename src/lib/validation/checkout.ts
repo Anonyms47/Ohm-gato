@@ -45,13 +45,14 @@ export const contactSchema = z.object({
 });
 
 /**
- * Livraison : adresse écrite, quartier, point de repère, contact du destinataire et
- * position exacte (transmise à OHMEGATO). Les frais se règlent au livreur.
+ * Livraison : position exacte (obligatoire, transmise à OHMEGATO) et contact du destinataire.
+ * Adresse écrite, quartier et point de repère complètent la position : facultatifs, remplis
+ * automatiquement depuis la position quand c'est possible. Les frais se règlent au livreur.
  */
 export const deliverySchema = z.object({
-  addressLine: trimmed(200).min(4, "Décrivez l'adresse (rue, villa, immeuble…)."),
-  district: trimmed(80).min(2, "Indiquez votre quartier."),
-  landmark: trimmed(160).min(3, "Indiquez un point de repère (pharmacie, mosquée, boutique…)."),
+  addressLine: trimmed(200),
+  district: trimmed(80),
+  landmark: trimmed(160),
   floorDoor: trimmed(80).optional(),
   recipientName: trimmed(80).min(2, "Indiquez qui réceptionne la commande."),
   recipientPhone: senegalPhone,
@@ -92,3 +93,8 @@ export const placeOrderSchema = z
 
 export type PlaceOrderInput = z.input<typeof placeOrderSchema>;
 export type PlaceOrderData = z.output<typeof placeOrderSchema>;
+
+/** Adresse enregistrée : celle saisie, sinon la position exacte (toujours présente). */
+export function deliveryAddressLine(d: { addressLine: string; latitude: number; longitude: number }): string {
+  return d.addressLine || `Position sur la carte (${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)})`;
+}

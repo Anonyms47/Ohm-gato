@@ -263,7 +263,7 @@ test.describe("Administration d'Alima", () => {
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("radio", { name: /^Livraison dans Dakar/ }).check();
     await page.getByLabel("Adresse").fill("Villa 12, rue 10");
-    await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
+    await page.getByLabel(/^Quartier/).fill("Mermoz");
     await page.getByLabel("Point de repère").fill("En face de la pharmacie");
     await page.getByLabel("Qui réceptionne ?").fill("Ibrahima Fall");
     await page.getByLabel("Son numéro").fill(testPhone());
@@ -286,6 +286,7 @@ test.describe("Administration d'Alima", () => {
     const reference = (await page.getByText(/^OHM12-\d{4,}$/).first().textContent())!.trim();
     await expect(page.getByRole("link", { name: "Ouvrir l'itinéraire" })).toBeVisible();
     // Reçu PDF pour l'équipe ; refusé sans connexion administrateur.
+    await page.locator("summary", { hasText: /^Reçu$/ }).click(); // section repliée
     const receiptDownload = page.waitForEvent("download");
     await page.getByRole("link", { name: "Reçu PDF" }).click();
     expect((await receiptDownload).suggestedFilename()).toBe(`recu-${reference}.pdf`);

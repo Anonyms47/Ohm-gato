@@ -5,17 +5,18 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AtelierIcon } from "@/components/admin/AtelierIcons";
 import { CommandPalette } from "@/components/admin/CommandPalette";
-import { MOBILE_TABS, NAV_GROUPS, isActive } from "@/components/admin/nav";
+import { DEFAULT_COLLAPSED, MOBILE_TABS, NAV_GROUPS, isActive } from "@/components/admin/nav";
 import { ToastProvider } from "@/components/admin/Toast";
 import { cn } from "@/lib/cn";
 
-const STORAGE_KEY = "ohm-atelier-groupes-replies";
+const STORAGE_KEY = "ohm-atelier-menu-v2";
 
 function readCollapsed(): string[] {
   try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]") as string[];
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as string[]) : DEFAULT_COLLAPSED;
   } catch {
-    return [];
+    return DEFAULT_COLLAPSED;
   }
 }
 
@@ -24,7 +25,7 @@ export function AdminShell({ name, badges, children }: { name: string; badges?: 
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const [palette, setPalette] = useState(false);
-  const [collapsed, setCollapsed] = useState<string[]>([]);
+  const [collapsed, setCollapsed] = useState<string[]>(DEFAULT_COLLAPSED);
   const moreRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
