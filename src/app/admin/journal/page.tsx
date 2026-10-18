@@ -1,8 +1,10 @@
 import { listAudit } from "@/lib/admin/data";
 import { requireAdmin } from "@/lib/auth/session";
-import { formatShortDay, formatTime } from "@/lib/dates";
+import { formatDay, formatTime } from "@/lib/dates";
+import { statusHeadline } from "@/lib/order-status";
+import type { OrderStatus } from "@/lib/order-status";
 
-export const metadata = { title: "Journal d'audit" };
+export const metadata = { title: "Journal d'activité" };
 
 const LABELS: Record<string, string> = {
   "cycle.create": "Fournée créée",
@@ -54,38 +56,87 @@ const LABELS: Record<string, string> = {
   "account.delete": "Compte supprimé par son titulaire",
 };
 
+const CYCLE_STATUS: Record<string, string> = {
+  draft: "brouillon",
+  scheduled: "programmée",
+  open: "ouverte",
+  closed: "précommandes clôturées",
+  preparing: "en production",
+  delivering: "en livraison",
+  surplus: "surplus en vente",
+  done: "terminée",
+  cancelled: "annulée",
+};
+
+/** Bruit technique, jamais utile à relire. */
+const HIDDEN = new Set(["automation.run"]);
+
+const text = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v) : null);
+
+/** Détail lisible d'une action (jamais de données brutes). */
+function describe(action: string, details: unknown): string | null {
+  const d = (details && typeof details === "object" ? details : {}) as Record<string, unknown>;
+  switch (action) {
+    case "order.status": {
+      const to = text(d.to);
+      const label = to ? (statusHeadline[to as OrderStatus] ?? to) : null;
+      return [text(d.reference), label && `→ ${label}`, text(d.note)].filter(Boolean).join(" ") || null;
+    }
+    case "cycle.status": {
+      const to = text(d.to);
+      return to ? `Fournée ${CYCLE_STATUS[to] ?? to}` : null;
+    }
+    case "order.payment_recorded":
+    case "order.payment_not_found":
+      return text(d.reference);
+    case "legal.publish":
+      return [text(d.slug), d.version ? `version ${text(d.version)}` : null].filter(Boolean).join(", ") || null;
+    case "refund.record":
+      return d.amount_fcfa ? `${text(d.amount_fcfa)} FCFA` : null;
+    case "settings.update":
+    case "product.update":
+    case "product.create":
+      return text(d.name) ?? text(d.field) ?? null;
+    default:
+      return text(d.reference) ?? null;
+  }
+}
+
 export default async function Journal() {
   await requireAdmin();
-  const entries = await listAudit();
+  const entries = (await listAudit()).filter((e) => !HIDDEN.has(e.action));
+  const days = new Map<string, typeof entries>();
+  for (const e of entries) {
+    const day = formatDay(e.created_at);
+    days.set(day, [...(days.get(day) ?? []), e]);
+  }
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Journal d&apos;audit</h1>
-      <p className="text-encre-douce">Toute action sensible de l&apos;administration est inscrite ici et ne peut pas être modifiée.</p>
-      <div className="overflow-x-auto rounded-[12px] bg-blanc-casse">
-        <table className="w-full min-w-[40rem] text-left">
-          <caption className="sr-only">200 dernières actions</caption>
-          <thead>
-            <tr className="border-b-2 border-chocolat/20">
-              <th className="p-2">Date</th>
-              <th className="p-2">Par</th>
-              <th className="p-2">Action</th>
-              <th className="p-2">Détail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((e) => (
-              <tr key={e.id} className="border-b border-dashed border-chocolat/15 align-top">
-                <td className="p-2 tabular-nums">
-                  {formatShortDay(e.created_at)} {formatTime(e.created_at)}
-                </td>
-                <td className="p-2">{e.actor}</td>
-                <td className="p-2">{LABELS[e.action] ?? e.action}</td>
-                <td className="max-w-md break-words p-2 text-[0.9rem] text-encre-douce">{e.details ? JSON.stringify(e.details) : ""}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <header>
+        <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Journal d&apos;activité</h1>
+        <p className="text-encre-douce">Ce qui s&apos;est passé dans l&apos;atelier, du plus récent au plus ancien. Rien ne peut y être modifié.</p>
+      </header>
+      {entries.length === 0 && <p className="text-encre-douce">Aucune action pour l&apos;instant.</p>}
+      {[...days.entries()].map(([day, list]) => (
+        <section key={day} aria-label={day} className="flex flex-col gap-2">
+          <h2 className="font-display text-[1.25rem] first-letter:uppercase">{day}</h2>
+          <ul className="flex flex-col divide-y divide-dashed divide-chocolat/15 rounded-[12px] border-2 border-chocolat/10 bg-blanc-casse">
+            {list.map((e) => {
+              const detail = describe(e.action, e.details);
+              return (
+                <li key={e.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-4 py-3">
+                  <span className="w-12 shrink-0 tabular-nums text-encre-douce">{formatTime(e.created_at)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="font-bold">{LABELS[e.action] ?? e.action}</span>
+                    {detail && <span className="block text-[0.95rem] text-encre-douce">{detail}</span>}
+                  </span>
+                  <span className="text-[0.9rem] text-encre-douce">{e.actor === "Système" ? "Automatique" : e.actor}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }

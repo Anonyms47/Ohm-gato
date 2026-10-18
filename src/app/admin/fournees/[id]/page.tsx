@@ -160,7 +160,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </p>
         {deadlinePassed && (
           <p className="font-bold text-orange-encre">
-            La date limite est passée : plus aucune précommande n&apos;est acceptée. Clôturez les précommandes pour passer à la suite.
+            La date limite est passée : plus aucune précommande n&apos;est acceptée. La clôture se fait toute seule dans quelques minutes (ou tout de suite avec le bouton ci-dessous).
           </p>
         )}
         <p className="flex flex-wrap gap-4">
@@ -311,7 +311,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </section>
       </Step>
 
-      <Step step="produire" current={step} title="Produire" intro="À la date limite, les nouvelles précommandes sont refusées automatiquement. Clôturez ensuite pour figer les quantités, imprimez la fiche, puis saisissez la production réelle." visibleToClients="« Précommandes terminées » après la date limite.">
+      <Step step="produire" current={step} title="Produire" intro="À la date limite, les précommandes se clôturent seules et les quantités sont figées. Le jour de production, la fournée et les commandes payées passent seules en préparation. Imprimez la fiche, puis saisissez la production réelle." visibleToClients="« Précommandes terminées » après la date limite.">
         <p>
           <Link href={`/admin/fournees/${cycle.id}/production`} className={link}>
             Ouvrir la fiche de production
@@ -345,7 +345,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </section>
       </Step>
 
-      <Step step="livrer" current={step} title="Livrer" intro="Marquez les commandes prêtes, confiez les livraisons au livreur et remettez les retraits. Les frais de livraison se règlent toujours au livreur." visibleToClients="l'étape de leur commande sur la page de suivi.">
+      <Step step="livrer" current={step} title="Livrer" intro="Le jour de remise, la fournée passe seule en livraison. Marquez les commandes prêtes, confiez les livraisons au livreur et remettez les retraits. Quand tout est remis et qu'il ne reste rien, la fournée se termine seule. Les frais de livraison se règlent toujours au livreur." visibleToClients="l'étape de leur commande sur la page de suivi.">
         <div className="flex flex-wrap gap-3">
           <Figure value={report.ready} label={report.ready > 1 ? "prêtes" : "prête"} />
           <Figure value={report.pickups} label="retraits" />

@@ -60,13 +60,17 @@ export default async function WaveQueue() {
                     <span className={cn(late && "font-bold text-erreur")}>en attente depuis {humanDuration(now - Date.parse(o.createdAt))}</span>
                   </p>
                   <div className="mt-1 flex flex-wrap gap-2">
+                    {/* Au-delà du délai d'alerte : relance pré-rédigée (relue et envoyée par Alima, jamais d'annulation automatique). */}
                     <a
-                      href={whatsappLink(o.customerPhone, whatsappMessage("payment_check", o))}
+                      href={whatsappLink(o.customerPhone, whatsappMessage(late ? "payment_reminder" : "payment_check", o))}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold hover:bg-blanc-casse"
+                      className={cn(
+                        "inline-flex min-h-11 items-center rounded-[10px] border-2 px-4 font-bold",
+                        late ? "border-erreur bg-erreur text-creme" : "border-chocolat hover:bg-blanc-casse",
+                      )}
                     >
-                      Contacter la cliente (WhatsApp)
+                      {late ? "Relancer la cliente (WhatsApp)" : "Contacter la cliente (WhatsApp)"}
                     </a>
                     <a href={telLink(o.customerPhone)} className="inline-flex min-h-11 items-center rounded-[10px] px-3 font-bold underline decoration-caramel decoration-2 underline-offset-4">
                       Appeler {o.customerPhone}

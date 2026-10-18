@@ -33,7 +33,10 @@ export function OrderTicket({ order, highlight = false }: { order: MemberOrder; 
       </p>
       <p className="mt-2 flex flex-wrap items-center gap-x-3 font-bold">
         <span>{statusHeadline[order.status]}</span>
-        <span className="font-normal text-encre-douce">Paiement : {paymentStatusLabel[order.paymentStatus].toLowerCase()}</span>
+        {/* Le paiement n'est rappelé que s'il demande encore quelque chose. */}
+        {order.paymentStatus !== "paid" && (
+          <span className="font-normal text-encre-douce">Paiement : {paymentStatusLabel[order.paymentStatus].toLowerCase()}</span>
+        )}
       </p>
       <span className="mt-2 inline-block font-bold underline decoration-caramel decoration-2 underline-offset-4 group-hover:decoration-chocolat">
         Voir le détail

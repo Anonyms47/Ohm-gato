@@ -1,3 +1,4 @@
+import { HistoryTimeline } from "@/components/order/HistoryTimeline";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminMap } from "@/components/admin/AdminMap";
@@ -56,6 +57,7 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
   const message = whatsappMessage(template, { ...order, pickupAddress: brand.pickupAddress });
   const templateLabel: Record<WhatsappTemplate, string> = {
     payment_check: "Demander la preuve de paiement",
+    payment_reminder: "Relancer le paiement Wave",
     payment_received: "Confirmer la réception du paiement",
     ready_pickup: "Prévenir : commande prête",
     out_for_delivery: "Prévenir : en route",
@@ -268,18 +270,15 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
           <h2 id="historique" className={h2}>
             Historique
           </h2>
-          <ol className="mt-2 flex flex-col gap-1">
-            {order.history.map((h, index) => (
-              <li key={index}>
-                <span className="tabular-nums text-encre-douce">
-                  {formatShortDay(h.createdAt)} {formatTime(h.createdAt)}
-                </span>{" "}
-                — {statusHeadline[h.status]}
-                {h.note ? ` · ${h.note}` : ""}
-                {h.actor ? ` · par ${h.actor}` : ""}
-              </li>
-            ))}
-          </ol>
+          <HistoryTimeline
+            className="mt-3"
+            entries={order.history.map((h) => ({
+              label: statusHeadline[h.status],
+              at: h.createdAt,
+              detail: h.note,
+              by: h.actor ? `par ${h.actor}` : null,
+            }))}
+          />
         </section>
 
         {/* 7. Reçu */}

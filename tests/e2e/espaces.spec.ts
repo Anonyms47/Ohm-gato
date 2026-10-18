@@ -298,7 +298,10 @@ test.describe("Administration d'Alima", () => {
       await page.getByRole("button", { name: label }).click();
       await expect(page.getByText("Statut mis à jour.")).toBeVisible();
     }
-    await expect(page.getByText(/Prête · par/)).toBeVisible();
+    // Historique en frise : l'étape la plus récente en tête, avec son auteur.
+    const latestStep = page.locator("ol > li").filter({ hasText: /^Prête/ }).first();
+    await expect(latestStep).toBeVisible();
+    await expect(latestStep).toContainText(/· par /);
 
     await page.goto("/admin/livraisons");
     await waitForHydration(page);

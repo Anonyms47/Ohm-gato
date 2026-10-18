@@ -3,6 +3,7 @@ import type { AdminTask } from "@/lib/admin/tasks";
 import { dakarDayBounds, getAutomationSettings, loadToday } from "@/lib/admin/today";
 import { brand } from "@/config/brand";
 import { processOutbox, emailChannel, type OutboxResult } from "@/lib/email/outbox";
+import { serverEnv } from "@/lib/env";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const db = () => supabaseAdmin();
@@ -75,12 +76,14 @@ export interface AutomationResult {
   notifications?: NotificationSync;
   emails?: OutboxResult;
   digest?: boolean;
+  cycles?: Record<string, number>;
 }
 
 /**
  * Automatisations de l'atelier, toutes idempotentes et à l'heure du serveur (Dakar, UTC+0) :
- * tâches et alertes recalculées, notifications synchronisées, e-mails en attente envoyés.
- * Aucune n'agit sur une commande, un paiement, un stock ou une fournée.
+ * étapes de la fournée qui avancent seules (clôture, production, livraison, fin — jamais un
+ * paiement, un remboursement, une annulation ni le surplus), tâches et alertes recalculées,
+ * notifications synchronisées, e-mails en attente envoyés.
  */
 export async function runAutomations(trigger: "cron" | "visite" | "action"): Promise<AutomationResult> {
   if (trigger === "visite") {
@@ -91,6 +94,13 @@ export async function runAutomations(trigger: "cron" | "visite" | "action"): Pro
   if (error) throw error;
   const result: AutomationResult = {};
   try {
+    // En production seulement : les tests de bout en bout partagent une fournée de démonstration
+    // dont ils déplacent eux-mêmes les dates (la fonction est testée à part, en base).
+    if (serverEnv().APP_ENV === "production") {
+      const { data: advanced, error: advanceError } = await db().rpc("auto_advance_cycles");
+      if (advanceError) throw advanceError;
+      result.cycles = advanced as Record<string, number>;
+    }
     const today = await loadToday();
     result.notifications = await syncNotifications(today.tasks);
     if (trigger === "cron") result.digest = await queueDailyDigest(today.tasks);
