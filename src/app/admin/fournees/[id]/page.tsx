@@ -73,16 +73,19 @@ function Step({ step, current, title, intro, children, visibleToClients }: { ste
   const index = CYCLE_STEPS.findIndex((s) => s.key === step);
   const currentIndex = CYCLE_STEPS.findIndex((s) => s.key === current);
   const state = index < currentIndex ? "passee" : index === currentIndex ? "en-cours" : "a-venir";
+  // Une chose à la fois : l'étape en cours et la suivante sont ouvertes, les autres repliées (un geste pour les rouvrir).
+  const expanded = index === currentIndex || index === currentIndex + 1;
   return (
-    <section
+    <details
       id={`etape-${step}`}
       aria-labelledby={`titre-${step}`}
+      open={expanded}
       className={cn(
-        "flex scroll-mt-24 flex-col gap-4 rounded-[14px] border-2 p-4 sm:p-6",
+        "group/etape flex scroll-mt-24 flex-col gap-4 rounded-[14px] border-2 p-4 sm:p-6 [&[open]>summary]:mb-4",
         state === "en-cours" ? "border-chocolat bg-blanc-casse shadow-[0_4px_0_var(--ohm-chocolat)]" : "border-chocolat/15 bg-blanc-casse/60",
       )}
     >
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className={cn("grid size-9 shrink-0 place-items-center rounded-full font-display text-[1.1rem]", state === "passee" ? "bg-chocolat text-creme" : state === "en-cours" ? "bg-caramel text-cacao" : "border-2 border-chocolat/25 text-encre-douce")} aria-hidden>
           {state === "passee" ? "✓" : index + 1}
         </span>
@@ -90,14 +93,17 @@ function Step({ step, current, title, intro, children, visibleToClients }: { ste
           Étape {index + 1} · {title}
         </p>
         {state === "en-cours" && <span className="atelier-annotation text-[1.1rem]">← vous êtes ici</span>}
+        {!expanded && <span className="ml-auto text-[0.95rem] font-bold text-encre-douce group-open/etape:hidden">{state === "passee" ? "Terminée · voir" : "Plus tard · voir"}</span>}
+      </summary>
+      <div className="flex flex-col gap-4">
+        <details className="text-[0.95rem] text-encre-douce">
+          <summary className="cursor-pointer font-bold">À quoi sert cette étape ?</summary>
+          <p className="mt-1">{intro}</p>
+          {visibleToClients && <p className="mt-1">Visible des clientes : {visibleToClients}</p>}
+        </details>
+        {children}
       </div>
-      <details className="text-[0.95rem] text-encre-douce">
-        <summary className="cursor-pointer font-bold">À quoi sert cette étape ?</summary>
-        <p className="mt-1">{intro}</p>
-        {visibleToClients && <p className="mt-1">Visible des clientes : {visibleToClients}</p>}
-      </details>
-      {children}
-    </section>
+    </details>
   );
 }
 

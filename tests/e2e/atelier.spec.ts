@@ -193,6 +193,7 @@ test.describe("Atelier — commandes et paiements", () => {
     await cancel.getByRole("button", { name: "Annuler la commande" }).click();
     await expect(page.getByText(/Motif : Paiement jamais reçu/).first()).toBeVisible();
 
+    await page.locator("summary", { hasText: /^Notes internes/ }).click(); // section repliée
     await page.getByLabel("Nouvelle note interne").fill("Cliente prévenue par téléphone.");
     await page.getByRole("button", { name: "Ajouter la note" }).click();
     await expect(page.getByText("Cliente prévenue par téléphone.").first()).toBeVisible();
@@ -263,14 +264,17 @@ test.describe("Atelier — chiffres", () => {
     await expect(page.getByRole("region", { name: "Par fournée" }).getByText("Fournée n°12")).toBeVisible();
     await expect(page.getByText(/paiements? Wave à vérifier/)).toBeVisible();
 
-    // Accessible depuis le menu « Ventes » (panneau « Plus » sur petit écran).
+    // Accessible depuis le menu « Le reste » (panneau « Plus » sur petit écran).
     await page.goto("/admin");
     await waitForHydration(page);
     if ((page.viewportSize()?.width ?? 1200) < 1024) {
       await page.getByRole("navigation", { name: "Accès rapides" }).getByRole("button", { name: "Plus" }).click();
       await page.getByRole("dialog", { name: "Toutes les rubriques" }).getByRole("link", { name: "Chiffres" }).click();
     } else {
-      await page.getByRole("link", { name: "Chiffres", exact: true }).first().click();
+      // Groupe « Le reste », replié par défaut.
+      const menu = page.getByRole("navigation", { name: "Administration" });
+      await menu.getByRole("button", { name: "Le reste" }).click();
+      await menu.getByRole("link", { name: "Chiffres", exact: true }).click();
     }
     await expect(page).toHaveURL(/\/admin\/chiffres/);
     await cancelTestOrder(wave);

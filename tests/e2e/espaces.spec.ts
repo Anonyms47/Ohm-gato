@@ -286,6 +286,7 @@ test.describe("Administration d'Alima", () => {
     const reference = (await page.getByText(/^OHM12-\d{4,}$/).first().textContent())!.trim();
     await expect(page.getByRole("link", { name: "Ouvrir l'itinéraire" })).toBeVisible();
     // Reçu PDF pour l'équipe ; refusé sans connexion administrateur.
+    await page.locator("summary", { hasText: /^Reçu$/ }).click(); // section repliée
     const receiptDownload = page.waitForEvent("download");
     await page.getByRole("link", { name: "Reçu PDF" }).click();
     expect((await receiptDownload).suggestedFilename()).toBe(`recu-${reference}.pdf`);
