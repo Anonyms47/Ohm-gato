@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TextInput } from "@/components/ui/Field";
 
 const AddressMap = dynamic(() => import("@/components/checkout/AddressMap"), {
@@ -45,27 +45,61 @@ export function PositionPicker({
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchState>({ kind: "idle" });
   const [focus, setFocus] = useState<Place | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const watchRef = useRef<{ id: number; timer: number } | null>(null);
   const errorId = `${id}-erreur`;
 
+  const stopWatching = () => {
+    if (!watchRef.current) return;
+    navigator.geolocation.clearWatch(watchRef.current.id);
+    window.clearTimeout(watchRef.current.timer);
+    watchRef.current = null;
+  };
+  useEffect(() => stopWatching, []);
+
+  /**
+   * Position précise : le premier relevé d'un téléphone est souvent approximatif (antennes, Wi-Fi).
+   * On écoute le GPS quelques secondes et on garde le relevé le plus précis (arrêt dès ± 20 m).
+   */
   const locate = () => {
     if (!("geolocation" in navigator)) {
       setGeo("unavailable");
       return;
     }
+    stopWatching();
     setGeo("locating");
-    navigator.geolocation.getCurrentPosition(
+    setAccuracy(null);
+    let best: GeolocationCoordinates | null = null;
+    const finish = () => {
+      stopWatching();
+      if (!best) {
+        setGeo("unavailable");
+        return;
+      }
+      const { latitude: lat, longitude: lng } = best;
+      if (lat < 14.4 || lat > 15 || lng < -17.6 || lng > -16.9) {
+        setGeo("outside");
+        return;
+      }
+      onChange({ lat, lng });
+      setFocus({ label: "Ma position", lat, lng });
+      setAccuracy(Math.round(best.accuracy));
+      setGeo("idle");
+    };
+    const watchId = navigator.geolocation.watchPosition(
       (result) => {
-        const { latitude: lat, longitude: lng } = result.coords;
-        if (lat < 14.4 || lat > 15 || lng < -17.6 || lng > -16.9) {
-          setGeo("outside");
-          return;
-        }
-        onChange({ lat, lng });
-        setGeo("idle");
+        if (!best || result.coords.accuracy < best.accuracy) best = result.coords;
+        if (best.accuracy <= 20) finish();
       },
-      (failure) => setGeo(failure.code === failure.PERMISSION_DENIED ? "denied" : "unavailable"),
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+      (failure) => {
+        if (failure.code === failure.PERMISSION_DENIED) {
+          stopWatching();
+          setGeo("denied");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
     );
+    watchRef.current = { id: watchId, timer: window.setTimeout(finish, 15_000) };
   };
 
   const runSearch = async () => {
@@ -105,9 +139,22 @@ export function PositionPicker({
     >
       <legend className="px-1 font-bold">{legend}</legend>
       <p className="text-encre-douce">
-        Cherchez votre quartier puis touchez la carte à l&apos;endroit exact de livraison, ou utilisez votre position. Elle est transmise à OHMEGATO pour organiser la
-        livraison.
+        Le plus simple : utilisez votre position GPS sur place. Sinon, cherchez votre quartier puis touchez la carte à l&apos;endroit exact. La position est transmise
+        à OHMEGATO pour organiser la livraison.
       </p>
+      <button
+        type="button"
+        onClick={locate}
+        disabled={geo === "locating"}
+        className="min-h-12 self-start rounded-[10px] border-2 border-chocolat bg-chocolat px-5 font-bold text-creme disabled:opacity-60"
+      >
+        {geo === "locating" ? "Recherche précise de votre position…" : "Utiliser ma position (GPS)"}
+      </button>
+      {geo !== "idle" && geo !== "locating" && (
+        <p role="status" className="font-bold text-orange-encre">
+          {geoMessage[geo]}
+        </p>
+      )}
       <div className="flex flex-col gap-2">
         <label htmlFor={`${id}-recherche`} className="font-bold">
           Chercher un quartier ou un lieu
@@ -161,29 +208,28 @@ export function PositionPicker({
             ))}
           </ul>
         )}
-        {focus && !position && (
+        {focus && !position && focus.label !== "Ma position" && (
           <p role="status" className="font-bold">
             Carte centrée sur « {focus.label} ». Touchez maintenant l&apos;endroit exact de livraison.
           </p>
         )}
       </div>
-      <button
-        type="button"
-        onClick={locate}
-        disabled={geo === "locating"}
-        className="min-h-11 self-start rounded-[10px] border-2 border-chocolat px-4 font-bold disabled:opacity-60"
-      >
-        {geo === "locating" ? "Recherche de votre position…" : "Utiliser ma position"}
-      </button>
-      {geo !== "idle" && geo !== "locating" && (
-        <p role="status" className="font-bold text-orange-encre">
-          {geoMessage[geo]}
-        </p>
-      )}
-      <AddressMap position={position} onChange={onChange} focus={focus} label="Carte de Dakar : touchez l'endroit de livraison pour poser le repère" />
+      <AddressMap
+        position={position}
+        onChange={(next) => {
+          setAccuracy(null);
+          onChange(next);
+        }}
+        focus={focus}
+        label="Carte de Dakar : touchez l'endroit de livraison pour poser le repère"
+      />
       {position ? (
-        <p role="status" className="font-bold text-succes">
-          Repère placé. Vous pouvez le déplacer pour l&apos;ajuster.
+        <p role="status" className={accuracy !== null && accuracy > 100 ? "font-bold text-orange-encre" : "font-bold text-succes"}>
+          {accuracy === null
+            ? "Repère placé. Vous pouvez le déplacer pour l'ajuster."
+            : accuracy > 100
+              ? `Position approximative (à ± ${accuracy} m) : vérifiez sur la carte et déplacez le repère sur votre porte.`
+              : `Position trouvée (à ± ${accuracy} m près). Vous pouvez déplacer le repère pour l'ajuster.`}
         </p>
       ) : (
         error && (

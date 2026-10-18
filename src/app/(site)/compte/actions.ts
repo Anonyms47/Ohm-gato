@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
-import { deliverySchema } from "@/lib/validation/checkout";
+import { deliveryAddressLine, deliverySchema } from "@/lib/validation/checkout";
 
 /**
  * Actions de l'espace membre. Chaque écriture passe par la session de l'utilisateur :
@@ -55,9 +55,9 @@ export async function saveAddress(input: unknown): Promise<ActionState & { field
     label: a.label || null,
     recipient_name: a.recipientName,
     recipient_phone: a.recipientPhone,
-    address_line: a.addressLine,
-    district: a.district,
-    landmark: a.landmark,
+    address_line: deliveryAddressLine(a),
+    district: a.district || null,
+    landmark: a.landmark || null,
     floor_door: a.floorDoor || null,
     instructions: a.instructions || null,
     latitude: a.latitude,

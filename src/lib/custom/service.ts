@@ -7,6 +7,7 @@ import { generateTrackingToken, hashTrackingToken, isWellFormedToken } from "@/l
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 import { customEditSchema, customRequestSchema, eventDateTime } from "@/lib/validation/custom-request";
+import { deliveryAddressLine } from "@/lib/validation/checkout";
 
 export type ServiceResult<T> = { ok: true; data: T } | { ok: false; status: number; code: string; message: string; fieldErrors?: Record<string, string> };
 
@@ -64,9 +65,9 @@ export async function createCustomRequest(
       notes: data.notes ?? null,
       customer: { name: data.contact.name, phone: data.contact.phone, email: data.contact.email ?? null },
       delivery: delivery && {
-        address_line: [delivery.addressLine, delivery.floorDoor].filter(Boolean).join(", "),
-        district: delivery.district,
-        landmark: delivery.landmark,
+        address_line: [deliveryAddressLine(delivery), delivery.floorDoor].filter(Boolean).join(", "),
+        district: delivery.district || null,
+        landmark: delivery.landmark || null,
         recipient_name: delivery.recipientName,
         recipient_phone: delivery.recipientPhone,
         latitude: delivery.latitude,

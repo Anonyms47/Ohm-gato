@@ -107,7 +107,7 @@ test.describe("Acceptation au paiement", () => {
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("radio", { name: /^Livraison/ }).check();
     await page.getByLabel("Adresse").fill("Villa 24, rue MZ-12");
-    await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
+    await page.getByLabel(/^Quartier/).fill("Mermoz");
     await page.getByLabel("Point de repère").fill("En face de la pharmacie");
     await page.getByRole("button", { name: "Placer le repère au centre de la carte" }).click();
     await expect(page.getByText("Repère placé.")).toBeVisible();

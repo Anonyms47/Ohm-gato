@@ -77,7 +77,7 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     const notice = "Frais de livraison non compris, à régler directement au livreur selon votre position.";
     await expect(page.getByText(notice).filter({ visible: true }).first()).toBeVisible();
     await page.getByLabel("Adresse").fill("Villa 24, rue MZ-12");
-    await page.getByLabel("Quartier", { exact: true }).fill("Mermoz");
+    await page.getByLabel(/^Quartier/).fill("Mermoz");
     await page.getByLabel("Point de repère").fill("En face de la pharmacie");
 
     // Sans repère sur la carte, l'étape est refusée.
