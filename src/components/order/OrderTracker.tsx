@@ -9,7 +9,7 @@ import { forgetPendingOrder, readPendingOrders } from "@/components/order/pendin
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
-import { formatSlot, formatTime } from "@/lib/dates";
+import { formatShortDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import {
   isAwaitingPayment,
@@ -175,8 +175,13 @@ export function OrderTracker({
     }
   };
 
-  const steps = roadSteps(order.fulfillment);
-  const reached = reachedStepIndex(order.status, order.fulfillment);
+  // « Cuisson et finitions » n'apparaît que si la commande y est réellement passée.
+  const reachedAt = (status: OrderStatus) => order.history.find((h) => h.status === status)?.createdAt ?? null;
+  const allSteps = roadSteps(order.fulfillment);
+  const reachedAll = reachedStepIndex(order.status, order.fulfillment);
+  const reachedKey = allSteps[reachedAll]?.key;
+  const steps = allSteps.filter((s) => s.key !== "finishing" || reachedAt("finishing") || order.status === "finishing");
+  const reached = steps.findIndex((s) => s.key === reachedKey);
   const whatsappText = encodeURIComponent(`Bonjour OHMEGATO, à propos de ma commande ${order.reference}`);
 
   return (
@@ -373,11 +378,12 @@ export function OrderTracker({
           <h2 id="route" className="font-display text-[1.8rem]">
             Carnet de route
           </h2>
-          <ol className="mt-4 flex flex-col gap-3">
+          <ol className="relative mt-4 flex flex-col gap-4 before:absolute before:bottom-4 before:left-[17px] before:top-4 before:w-0.5 before:bg-chocolat/15">
             {steps.map((step, index) => {
               const done = index <= reached;
+              const at = done ? reachedAt(step.key) : null;
               return (
-                <li key={step.key} className="flex items-center gap-3">
+                <li key={step.key} className="relative flex items-center gap-3">
                   <span
                     aria-hidden
                     className={cn(
@@ -390,6 +396,11 @@ export function OrderTracker({
                   <span className={done ? "font-bold" : "text-encre-douce"}>
                     {step.label}
                     <span className="sr-only">{done ? " — étape atteinte" : " — à venir"}</span>
+                    {at && (
+                      <span className="block text-[0.9rem] font-normal text-encre-douce">
+                        {formatShortDay(at)} à {formatTime(at)}
+                      </span>
+                    )}
                   </span>
                 </li>
               );

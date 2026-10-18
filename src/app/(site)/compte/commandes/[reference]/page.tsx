@@ -1,3 +1,4 @@
+import { HistoryTimeline } from "@/components/order/HistoryTimeline";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RecomposeBox } from "@/components/account/RecomposeBox";
@@ -6,7 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { getMyOrder } from "@/lib/account/data";
 import { requireUser } from "@/lib/auth/session";
-import { formatShortDay, formatSlot, formatTime } from "@/lib/dates";
+import { formatShortDay, formatSlot } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import { isAwaitingPayment, paymentStatusLabel, statusHeadline } from "@/lib/order-status";
 import { providerLabel } from "@/lib/payments/labels";
@@ -131,17 +132,7 @@ export default async function CommandeDetail({ params }: { params: Promise<{ ref
           <h2 id="historique" className="font-display text-[1.4rem]">
             Historique
           </h2>
-          <ol className="mt-2 flex flex-col gap-1">
-            {order.history.map((h, index) => (
-              <li key={index}>
-                <span className="tabular-nums text-encre-douce">
-                  {formatShortDay(h.createdAt)} {formatTime(h.createdAt)}
-                </span>{" "}
-                — {statusHeadline[h.status]}
-                {h.note ? ` · ${h.note}` : ""}
-              </li>
-            ))}
-          </ol>
+          <HistoryTimeline className="mt-3" entries={order.history.map((h) => ({ label: statusHeadline[h.status], at: h.createdAt, detail: h.note?.startsWith("Automatique") ? null : h.note }))} />
         </section>
       </aside>
     </div>
