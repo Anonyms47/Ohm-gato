@@ -13,7 +13,7 @@ export function telLink(phoneE164: string): string {
   return `tel:${phoneE164.replace(/[^\d+]/g, "")}`;
 }
 
-export type WhatsappTemplate = "payment_check" | "payment_received" | "ready_pickup" | "out_for_delivery" | "landmark" | "general";
+export type WhatsappTemplate = "payment_check" | "payment_reminder" | "payment_received" | "ready_pickup" | "out_for_delivery" | "landmark" | "general";
 
 export function whatsappMessage(
   template: WhatsappTemplate,
@@ -23,6 +23,8 @@ export function whatsappMessage(
   switch (template) {
     case "payment_check":
       return `Bonjour ${first}, c'est ${brand.name}. Nous ne retrouvons pas encore votre paiement Wave de ${formatFcfa(o.totalFcfa)} pour la commande ${o.reference}. Pourriez-vous nous envoyer la capture de la transaction ? Merci !`;
+    case "payment_reminder":
+      return `Bonjour ${first}, c'est ${brand.name}. Votre commande ${o.reference} (${formatFcfa(o.totalFcfa)}) attend encore votre paiement Wave. Si c'est déjà fait, envoyez-nous simplement la capture de la transaction ; sinon, vous pouvez payer depuis votre lien de suivi. Merci !`;
     case "payment_received":
       return `Bonjour ${first}, c'est ${brand.name}. Nous avons bien reçu votre paiement pour la commande ${o.reference}. Merci ! Nous vous prévenons dès qu'elle est prête.`;
     case "ready_pickup":
