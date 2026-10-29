@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { isMemberActive, MEMBER_NAV } from "@/components/account/MemberNav";
 import { Logo } from "@/components/brand/Logo";
 import { useCart } from "@/components/cart/CartProvider";
+import { StickyCtaBar, useStickyCtaState } from "@/components/layout/StickyCta";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatFcfa } from "@/lib/money";
@@ -156,7 +157,24 @@ export function MobileNav({ account }: { account: AccountSummary | null }) {
   const { resolved, setDrawerOpen, hydrated, lastAdded } = useCart();
   const count = hydrated ? resolved.itemCount : 0;
   const inAccount = pathname.startsWith("/compte");
-  const hideBand = pathname.startsWith("/commande") || pathname.startsWith("/ma-boite") || inAccount;
+  const stickyCta = useStickyCtaState();
+  // Un seul bouton d'action collé à la fois : la bande « Ma boîte » s'efface quand l'action de la page prend sa place.
+  const hideBand = pathname.startsWith("/commande") || pathname.startsWith("/ma-boite") || inAccount || stickyCta !== null;
+  const barRef = useRef<HTMLDivElement>(null);
+  // Hauteur réelle de la barre du bas (navigation, bande, action collée) : le pied de page, le retour en haut et le
+  // défilement vers un champ en tiennent compte pour ne rien laisser caché derrière.
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const publish = () => document.documentElement.style.setProperty("--mobile-bottom", `${el.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--mobile-bottom");
+    };
+  }, []);
   const boxButton = (
     <button
       type="button"
@@ -171,7 +189,8 @@ export function MobileNav({ account }: { account: AccountSummary | null }) {
     </button>
   );
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 print:hidden md:hidden">
+    <div ref={barRef} className="fixed inset-x-0 bottom-0 z-40 print:hidden md:hidden">
+      <StickyCtaBar />
       {count > 0 && !hideBand && (
         <button
           type="button"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { grantRole, removeStoryMedia, revokeRole, saveTextSetting, uploadStoryMedia } from "@/app/admin/_actions/settings";
+import { grantRole, removeStoryMedia, revokeRole, saveSnapchat, saveTextSetting, uploadStoryMedia } from "@/app/admin/_actions/settings";
 import { ActionButton, AdminForm, StateMessage } from "@/components/admin/AdminUi";
 import { UploadInput } from "@/components/admin/UploadInput";
 import { Button } from "@/components/ui/Button";
@@ -123,6 +123,45 @@ export function RolesEditor({ staff, currentUserId }: { staff: { userId: string;
         />
       </div>
       <StateMessage state={state} />
+    </div>
+  );
+}
+
+/** Instagram reste toujours affiché ; Snapchat n'apparaît que lorsqu'il est activé avec un vrai identifiant. */
+export function SocialSettings({ instagramHandle, initial }: { instagramHandle: string; initial: { handle: string; url: string; enabled: boolean } }) {
+  const [handle, setHandle] = useState(initial.handle);
+  const [url, setUrl] = useState(initial.url);
+  const [enabled, setEnabled] = useState(initial.enabled);
+  const [state, setState] = useState<AdminState>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="flex flex-col gap-4">
+      <p>
+        <strong>Instagram</strong> : @{instagramHandle} (toujours affiché dans le pied de page et sur les pages concernées).
+      </p>
+      <Field label="Identifiant Snapchat" optional hint="Sans le @. Tant qu'il est vide ou désactivé, Snapchat reste masqué sur le site.">
+        {({ id, describedBy }) => <TextInput id={id} value={handle} maxLength={16} aria-describedby={describedBy} onChange={(e) => setHandle(e.target.value)} />}
+      </Field>
+      <Field label="URL Snapchat" optional hint="Vide : l'adresse du profil est déduite de l'identifiant (https://www.snapchat.com/add/…).">
+        {({ id, describedBy }) => <TextInput id={id} type="url" inputMode="url" value={url} maxLength={200} aria-describedby={describedBy} onChange={(e) => setUrl(e.target.value)} />}
+      </Field>
+      <label className="flex min-h-11 items-center gap-3 font-bold">
+        <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="size-5 accent-chocolat" />
+        Afficher Snapchat avec Instagram
+      </label>
+      <StateMessage state={state} />
+      <Button
+        variant="secondary"
+        className="self-start"
+        state={busy ? "loading" : "idle"}
+        onClick={async () => {
+          setBusy(true);
+          setState(await saveSnapchat({ handle, url, enabled }));
+          setBusy(false);
+        }}
+      >
+        Enregistrer les réseaux
+      </Button>
     </div>
   );
 }

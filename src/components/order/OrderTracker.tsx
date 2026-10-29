@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandHeading } from "@/components/brand/BrandHeading";
-import { DELIVERY_FEE_NOTICE, DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
+import { DeliveryFeeNotice, deliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { useCart } from "@/components/cart/CartProvider";
 import { forgetPendingOrder, readPendingOrders } from "@/components/order/pending-orders";
 import { Button, type ButtonState } from "@/components/ui/Button";
@@ -36,6 +36,7 @@ export interface TrackerOrder {
   pickupCode: string | null;
   subtotalFcfa: number;
   deliveryFeeFcfa: number | null;
+  deliveryZoneName?: string | null;
   totalFcfa: number;
   reservationExpiresAt: string | null;
   cycleNumber: number | null;
@@ -74,7 +75,7 @@ export function OrderTracker({
   returningFromPayment,
   paymentMethods,
   pickupAddress,
-  waveLink = null,
+  paymentLink = null,
   phoneLogin = true,
 }: {
   token: string;
@@ -83,7 +84,8 @@ export function OrderTracker({
   paymentMethods: { id: "wave" | "wave_link" | "orange_money" | "test"; label: string; available: boolean }[];
   pickupAddress: string;
   /** Lien marchand Wave à payer (commande confirmée, paiement à vérifier par OHMEGATO). */
-  waveLink?: string | null;
+  /** Lien marchand du moyen choisi (Wave ou Orange Money) : paiement vérifié à la main par OHMEGATO. */
+  paymentLink?: { provider: "wave" | "orange_money"; label: string; url: string; instructions: string | null } | null;
   /** Connexion par téléphone disponible (sinon, aucun lien « numéro de la commande »). */
   phoneLogin?: boolean;
 }) {
@@ -94,7 +96,7 @@ export function OrderTracker({
   const paid = order.paymentStatus === "paid";
   const waiting = isAwaitingPayment(order.status, order.paymentStatus);
   // Commande confirmée par le lien Wave, paiement pas encore constaté par OHMEGATO.
-  const awaitingWave = waveLink !== null && order.paymentStatus === "pending" && !waiting && !["cancelled", "expired", "refunded"].includes(order.status);
+  const awaitingWave = paymentLink !== null && order.paymentStatus === "pending" && !waiting && !["cancelled", "expired", "refunded"].includes(order.status);
   const polling = waiting || awaitingWave;
   const lastStatus = useRef(`${order.status}/${order.paymentStatus}`);
 
@@ -230,23 +232,34 @@ export function OrderTracker({
             </div>
           </div>
         )}
-        {awaitingWave && waveLink && (
-          <div className="flex flex-col gap-3 rounded-[12px] border-2 border-wave-encre bg-blanc-casse p-4" data-testid="paiement-wave">
+        {awaitingWave && paymentLink && (
+          <div
+            className={`flex flex-col gap-3 rounded-[12px] border-2 bg-blanc-casse p-4 ${paymentLink.provider === "wave" ? "border-wave-encre" : "border-chocolat"}`}
+            data-testid={paymentLink.provider === "wave" ? "paiement-wave" : "paiement-orange-money"}
+          >
             <p className="text-[1.1rem]">
-              Votre commande est confirmée. Réglez <strong className="tabular-nums">{formatFcfa(order.totalFcfa)}</strong> avec Wave en indiquant la
+              Votre commande est confirmée. Réglez <strong className="tabular-nums">{formatFcfa(order.totalFcfa)}</strong> avec {paymentLink.label} en indiquant la
               référence <strong>{order.reference}</strong>.
             </p>
+            {paymentLink.instructions && <p>{paymentLink.instructions}</p>}
             <a
-              href={waveLink}
+              href={paymentLink.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-14 w-fit items-center rounded-[12px] bg-wave px-6 font-bold text-wave-encre shadow-[0_3px_0_var(--ohm-wave-encre)]"
+              className={
+                paymentLink.provider === "wave"
+                  ? "inline-flex min-h-14 w-fit items-center rounded-[12px] bg-wave px-6 font-bold text-wave-encre shadow-[0_3px_0_var(--ohm-wave-encre)]"
+                  : "inline-flex min-h-14 w-fit items-center rounded-[12px] bg-orange-money px-6 font-bold text-cacao shadow-[0_3px_0_var(--ohm-cacao)]"
+              }
             >
-              Payer {formatFcfa(order.totalFcfa)} avec Wave
+              Payer {formatFcfa(order.totalFcfa)} avec {paymentLink.label}
             </a>
+            <p className="font-bold" data-testid="paiement-a-verifier">
+              Paiement à vérifier par OHMEGATO
+            </p>
             <p className="text-encre-douce">
-              OHMEGATO vérifie la réception du paiement : cette page affichera « Payée » dès que c&apos;est fait. Sans paiement, la commande pourra
-              être annulée.
+              OHMEGATO vérifie la réception du paiement : cette page affichera « Payée » dès que c&apos;est fait. Ouvrir le lien ne vaut pas paiement. Sans paiement,
+              la commande pourra être annulée.
             </p>
           </div>
         )}
@@ -298,9 +311,15 @@ export function OrderTracker({
             </div>
           )}
           <div className="flex justify-between border-t-2 border-chocolat pt-2 text-[1.15rem] font-bold">
-            <dt>{paid ? "Total payé" : "Total à payer"}</dt>
+            <dt>{order.fulfillment === "delivery" ? (paid ? "Total produits payé en ligne" : "Total produits à payer en ligne") : paid ? "Total payé" : "Total à payer"}</dt>
             <dd className="tabular-nums">{formatFcfa(order.totalFcfa)}</dd>
           </div>
+          {order.fulfillment === "delivery" && (
+            <div className="flex justify-between gap-3" data-testid="livraison-au-livreur">
+              <dt>Livraison{order.deliveryZoneName ? ` · ${order.deliveryZoneName}` : ""}</dt>
+              <dd className="text-right">{typeof order.deliveryFeeFcfa === "number" ? `${formatFcfa(order.deliveryFeeFcfa)}, à régler au livreur` : "à régler au livreur"}</dd>
+            </div>
+          )}
           <div className="flex justify-between">
             <dt>Paiement</dt>
             <dd>{paymentStatusLabel[order.paymentStatus]}</dd>
@@ -349,7 +368,7 @@ export function OrderTracker({
             </p>
           )}
         </div>
-        {order.fulfillment === "delivery" && <p className="mt-3 font-bold">{DELIVERY_FEE_NOTICE}</p>}
+        {order.fulfillment === "delivery" && <p className="mt-3 font-bold">{deliveryFeeNotice(order.deliveryFeeFcfa)}</p>}
         {!order.showPrivate && order.fulfillment === "pickup" && paid && (
           <p className="mt-4 text-encre-douce">
             Le code de retrait s&apos;affiche sur le navigateur qui a passé la commande
@@ -418,7 +437,7 @@ export function OrderTracker({
             Votre repère est enregistré avec la commande. Pour aider le livreur, envoyez-le aussi à OHMEGATO sur WhatsApp ; les frais de livraison vous
             seront indiqués selon cette position.
           </p>
-          <DeliveryFeeNotice />
+          <DeliveryFeeNotice feeFcfa={order.deliveryFeeFcfa} />
           <a
             href={`${brand.whatsappUrl}?text=${encodeURIComponent(
               [

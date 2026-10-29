@@ -7,7 +7,7 @@ import { getPublicSettings } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Notre histoire",
-  description: "D'Oumou Gâteau à OHMEGATO : les premiers muffins à l'ESP, puis une carte qui grandit, et l'envie d'un futur café.",
+  description: "OHMEGATO associe OMEGA (Ω) et TO (Τ) : les premiers muffins préparés à l'ESP, puis une carte qui grandit, et l'envie d'un futur café.",
 };
 
 interface StoryPhoto {
@@ -57,13 +57,9 @@ export default async function NotreHistoirePage() {
             </h2>
           </div>
           <div className="flex flex-col gap-4 text-[1.1rem]">
+            <p>Avant OHMEGATO, il y avait « Oumou Gâteau ».</p>
             <p>
-              Avant OHMEGATO, il y avait « Oumou Gâteau ». Le nom s&apos;est transformé : prononcé d&apos;une traite, il est devenu{" "}
-              <strong>OHMEGATO</strong>.
-            </p>
-            <p>
-              Dans OHMEGATO, on entend aussi <strong>Oméga</strong>, la lettre grecque <span aria-hidden>Ω</span>
-              <span className="sr-only">oméga</span>, devenue notre signe.
+              Le nom <strong>OHMEGATO</strong> associe <strong>OMEGA (Ω)</strong>, la lettre grecque devenue notre signe, et <strong>TO (Τ)</strong>.
             </p>
           </div>
         </div>
@@ -77,7 +73,7 @@ export default async function NotreHistoirePage() {
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:-rotate-1">
               <p className="font-script text-[1.5rem] text-caramel-encre">1.</p>
-              <p className="text-[1.1rem]">Pendant sa troisième année à l&apos;ESP, la fondatrice d&apos;OHMEGATO prépare ses premiers muffins.</p>
+              <p className="text-[1.1rem]">Pendant notre troisième année à l&apos;ESP, on prépare nos premiers muffins pour un événement.</p>
             </li>
             <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:translate-y-4">
               <p className="font-script text-[1.5rem] text-caramel-encre">2.</p>
@@ -116,12 +112,12 @@ export default async function NotreHistoirePage() {
             {quote && (
               <blockquote className="mt-2 border-l-4 border-caramel pl-4">
                 <p className="font-script text-[1.6rem] leading-snug text-creme">{quote}</p>
-                <footer className="mt-2 font-bold text-creme/80">— La fondatrice d&apos;OHMEGATO</footer>
+                <footer className="mt-2 font-bold text-creme/80">— OHMEGATO</footer>
               </blockquote>
             )}
             {audio && (
               <figure className="mt-2">
-                <figcaption className="mb-2 font-bold text-creme">La fondatrice raconte (audio)</figcaption>
+                <figcaption className="mb-2 font-bold text-creme">OHMEGATO raconte (audio)</figcaption>
                 {/* Jamais de lecture automatique. */}
                 <audio controls preload="none" src={audio.url} className="w-full" />
                 {audio.transcript && (

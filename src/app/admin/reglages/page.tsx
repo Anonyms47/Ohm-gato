@@ -1,4 +1,6 @@
-import { RemoveMedia, RolesEditor, StoryMediaUpload, TextSetting } from "@/components/admin/SettingsEditors";
+import { RemoveMedia, RolesEditor, SocialSettings, StoryMediaUpload, TextSetting } from "@/components/admin/SettingsEditors";
+import { brand } from "@/config/brand";
+import { parseSnapchat } from "@/lib/social";
 import { WorkshopTracesEditor } from "@/components/admin/WorkshopTracesEditor";
 import { AutomationSettingsForm } from "@/components/admin/AutomationEditors";
 import { getAutomationSettings } from "@/lib/admin/today";
@@ -22,6 +24,12 @@ export default async function AdminReglages() {
         <p className="text-encre-douce">Un texte vide n&apos;est jamais affiché : rien n&apos;est inventé à sa place.</p>
         <TextSetting settingKey="home.alima_note" label="Le mot d'Alima (accueil)" hint="Affiché sur l'accueil, signé Alima." initial={text("home.alima_note")} />
         <TextSetting settingKey="story.quote" label="Citation d'Alima (Notre histoire)" hint="Uniquement une vraie citation." initial={text("story.quote")} />
+      </section>
+      <section id="reseaux" aria-labelledby="titre-reseaux" className="flex scroll-mt-24 flex-col gap-4">
+        <h2 id="titre-reseaux" className="font-display text-[1.5rem]">
+          Réseaux sociaux
+        </h2>
+        <SocialSettings instagramHandle={brand.instagramHandle} initial={parseSnapchat(settings["social.snapchat"]?.value) ?? { handle: "", url: "", enabled: false }} />
       </section>
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-[1.5rem]">Traces d&apos;atelier</h2>

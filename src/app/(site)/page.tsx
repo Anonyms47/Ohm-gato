@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { HandArrow } from "@/components/brand/HandArrow";
 import { AvailabilityBadge } from "@/components/catalog/AvailabilityBadge";
@@ -12,6 +13,7 @@ import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
 import { cyclePhaseLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
+import { socialLinks } from "@/lib/social";
 
 function fromPrice(product: CatalogProduct) {
   const prices = product.variants.filter((v) => v.enabledInCycle).map((v) => v.priceFcfa);
@@ -19,7 +21,7 @@ function fromPrice(product: CatalogProduct) {
 }
 
 function cycleLine(cycle: CycleSummary | null): string {
-  if (!cycle) return "Prochaine fournée annoncée sur Instagram.";
+  if (!cycle) return "Aucune fournée n'est ouverte pour le moment.";
   const phase = phaseNow(cycle);
   if (phase === "scheduled") return `Fournée annoncée : ${productionLabel(cycle)}`;
   return phaseMessage(phase, cycle) ?? "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
@@ -34,6 +36,7 @@ export default async function FourneePage() {
   const manifestoCandidate = products.find((p) => p.slug === "moelleux-chocolat") ?? null;
   const manifesto = manifestoCandidate && manifestoCandidate.id !== featured?.id ? manifestoCandidate : null;
   const alimaNote = typeof settings["home.alima_note"] === "string" ? (settings["home.alima_note"] as string) : null;
+  const social = socialLinks(settings);
   const phase = cycle ? phaseNow(cycle) : null;
   const action = cycle && phase ? phaseAction(phase, cycle.number) : null;
 
@@ -51,7 +54,7 @@ export default async function FourneePage() {
     email: brand.email,
     address: { "@type": "PostalAddress", addressLocality: brand.city, addressCountry: "SN" },
     areaServed: { "@type": "City", name: brand.city },
-    sameAs: [brand.instagramUrl],
+    sameAs: [social.instagram.url, ...(social.snapchat ? [social.snapchat.url] : [])],
   };
 
   return (
@@ -101,8 +104,8 @@ export default async function FourneePage() {
                   Voir la fournée
                 </ButtonLink>
               ) : (
-                <ButtonLink href={brand.instagramUrl} variant="secondary">
-                  Suivre les annonces sur Instagram
+                <ButtonLink href="#prevenez-accueil" variant="secondary">
+                  Être prévenu(e) de la prochaine fournée
                 </ButtonLink>
               )}
             </div>
@@ -124,6 +127,15 @@ export default async function FourneePage() {
           )}
         </div>
       </section>
+
+      {/* Aucune fournée ouverte : prévenir la cliente plutôt que la renvoyer vers un réseau social */}
+      {!cycle?.isOpen && (
+        <section className="ohm-grille">
+          <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+            <NextBatchAlert source="accueil" />
+          </div>
+        </section>
+      )}
 
       {/* Acte 2 — table des produits de la fournée */}
       <section aria-labelledby="table" className="bg-blanc-casse">
@@ -189,7 +201,33 @@ export default async function FourneePage() {
         </section>
       )}
 
-      {/* Acte 3 — pause humaine (affichée seulement avec une vraie note d'Alima) */}
+      {/* Acte 2 ter — des premiers muffins à OHMEGATO */}
+      <section aria-labelledby="histoire-accueil" className="bg-blanc-casse" data-testid="histoire-accueil">
+        <div className="mx-auto grid max-w-5xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-[1fr_1.4fr] md:items-center">
+          <div>
+            <Annotation>notre histoire</Annotation>
+            <BrandHeading id="histoire-accueil" size="titre">
+              Des premiers muffins à OHMEGATO
+            </BrandHeading>
+          </div>
+          <div className="flex flex-col gap-4 text-[1.1rem]">
+            <p>
+              Les premiers muffins ont été préparés à l&apos;ESP, pour un événement. Ils ont plu à l&apos;entourage, puis la carte s&apos;est développée petit à petit.
+            </p>
+            <p>
+              Le nom raconte aussi cette histoire : OHMEGATO associe <strong>OMEGA (Ω)</strong> et <strong>TO (Τ)</strong>.
+            </p>
+            <p>Aujourd&apos;hui, nous voulons simplement partager des douceurs maison et une expérience chaleureuse, une fournée après l&apos;autre.</p>
+            <p>
+              <Link href="/notre-histoire" className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                Découvrir notre histoire
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Acte 3 — pause humaine (affichée seulement avec une vraie note de l'atelier) */}
       {alimaNote && (
         <section aria-labelledby="note" className="ohm-grille">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">

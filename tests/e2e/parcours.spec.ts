@@ -93,7 +93,7 @@ test.describe("Parcours complet : fournée → produit → Ma boîte → command
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
     // Seuls les produits sont payés : 2 500 FCFA, sans frais de livraison.
-    await expect(page.getByText(/Total à payer/)).toBeVisible();
+    await expect(page.getByText(/Total produits à payer en ligne/)).toBeVisible();
     await expect(page.getByText(/2\u202f500\u00a0FCFA/).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(notice).filter({ visible: true }).first()).toBeVisible();
 

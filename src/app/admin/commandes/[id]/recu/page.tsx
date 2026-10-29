@@ -60,9 +60,15 @@ export default async function Recu({ params }: { params: Promise<{ id: string }>
         </ul>
         <hr className="my-3 border-dashed border-chocolat/40" />
         <p className="flex justify-between font-bold tabular-nums">
-          <span>Total produits</span>
+          <span>Total produits payé en ligne</span>
           <span>{formatFcfa(order.totalFcfa)}</span>
         </p>
+        {order.fulfillment === "delivery" && (
+          <p className="flex justify-between font-bold tabular-nums" data-testid="recu-livraison">
+            <span>Livraison à régler au livreur{order.deliveryZoneName ? ` (${order.deliveryZoneName})` : ""}</span>
+            <span>{typeof order.deliveryFeeFcfa === "number" ? formatFcfa(order.deliveryFeeFcfa) : "selon la position"}</span>
+          </p>
+        )}
         <p>
           Paiement : {paymentStatusLabel[order.paymentStatus]}
           {paid ? ` · ${providerLabel(paid.provider)}${paid.providerReference ? ` · réf. ${paid.providerReference}` : ""}` : ""}

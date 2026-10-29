@@ -5,7 +5,7 @@ import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
 import { CheckoutSummary } from "@/components/checkout/CheckoutSummary";
 import { getMyAddresses } from "@/lib/account/data";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getCatalog, getSlots } from "@/lib/catalog";
+import { getCatalog, getDeliveryZones, getSlots } from "@/lib/catalog";
 import { getCheckoutAcceptance } from "@/lib/legal/documents";
 import { formatSenegalPhone } from "@/lib/phone";
 import { paymentMethods } from "@/lib/payments";
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Le bon de fournée", robots: { index
 
 export default async function CommandePage() {
   const { cycle } = await getCatalog();
-  const [slots, user, legal] = await Promise.all([cycle ? getSlots(cycle.id, cycle.orderKind === "surplus" ? "surplus" : "preorder") : Promise.resolve([]), getCurrentUser(), getCheckoutAcceptance()]);
+  const [slots, user, legal, zones] = await Promise.all([cycle ? getSlots(cycle.id, cycle.orderKind === "surplus" ? "surplus" : "preorder") : Promise.resolve([]), getCurrentUser(), getCheckoutAcceptance(), getDeliveryZones()]);
   const acceptance = legal
     ? { termsVersionId: legal.termsId, termsVersion: legal.termsVersion, cancellationVersionId: legal.cancellationId, cancellationVersion: legal.cancellationVersion }
     : null;
@@ -33,7 +33,7 @@ export default async function CommandePage() {
       <CheckoutSummary variant="mobile" />
       <div className="lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-10">
         <div className="min-w-0">
-          <CheckoutFlow slots={slots} paymentMethods={paymentMethods()} acceptance={acceptance} member={member} />
+          <CheckoutFlow slots={slots} paymentMethods={await paymentMethods()} acceptance={acceptance} member={member} zones={zones} />
           <BoxAllergens className="mt-10" />
         </div>
         <CheckoutSummary variant="desktop" />

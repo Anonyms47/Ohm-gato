@@ -5,12 +5,18 @@ import { BoxAllergens } from "@/components/cart/BoxAllergens";
 import { useCart } from "@/components/cart/CartProvider";
 import { CartLines } from "@/components/cart/CartLines";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
+import { useStickyCta } from "@/components/layout/StickyCta";
 import { ButtonLink } from "@/components/ui/Button";
 import { cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
+import { useOffscreen } from "@/lib/use-offscreen";
 
 export function BoxPage() {
   const { resolved, hydrated, catalog, clear } = useCart();
+  const [orderRef, orderOffscreen] = useOffscreen<HTMLDivElement>();
+  const canOrder = hydrated && resolved.lines.length > 0 && !resolved.hasIssues && Boolean(catalog.cycle?.isOpen);
+  // Téléphone : « Remplir le bon de fournée » reste accessible sans atteindre le bas d'une longue boîte.
+  useStickyCta({ key: "bon-de-fournee", label: "Remplir le bon de fournée", href: "/commande" }, canOrder && orderOffscreen);
   if (!hydrated) {
     return <p className="mt-6 text-encre-douce" aria-busy="true">Ouverture de votre boîte…</p>;
   }
@@ -59,7 +65,9 @@ export function BoxPage() {
         {resolved.hasIssues || !cycle?.isOpen ? (
           <span className="text-encre-douce">Commande impossible pour le moment.</span>
         ) : (
-          <ButtonLink href="/commande">Remplir le bon de fournée</ButtonLink>
+          <div ref={orderRef}>
+            <ButtonLink href="/commande">Remplir le bon de fournée</ButtonLink>
+          </div>
         )}
       </div>
       {/* Les allergènes restent consultables, après l'action principale. */}

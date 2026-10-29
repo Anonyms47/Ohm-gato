@@ -4,6 +4,7 @@ import { toVerifyCount } from "@/lib/admin/allergen-review";
 import { activeCycle, listProducts, type AdminCycle } from "@/lib/admin/data";
 import { getLegalSettings, missingIdentityFields } from "@/lib/admin/legal";
 import { buildTasks, nextCycleStep, type AdminTask, type NextStep, type TaskInput } from "@/lib/admin/tasks";
+import { getSetupState } from "@/lib/admin/setup-state";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const db = () => supabaseAdmin();
@@ -29,6 +30,37 @@ export interface WaveToVerify {
   customerPhone: string;
   totalFcfa: number;
   createdAt: string;
+  /** Moyen de paiement choisi : le paiement est vérifié à la main dans l'application de ce moyen. */
+  method: "Wave" | "Orange Money";
+}
+
+interface ToVerifyRow {
+  id: string;
+  reference: string;
+  customer_name: string;
+  customer_phone: string;
+  total_fcfa: number;
+  created_at: string;
+  payments: { provider: string; created_at: string }[] | null;
+}
+
+function toVerify(o: ToVerifyRow): WaveToVerify {
+  const last = [...(o.payments ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  return {
+    id: o.id,
+    reference: o.reference,
+    customerName: o.customer_name,
+    customerPhone: o.customer_phone,
+    totalFcfa: o.total_fcfa,
+    createdAt: o.created_at,
+    method: last?.provider === "orange_money" ? "Orange Money" : "Wave",
+  };
+}
+
+/** « Wave », « Orange Money » ou « Wave et Orange Money » selon les paiements en attente. */
+export function methodsLabel(rows: { method: string }[]): string {
+  const set = [...new Set(rows.map((r) => r.method))];
+  return set.length === 0 ? "Wave" : set.join(" et ");
 }
 
 export interface TodaySummary {
@@ -62,7 +94,7 @@ export async function loadToday(): Promise<TodayData> {
     db().from("orders").select("id", head).eq("status", "needs_attention"),
     db()
       .from("orders")
-      .select("id, reference, customer_name, customer_phone, total_fcfa, created_at")
+      .select("id, reference, customer_name, customer_phone, total_fcfa, created_at, payments(provider, created_at)")
       .eq("payment_status", "pending")
       .not("status", "in", "(pending_payment,cancelled,expired,refunded)")
       .order("created_at"),
@@ -105,14 +137,7 @@ export async function loadToday(): Promise<TodayData> {
   const customRows = (custom.data ?? []) as { created_at: string }[];
   const customOverdue = customRows.filter((r) => now - Date.parse(r.created_at) >= settings.customAnswerHours * 3_600_000).length;
 
-  const waveRows: WaveToVerify[] = ((wave.data ?? []) as { id: string; reference: string; customer_name: string; customer_phone: string; total_fcfa: number; created_at: string }[]).map((o) => ({
-    id: o.id,
-    reference: o.reference,
-    customerName: o.customer_name,
-    customerPhone: o.customer_phone,
-    totalFcfa: o.total_fcfa,
-    createdAt: o.created_at,
-  }));
+  const waveRows: WaveToVerify[] = ((wave.data ?? []) as unknown as ToVerifyRow[]).map(toVerify);
   const readyRows = (ready.data ?? []) as { fulfillment: string }[];
   const slotRows = (slotsToday.data ?? []) as { fulfillment: string }[];
 
@@ -132,6 +157,8 @@ export async function loadToday(): Promise<TodayData> {
   // Import différé : le module des e-mails dépend lui-même des réglages de l'atelier.
   const emails = await (await import("@/lib/email/health")).getEmailAlertState().catch(() => undefined);
 
+  const setup = await getSetupState(cycle && cycle.status === "open" ? { id: cycle.id, number: cycle.number } : null);
+
   const tasks = buildTasks({
     now,
     cycle: taskCycle,
@@ -149,6 +176,7 @@ export async function loadToday(): Promise<TodayData> {
     allergensToVerify: toVerifyCount(activeProducts),
     identityMissing: missingIdentityFields(legal.identity).length > 0,
     emails,
+    setup,
   });
 
   return {
@@ -192,19 +220,12 @@ export async function navBadges(): Promise<Record<string, number>> {
 export async function listWaveToVerify(): Promise<WaveToVerify[]> {
   const { data, error } = await db()
     .from("orders")
-    .select("id, reference, customer_name, customer_phone, total_fcfa, created_at")
+    .select("id, reference, customer_name, customer_phone, total_fcfa, created_at, payments(provider, created_at)")
     .eq("payment_status", "pending")
     .not("status", "in", "(pending_payment,cancelled,expired,refunded)")
     .order("created_at");
   if (error) throw error;
-  return ((data ?? []) as { id: string; reference: string; customer_name: string; customer_phone: string; total_fcfa: number; created_at: string }[]).map((o) => ({
-    id: o.id,
-    reference: o.reference,
-    customerName: o.customer_name,
-    customerPhone: o.customer_phone,
-    totalFcfa: o.total_fcfa,
-    createdAt: o.created_at,
-  }));
+  return ((data ?? []) as unknown as ToVerifyRow[]).map(toVerify);
 }
 
 /** Heure du serveur (référence des délais affichés dans l'atelier). */

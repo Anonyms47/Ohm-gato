@@ -26,9 +26,17 @@ const messages: Record<string, string> = {
   SURPLUS_EMPTY: "Indiquez au moins une quantité de surplus à publier.",
   SURPLUS_END_INVALID: "La dernière date de vente du surplus doit être dans le futur.",
   SURPLUS_INVALID: "Quantités de surplus invalides.",
+  ZONES_INVALID: "Fichier de zones invalide : aucune zone exploitable.",
+  ALERT_CYCLE_NOT_OPEN: "L'alerte ne peut être envoyée que pour une fournée ouverte.",
+  ALERT_ALREADY_SENT: "L'alerte de cette fournée a déjà été déclenchée : aucun second envoi.",
+  ALERT_NO_SUBSCRIBERS: "Aucun inscrit actif : rien à envoyer.",
 };
 
 export function adminErrorMessage(error: { message: string; details?: string | null }): string {
+  if (error.message === "ZONE_DISTRICT_CLASH") {
+    const zone = error.details?.trim();
+    return zone && zone.length < 90 ? `Un de ces quartiers appartient déjà à la zone active « ${zone} ». Un quartier ne peut être que dans une zone.` : "Un de ces quartiers appartient déjà à une autre zone active.";
+  }
   if (error.message === "STOCK_BELOW_COMMITTED" && error.details) {
     try {
       const detail = JSON.parse(error.details) as { committed?: number };

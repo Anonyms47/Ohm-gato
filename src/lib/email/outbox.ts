@@ -102,14 +102,18 @@ async function render(row: OutboxRow): Promise<RenderedEmail | null> {
   if (!row.order_id) return null;
   const { data: o, error } = await supabaseAdmin()
     .from("orders")
-    .select("reference, customer_name, total_fcfa, fulfillment, pickup_code, idempotency_key, payment_status, delivery_slots(starts_at, ends_at)")
+    .select("reference, customer_name, total_fcfa, fulfillment, pickup_code, idempotency_key, payment_status, delivery_fee_fcfa, delivery_zone_name, delivery_slots(starts_at, ends_at), payments(provider, created_at)")
     .eq("id", row.order_id)
     .maybeSingle();
   if (error) throw error;
   if (!o) return null;
   const slot = o.delivery_slots as unknown as { starts_at: string; ends_at: string } | null;
   const token = generateTrackingToken(o.idempotency_key as string).token;
+  const lastPayment = [...((o.payments as unknown as { provider: string; created_at: string }[] | null) ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
   return renderOrderEmail(row.template, {
+    deliveryFeeFcfa: (o.delivery_fee_fcfa as number | null) ?? null,
+    deliveryZoneName: (o.delivery_zone_name as string | null) ?? null,
+    paymentLabel: lastPayment?.provider === "orange_money" ? "Orange Money" : "Wave",
     customerName: o.customer_name as string,
     reference: o.reference as string,
     totalFcfa: o.total_fcfa as number,
@@ -133,7 +137,15 @@ export async function deliver(channel: Exclude<EmailChannel, "none">, row: Pick<
   const env = serverEnv();
   if (channel === "brevo") {
     // Brevo n'a pas de clé d'idempotence : la réservation atomique de la ligne évite le double envoi.
-    return brevoSend(fetch, env.BREVO_API_KEY, { sender: emailSender(), to: row.to_email, subject: email.subject, html: email.html, text: email.text, reference: row.idempotency_key });
+    return brevoSend(fetch, env.BREVO_API_KEY, {
+      sender: emailSender(),
+      to: row.to_email,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      reference: row.idempotency_key,
+      headers: email.listUnsubscribe ? { "List-Unsubscribe": `<${email.listUnsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined,
+    });
   }
   try {
     const response = await fetch("https://api.resend.com/emails", {

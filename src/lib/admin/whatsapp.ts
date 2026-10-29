@@ -17,14 +17,15 @@ export type WhatsappTemplate = "payment_check" | "payment_reminder" | "payment_r
 
 export function whatsappMessage(
   template: WhatsappTemplate,
-  o: { customerName: string; reference: string; totalFcfa: number; pickupCode?: string | null; pickupAddress?: string },
+  o: { customerName: string; reference: string; totalFcfa: number; pickupCode?: string | null; pickupAddress?: string; method?: string },
 ): string {
   const first = o.customerName.split(/\s+/)[0] ?? o.customerName;
+  const method = o.method ?? "Wave";
   switch (template) {
     case "payment_check":
-      return `Bonjour ${first}, c'est ${brand.name}. Nous ne retrouvons pas encore votre paiement Wave de ${formatFcfa(o.totalFcfa)} pour la commande ${o.reference}. Pourriez-vous nous envoyer la capture de la transaction ? Merci !`;
+      return `Bonjour ${first}, c'est ${brand.name}. Nous ne retrouvons pas encore votre paiement ${method} de ${formatFcfa(o.totalFcfa)} pour la commande ${o.reference}. Pourriez-vous nous envoyer la capture de la transaction ? Merci !`;
     case "payment_reminder":
-      return `Bonjour ${first}, c'est ${brand.name}. Votre commande ${o.reference} (${formatFcfa(o.totalFcfa)}) attend encore votre paiement Wave. Si c'est déjà fait, envoyez-nous simplement la capture de la transaction ; sinon, vous pouvez payer depuis votre lien de suivi. Merci !`;
+      return `Bonjour ${first}, c'est ${brand.name}. Votre commande ${o.reference} (${formatFcfa(o.totalFcfa)}) attend encore votre paiement ${method}. Si c'est déjà fait, envoyez-nous simplement la capture de la transaction ; sinon, vous pouvez payer depuis votre lien de suivi. Merci !`;
     case "payment_received":
       return `Bonjour ${first}, c'est ${brand.name}. Nous avons bien reçu votre paiement pour la commande ${o.reference}. Merci ! Nous vous prévenons dès qu'elle est prête.`;
     case "ready_pickup":

@@ -1,0 +1,10 @@
+drop function if exists public.admin_retry_batch_alert_sends(uuid, uuid);
+drop function if exists public.release_stale_batch_alert_claims(int);
+drop function if exists public.claim_batch_alert_sends(int);
+drop function if exists public.admin_trigger_batch_alert(uuid, uuid);
+drop function if exists public.admin_unsubscribe_alert_subscriber(uuid, uuid);
+drop function if exists public.batch_alert_unsubscribe(text);
+drop function if exists public.batch_alert_subscribe(text, text, text);
+drop table if exists public.batch_alert_sends;
+drop table if exists public.batch_alerts;
+drop table if exists public.batch_alert_subscribers;

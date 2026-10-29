@@ -1,6 +1,6 @@
 ## Qui traite vos données
 
-Le responsable du traitement est OHMEGATO. OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+Le responsable du traitement est OHMEGATO. OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
 Pour toute question ou demande sur vos données personnelles : {{email}}.
 
@@ -12,6 +12,7 @@ Selon ce que vous faites sur le site, nous pouvons collecter :
 
 - votre nom ;
 - votre adresse e-mail ;
+- si vous demandez à être prévenu(e) de l'ouverture d'une fournée : votre adresse e-mail, la date, le texte et la page de votre consentement (aucune adresse IP n'est conservée) ;
 - votre numéro de téléphone ;
 - les données de connexion et les codes temporaires de connexion ;
 - l'historique et le contenu de vos commandes ;
@@ -23,7 +24,7 @@ Selon ce que vous faites sur le site, nous pouvons collecter :
 - des données techniques nécessaires à la sécurité (limitation des tentatives, sessions) ;
 - les traces des actions de l'équipe dans l'administration (journal d'audit).
 
-Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants Wave.
+Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants Wave ou Orange Money.
 
 ## Pourquoi nous les utilisons
 
@@ -37,6 +38,7 @@ Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants
 - traiter les réclamations et les remboursements ;
 - prévenir la fraude et sécuriser le site ;
 - respecter les obligations administratives applicables ;
+- vous prévenir de l'ouverture d'une fournée, uniquement si vous l'avez demandé ;
 - vous envoyer des communications commerciales, uniquement si vous y avez consenti.
 
 ## Votre position
@@ -51,10 +53,10 @@ Vos données ne sont accessibles qu'à OHMEGATO et, dans la limite nécessaire, 
 
 - Supabase : base de données, authentification, stockage des fichiers et fonctions du serveur ;
 - Vercel : hébergement et déploiement du site ;
-- Brevo : envoi des codes de connexion et des e-mails liés à vos commandes ;
+- Brevo : envoi des codes de connexion, des e-mails liés à vos commandes et des alertes d'ouverture de fournée que vous avez demandées ;
 - Spacemail : messagerie professionnelle d'OHMEGATO ;
 - OpenStreetMap : affichage de la carte et recherche de quartiers ;
-- Wave : paiement par lien marchand, selon les conditions de Wave ;
+- Wave et Orange Money : paiement par lien marchand, selon les conditions de chaque service ;
 - le livreur, uniquement pour les informations nécessaires à la livraison (nom et numéro du destinataire, adresse, repère, position).
 
 Le livreur n'a jamais accès à l'historique de votre compte ni à d'autres données.
@@ -63,6 +65,7 @@ Le livreur n'a jamais accès à l'historique de votre compte ni à d'autres donn
 
 - vos données de commande sont conservées le temps nécessaire à la préparation, à la livraison et au suivi de la commande ;
 - les informations nécessaires sont ensuite conservées pendant les durées imposées par les obligations administratives, comptables ou légales applicables ;
+- votre inscription aux alertes d'ouverture de fournée est conservée jusqu'à votre désinscription (lien dans chaque e-mail) ou votre demande ;
 - les données qui ne sont plus nécessaires sont supprimées ou anonymisées ;
 - votre compte est supprimé à votre demande ou depuis votre espace client, sous réserve des informations que la loi impose de conserver ;
 - les codes temporaires et les sessions sont supprimés ou expirent automatiquement selon les mécanismes de sécurité du site.

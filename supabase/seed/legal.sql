@@ -12,9 +12,9 @@ insert into public.legal_documents (slug, title, description, sort_order) values
 on conflict (slug) do nothing;
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'conditions-generales', '1.1', 'published', 'Conditions générales', $md$## Présentation
+select 'conditions-generales', '1.2', 'published', 'Conditions générales', $md$## Présentation
 
-OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
 OHMEGATO prépare des pâtisseries maison (cookies, brownies, moelleux, muffins, cake, choux, verrines…) par cycles de production appelés « fournées ». Le site ohmegato.com permet de découvrir les produits, de passer commande, de payer les produits, de suivre ses commandes et d'envoyer des demandes sur mesure pour un événement.
 
@@ -59,21 +59,21 @@ Une commande se passe en quelques étapes :
 
 Une commande enregistrée ou en attente de vérification du paiement n'est pas encore une commande payée. Elle n'est considérée comme payée qu'après vérification du paiement par OHMEGATO.
 
-## Paiement par Wave
+## Paiement par Wave ou Orange Money
 
-Le paiement se fait aujourd'hui par le lien marchand Wave d'OHMEGATO :
+Le paiement se fait par lien marchand : Wave, et Orange Money lorsqu'il est proposé sur le bon de commande :
 
-- vous utilisez le lien Wave affiché sur votre suivi de commande, pour le montant indiqué ;
-- votre commande est enregistrée dès que vous choisissez Wave ;
-- Alima vérifie ensuite manuellement la réception du paiement ;
+- vous utilisez le lien du moyen choisi, affiché sur votre suivi de commande, pour le montant indiqué ;
+- votre commande est enregistrée dès que vous choisissez le moyen de paiement ;
+- OHMEGATO vérifie ensuite manuellement la réception du paiement : ouvrir le lien ne vaut pas paiement ;
 - si le paiement est retrouvé, la commande est marquée « Payée » ;
 - si le paiement n'est pas reçu ou ne peut pas être identifié, la commande peut être annulée, et les produits réservés sont remis à disposition.
 
 Si vous avez payé mais que votre commande a été annulée faute de paiement identifié, contactez-nous avec la preuve de votre transaction : après vérification, nous rétablissons la commande ou nous vous remboursons.
 
-Wave est un prestataire de paiement indépendant. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par Wave. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave.
+Wave et Orange Money sont des prestataires de paiement indépendants. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par eux. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave ou Orange Money.
 
-Le paiement Orange Money n'est pas encore disponible.
+Un moyen de paiement n'est proposé que lorsqu'il est affiché sur le bon de commande.
 
 ## Retrait
 
@@ -85,7 +85,7 @@ Merci de respecter le créneau confirmé pour votre commande. La commande est re
 
 La livraison est possible dans Dakar, selon la disponibilité des livreurs. Pour une livraison, vous indiquez votre quartier, votre adresse, un point de repère et l'emplacement exact sur la carte.
 
-Le tarif de livraison dépend de la destination. Il n'est ni calculé ni payé sur le site : il vous est communiqué après la commande ou au moment de l'organisation de la livraison, et vous le réglez directement au livreur. Le montant payé à OHMEGATO concerne uniquement les produits.
+Le tarif de livraison dépend de la zone de votre quartier. Lorsque la zone est connue, le bon de commande l'affiche avec son tarif ; sinon, le tarif est confirmé selon votre position. Il n'est jamais ajouté au paiement en ligne : vous le réglez directement au livreur. Le tarif affiché au moment de la commande est celui enregistré avec elle. Le montant payé à OHMEGATO concerne uniquement les produits.
 
 Le détail du fonctionnement figure sur la page « Livraison et retrait ».
 
@@ -143,11 +143,11 @@ Les marques et logos des prestataires cités sur le site restent la propriété 
 
 Ces conditions sont soumises au droit sénégalais, notamment aux règles applicables aux transactions électroniques et à la protection des données personnelles.
 
-En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
+En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'conditions-generales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'livraison-retrait', '1.0', 'published', 'Livraison et retrait', $md$## Livraison dans Dakar
+select 'livraison-retrait', '1.2', 'published', 'Livraison et retrait', $md$## Livraison dans Dakar
 
 Nous livrons dans Dakar, selon la disponibilité des livreurs. Pour être sûr d'être servi, commandez idéalement au moins 24 heures à l'avance.
 
@@ -167,9 +167,9 @@ Vous pouvez taper votre adresse et chercher votre quartier, puis toucher la cart
 
 ## Le tarif de livraison
 
-Le tarif de livraison dépend de la destination. Il n'est ni calculé ni payé sur le site.
+Le tarif de livraison dépend de votre quartier : chaque quartier appartient à une zone de livraison. Lorsque la zone est connue, le bon de commande affiche la zone et son tarif dès que vous choisissez votre quartier. Si votre quartier ne figure pas dans la liste, le tarif est confirmé selon votre position.
 
-Il vous est communiqué après la commande ou au moment de l'organisation de la livraison, et vous le réglez directement au livreur.
+Le tarif affiché au moment de votre commande est celui qui est enregistré avec elle. Il n'est pas payé sur le site : vous le réglez directement au livreur.
 
 > Votre paiement en ligne couvre uniquement les produits. Les frais de livraison sont réglés séparément au livreur.
 
@@ -181,7 +181,7 @@ Vous choisissez votre créneau de retrait dans le bon de commande. Les instructi
 
 ## Une question ?
 
-Écrivez-nous à {{email}} ou sur WhatsApp au {{telephone}}.$md$, date '2026-10-10', timestamptz '2026-10-10 08:00:00+00'
+Écrivez-nous à {{email}} ou sur WhatsApp au {{telephone}}.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'livraison-retrait');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
@@ -240,9 +240,9 @@ Chaque remboursement est enregistré : date, montant, raison, moyen utilisé et 
 where not exists (select 1 from public.legal_document_versions where document_slug = 'annulation-remboursement');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'confidentialite', '1.1', 'published', 'Confidentialité', $md$## Qui traite vos données
+select 'confidentialite', '1.2', 'published', 'Confidentialité', $md$## Qui traite vos données
 
-Le responsable du traitement est OHMEGATO. OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+Le responsable du traitement est OHMEGATO. OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
 Pour toute question ou demande sur vos données personnelles : {{email}}.
 
@@ -254,6 +254,7 @@ Selon ce que vous faites sur le site, nous pouvons collecter :
 
 - votre nom ;
 - votre adresse e-mail ;
+- si vous demandez à être prévenu(e) de l'ouverture d'une fournée : votre adresse e-mail, la date, le texte et la page de votre consentement (aucune adresse IP n'est conservée) ;
 - votre numéro de téléphone ;
 - les données de connexion et les codes temporaires de connexion ;
 - l'historique et le contenu de vos commandes ;
@@ -265,7 +266,7 @@ Selon ce que vous faites sur le site, nous pouvons collecter :
 - des données techniques nécessaires à la sécurité (limitation des tentatives, sessions) ;
 - les traces des actions de l'équipe dans l'administration (journal d'audit).
 
-Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants Wave.
+Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants Wave ou Orange Money.
 
 ## Pourquoi nous les utilisons
 
@@ -279,6 +280,7 @@ Nous n'enregistrons jamais votre code secret, votre code PIN ni vos identifiants
 - traiter les réclamations et les remboursements ;
 - prévenir la fraude et sécuriser le site ;
 - respecter les obligations administratives applicables ;
+- vous prévenir de l'ouverture d'une fournée, uniquement si vous l'avez demandé ;
 - vous envoyer des communications commerciales, uniquement si vous y avez consenti.
 
 ## Votre position
@@ -293,10 +295,10 @@ Vos données ne sont accessibles qu'à OHMEGATO et, dans la limite nécessaire, 
 
 - Supabase : base de données, authentification, stockage des fichiers et fonctions du serveur ;
 - Vercel : hébergement et déploiement du site ;
-- Brevo : envoi des codes de connexion et des e-mails liés à vos commandes ;
+- Brevo : envoi des codes de connexion, des e-mails liés à vos commandes et des alertes d'ouverture de fournée que vous avez demandées ;
 - Spacemail : messagerie professionnelle d'OHMEGATO ;
 - OpenStreetMap : affichage de la carte et recherche de quartiers ;
-- Wave : paiement par lien marchand, selon les conditions de Wave ;
+- Wave et Orange Money : paiement par lien marchand, selon les conditions de chaque service ;
 - le livreur, uniquement pour les informations nécessaires à la livraison (nom et numéro du destinataire, adresse, repère, position).
 
 Le livreur n'a jamais accès à l'historique de votre compte ni à d'autres données.
@@ -305,6 +307,7 @@ Le livreur n'a jamais accès à l'historique de votre compte ni à d'autres donn
 
 - vos données de commande sont conservées le temps nécessaire à la préparation, à la livraison et au suivi de la commande ;
 - les informations nécessaires sont ensuite conservées pendant les durées imposées par les obligations administratives, comptables ou légales applicables ;
+- votre inscription aux alertes d'ouverture de fournée est conservée jusqu'à votre désinscription (lien dans chaque e-mail) ou votre demande ;
 - les données qui ne sont plus nécessaires sont supprimées ou anonymisées ;
 - votre compte est supprimé à votre demande ou depuis votre espace client, sous réserve des informations que la loi impose de conserver ;
 - les codes temporaires et les sessions sont supprimés ou expirent automatiquement selon les mécanismes de sécurité du site.
@@ -343,7 +346,7 @@ Nous envoyons les e-mails nécessaires à vos commandes et à votre connexion. L
 
 ## Modifications
 
-La date et la version de cette politique sont indiquées en haut de la page. En cas de changement important, nous vous en informons lorsque c'est raisonnablement possible.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
+La date et la version de cette politique sont indiquées en haut de la page. En cas de changement important, nous vous en informons lorsque c'est raisonnablement possible.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'confidentialite');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
@@ -380,9 +383,11 @@ Si un outil de mesure d'audience ou de publicité était un jour ajouté, il ne 
 where not exists (select 1 from public.legal_document_versions where document_slug = 'cookies');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'mentions-legales', '1.1', 'published', 'Mentions légales', $md$## Éditeur du site
+select 'mentions-legales', '1.2', 'published', 'Mentions légales', $md$## Éditeur du site
 
-OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
+
+Responsable de l'activité : Madame Alimatou Sadiya Thiam.
 
 - Site : ohmegato.com
 - E-mail : {{email}}
@@ -405,7 +410,7 @@ Pour signaler un contenu, une erreur ou un problème de sécurité : {{email}}.
 
 ## Droit applicable
 
-Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10-17', timestamptz '2026-10-17 08:00:00+00'
+Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'mentions-legales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)

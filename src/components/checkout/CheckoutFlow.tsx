@@ -6,13 +6,17 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm, type FieldPath, type Resolver } from "react-hook-form";
 import { useCart } from "@/components/cart/CartProvider";
 import { DeliveryFields, type SavedAddress } from "@/components/checkout/DeliveryFields";
+import { useStickyCta } from "@/components/layout/StickyCta";
+import { useOffscreen } from "@/lib/use-offscreen";
 import { TicketPrinter } from "@/components/checkout/TicketPrinter";
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { ErrorSummary, Field, TextArea, TextInput } from "@/components/ui/Field";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
 import { brand } from "@/config/brand";
 import type { SlotSummary } from "@/lib/catalog-types";
-import { DELIVERY_FEE_NOTICE, DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
+import { DeliveryFeeNotice, deliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
+import { zoneForDistrict, type DeliveryZone } from "@/lib/delivery/zones";
 import { cn } from "@/lib/cn";
 import { SURPLUS_MESSAGE, cycleStatusLine, preorderMessage } from "@/lib/cycle-status";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
@@ -94,7 +98,9 @@ export function CheckoutFlow({
   paymentMethods,
   acceptance,
   member = null,
+  zones = [],
 }: {
+  zones?: DeliveryZone[];
   slots: SlotSummary[];
   paymentMethods: PaymentMethodView[];
   acceptance: CheckoutAcceptanceView | null;
@@ -265,6 +271,14 @@ export function CheckoutFlow({
       },
     )();
 
+  // Téléphone : l'action de l'étape active reste à portée de pouce quand son bouton n'est plus visible (jamais pendant la saisie).
+  const [actionRef, actionOffscreen] = useOffscreen<HTMLDivElement>();
+  const stickyLabel = step === "verification" ? "Tout est bon, payer" : step === "paiement" ? null : "Continuer";
+  useStickyCta(
+    stickyLabel ? { key: `bon-${step}`, label: stickyLabel, onClick: () => continueFrom(step), disabled: step === "verification" && !acceptance } : null,
+    hydrated && Boolean(cycle?.isOpen) && resolved.lines.length > 0 && !resolved.hasIssues && actionOffscreen && stickyLabel !== null,
+  );
+
   if (!hydrated) {
     return <p className="mt-6 text-encre-douce" aria-busy="true">Préparation de votre bon…</p>;
   }
@@ -282,6 +296,7 @@ export function CheckoutFlow({
           </a>
           .
         </p>
+        {!cycle && <NextBatchAlert source="autre" className="mt-2" />}
       </div>
     );
   }
@@ -309,6 +324,8 @@ export function CheckoutFlow({
   }
 
   const values = getValues();
+  // Tarif de la zone du quartier choisi (affichage : la base recalcule zone et tarif à la commande).
+  const deliveryFee = fulfillment === "delivery" ? (zoneForDistrict(zones, values.delivery.district)?.feeFcfa ?? null) : null;
   const phoneDisplay = (raw: string) => {
     const normalized = normalizeSenegalPhone(raw);
     return normalized ? formatSenegalPhone(normalized) : raw;
@@ -320,7 +337,7 @@ export function CheckoutFlow({
       values.fulfillment === "pickup"
         ? `Retrait — ${brand.pickupAddress}`
         : values.fulfillment === "delivery"
-          ? `Livraison — ${values.delivery.district}, ${values.delivery.addressLine}`
+          ? `Livraison — ${[values.delivery.district, values.delivery.addressLine].filter(Boolean).join(", ") || "position sur la carte"}`
           : undefined,
     creneau: slot ? formatSlot(slot.startsAt, slot.endsAt) : undefined,
     notes: values.notes ? values.notes : "Aucune note",
@@ -456,7 +473,7 @@ export function CheckoutFlow({
                             <p className="mt-2 font-bold text-erreur">{formState.errors.fulfillment.message}</p>
                           )}
                         </fieldset>
-                        {fulfillment === "delivery" && <DeliveryFields savedAddresses={member?.addresses ?? []} />}
+                        {fulfillment === "delivery" && <DeliveryFields savedAddresses={member?.addresses ?? []} zones={zones} />}
                       </>
                     )}
 
@@ -497,9 +514,10 @@ export function CheckoutFlow({
                             total={total}
                             slotLabel={slot ? formatSlot(slot.startsAt, slot.endsAt) : ""}
                             cycleNumber={cycle.number}
+                            deliveryFee={deliveryFee}
                           />
                         </TicketPrinter>
-                        {fulfillment === "delivery" && <DeliveryFeeNotice />}
+                        {fulfillment === "delivery" && <DeliveryFeeNotice feeFcfa={deliveryFee} />}
                         {acceptance ? (
                           <CheckoutAcceptance
                             ref={acceptanceRef}
@@ -520,7 +538,7 @@ export function CheckoutFlow({
                             .
                           </p>
                         )}
-                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div ref={actionRef} className="flex flex-col-reverse gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <Button variant="secondary" onClick={() => goTo("coordonnees")}>
                             Modifier
                           </Button>
@@ -539,13 +557,14 @@ export function CheckoutFlow({
                         methods={paymentMethods}
                         total={total}
                         delivery={fulfillment === "delivery"}
+                        deliveryFee={deliveryFee}
                         payState={payState}
                         onPay={pay}
                       />
                     )}
 
                     {(s.id === "coordonnees" || s.id === "reception" || s.id === "creneau" || s.id === "notes") && (
-                      <div className="flex justify-end">
+                      <div ref={actionRef} className="flex justify-end">
                         <Button onClick={() => continueFrom(s.id)}>Continuer</Button>
                       </div>
                     )}
@@ -624,6 +643,7 @@ function OrderTicket({
   total,
   slotLabel,
   cycleNumber,
+  deliveryFee,
 }: {
   lines: { key: string; name: string; detail: string; quantity: number; total: number }[];
   subtotal: number;
@@ -631,6 +651,7 @@ function OrderTicket({
   total: number;
   slotLabel: string;
   cycleNumber: number;
+  deliveryFee: number | null;
 }) {
   return (
     <div className="relative text-[0.98rem]">
@@ -659,11 +680,17 @@ function OrderTicket({
           </div>
         )}
         <div className="flex justify-between border-t-2 border-chocolat pt-2 text-[1.15rem] font-bold">
-          <dt>Total à payer</dt>
+          <dt>Total produits à payer en ligne</dt>
           <dd className="tabular-nums">{formatFcfa(total)}</dd>
         </div>
+        {fulfillment === "delivery" && (
+          <div className="flex justify-between gap-3">
+            <dt>Livraison</dt>
+            <dd className="text-right tabular-nums">{typeof deliveryFee === "number" ? `${formatFcfa(deliveryFee)}, au livreur` : "à régler au livreur"}</dd>
+          </div>
+        )}
       </dl>
-      {fulfillment === "delivery" && <p className="mt-2 font-bold">{DELIVERY_FEE_NOTICE}</p>}
+      {fulfillment === "delivery" && <p className="mt-2 font-bold">{deliveryFeeNotice(deliveryFee)}</p>}
       <p className="mt-3">{slotLabel}</p>
       <p className="ohm-tampon absolute right-0 top-12 text-[1rem] text-rose-encre">À vérifier</p>
       <p className="mt-4 text-center font-bold">Ceci n&apos;est pas encore une confirmation.</p>
@@ -675,12 +702,14 @@ function PaymentChoices({
   methods,
   total,
   delivery,
+  deliveryFee,
   payState,
   onPay,
 }: {
   methods: PaymentMethodView[];
   total: number;
   delivery: boolean;
+  deliveryFee: number | null;
   payState: { provider: PaymentMethodView["id"] | null; state: ButtonState; message?: string };
   onPay: (provider: PaymentMethodView["id"]) => void;
 }) {
@@ -691,7 +720,7 @@ function PaymentChoices({
         Montant à régler : <strong className="tabular-nums">{formatFcfa(total)}</strong>. Le paiement est intégral ; vous serez redirigé vers votre
         application de paiement.
       </p>
-      {delivery && <DeliveryFeeNotice />}
+      {delivery && <DeliveryFeeNotice feeFcfa={deliveryFee} />}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {methods.map((method) => (
           <div key={method.id} className="flex flex-col gap-1 sm:min-w-56">

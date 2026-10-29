@@ -37,21 +37,21 @@ select (select id from o), terms, cancel,
   (select content_hash from public.legal_document_versions where id = cancel)
 from v1;
 
--- Brouillon puis publication de la version 1.2
+-- Brouillon puis publication de la version 1.3
 insert into public.legal_document_versions (document_slug, version, title, content)
-values ('conditions-generales', '1.2', 'Conditions générales', 'Nouveau texte');
-select is((select content_hash from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'),
+values ('conditions-generales', '1.3', 'Conditions générales', 'Nouveau texte');
+select is((select content_hash from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.3'),
   encode(sha256(convert_to('Nouveau texte', 'UTF8')), 'hex'), 'l''empreinte du texte est calculée automatiquement');
 
 set local role anon;
-select is((select count(*)::int from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'), 0, 'un brouillon n''est jamais visible du public');
+select is((select count(*)::int from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.3'), 0, 'un brouillon n''est jamais visible du public');
 reset role;
 set local role service_role;
 
 select lives_ok($$ select public.admin_publish_legal_version(
-  (select id from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.2'), null) $$,
-  'publication de la version 1.2');
-select is((select version from public.legal_document_versions where document_slug = 'conditions-generales' and status = 'published'), '1.2',
+  (select id from public.legal_document_versions where document_slug = 'conditions-generales' and version = '1.3'), null) $$,
+  'publication de la version 1.3');
+select is((select version from public.legal_document_versions where document_slug = 'conditions-generales' and status = 'published'), '1.3',
   'une seule version publiée : la nouvelle');
 select is((select status::text from public.legal_document_versions where id = (select terms from v1)), 'archived', 'l''ancienne version est archivée');
 select is((select terms_version_id from public.order_acceptances where order_id = (select id from o)), (select terms from v1),

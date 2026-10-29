@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { FourneePoster } from "@/components/cycles/FourneePoster";
 import { brand } from "@/config/brand";
@@ -76,8 +77,9 @@ export default async function FourneesPage() {
                 <a href={brand.instagramUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
                   Instagram @{brand.instagramHandle}
                 </a>
-                . Avec un carnet OHMEGATO, vous pouvez aussi demander à être prévenu.
+                .
               </p>
+              <NextBatchAlert source="fournees" className="mt-4" />
             </div>
           )}
         </section>

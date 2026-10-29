@@ -1,6 +1,8 @@
 ## Éditeur du site
 
-OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
+
+Responsable de l'activité : Madame Alimatou Sadiya Thiam.
 
 - Site : ohmegato.com
 - E-mail : {{email}}

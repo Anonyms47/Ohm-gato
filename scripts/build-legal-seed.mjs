@@ -13,14 +13,15 @@ const documents = [
 ];
 
 // Version publiée de chaque texte de content/legal (les autres restent en 1.0 du 10 octobre 2026).
-// 1.1 du 17 octobre 2026 : identité officielle de l'exploitante (Madame Alimatou Sadiya Thiam).
-const identity = { version: "1.1", publishedAt: "2026-10-17 08:00:00+00", effectiveAt: "2026-10-17" };
+// 1.2 du 29 octobre 2026 : formulation neutre (activité en cours de formalisation), zones de livraison, Orange Money, alertes de fournée.
+const update = { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" };
 const versions = {
   // 1.2 du 29 octobre 2026 : le prénom de la fondatrice n'apparaît plus.
   "allergenes-conservation": { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" },
-  "conditions-generales": identity,
-  confidentialite: identity,
-  "mentions-legales": identity,
+  "conditions-generales": update,
+  confidentialite: update,
+  "mentions-legales": update,
+  "livraison-retrait": update,
 };
 
 const q = (s) => `'${s.replaceAll("'", "''")}'`;
@@ -43,3 +44,24 @@ where not exists (select 1 from public.legal_document_versions where document_sl
 }
 writeFileSync("supabase/seed/legal.sql", sql);
 console.log(`supabase/seed/legal.sql : ${documents.length} documents`);
+
+// Publication en production : les nouvelles versions (1.2) sont créées en brouillon puis publiées par la fonction de l'atelier
+// (l'ancienne version est archivée, les preuves d'acceptation déjà enregistrées restent valables). Rejouable sans doublon.
+const changed = Object.entries(versions).filter(([, v]) => v === update || v.version === "1.2").map(([slug]) => slug);
+let publish = `-- OHMEGATO — publication des documents légaux en version 1.2 (29 octobre 2026).
+-- Généré par scripts/build-legal-seed.mjs. À exécuter une fois en production (SQL Editor) après les migrations ;
+-- équivalent à « Publier » dans l'atelier (Documents et règles). Rejouable : sans effet si la 1.2 existe déjà.
+`;
+for (const slug of changed) {
+  const title = documents.find((d) => d[0] === slug)[1];
+  const content = readFileSync(`content/legal/${slug}.md`, "utf8").trim();
+  publish += `
+insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at)
+select ${q(slug)}, '1.2', 'draft', ${q(title)}, $md$${content}$md$, date '2026-10-29'
+where not exists (select 1 from public.legal_document_versions where document_slug = ${q(slug)} and version = '1.2');
+select public.admin_publish_legal_version(id, null) from public.legal_document_versions
+ where document_slug = ${q(slug)} and version = '1.2' and status = 'draft';
+`;
+}
+writeFileSync("supabase/seed/legal-publish-1.2.sql", publish);
+console.log(`supabase/seed/legal-publish-1.2.sql : ${changed.length} documents`);

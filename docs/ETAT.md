@@ -8,7 +8,7 @@
 - La Fournée (accueil), La Carte, fiches produits (conservation d'Alima, préférés), Ma boîte, bon de fournée (pré-rempli pour les membres, carnet d'adresses).
 - **Nos fournées — le journal du four** (`/fournees`) : fournée actuelle, statut réel (programmée, ouverte, clôturée, préparation, livraison, terminée, annulée), quatre dates, créneaux, produits et formats autorisés, stock restant réel, ajout direct à Ma boîte, prochaine fournée ou « pas encore de date », archives ; chargement et erreur gérés.
 - **Sur-mesure & Événements** (`/sur-mesure`) : carnet conversationnel en 11 questions + envoi (occasion, date et heure, invités, produits, formats/quantités/parfums, ambiance, inspiration, budget, réception avec carte, coordonnées, résumé). Brouillon conservé. Une demande n'est jamais une commande : statuts Reçue → … → Terminée, échanges avec pièces jointes, modification, propositions chiffrées par OHMEGATO, acceptation qui ouvre seulement alors le paiement.
-- **Notre histoire** (`/notre-histoire`) : Oumou Gâteau → OHMEGATO → Ω (animation typographique, version fixe sans animation), ESP, événement étudiant, entourage, carte élargie, bonnes ondes, futur café présenté comme un projet. Emplacements archives, photo d'Alima, citation et audio masqués tant qu'ils ne sont pas fournis (gérés dans /admin/reglages).
+- **Notre histoire** (`/notre-histoire`) : Oumou Gâteau → OHMEGATO (OMEGA devient Ω, TO devient Τ) (animation typographique, version fixe sans animation), ESP, événement étudiant, entourage, carte élargie, bonnes ondes, futur café présenté comme un projet. Emplacements archives, photo d'Alima, citation et audio masqués tant qu'ils ne sont pas fournis (gérés dans /admin/reglages).
 - **Retrouvons votre carnet** (`/connexion`) : code temporaire par téléphone (e-mail en complément), sans mot de passe ; création de compte au premier code, commandes invitées retrouvées, code incorrect / expiré / renvoi / trop de tentatives / échec d'envoi, tampon « Carnet retrouvé ».
 - **Mon carnet** (`/compte`) : commande active en priorité, tickets, détail, recomposition au prix et stock actuels, boîte et brouillons, demandes et propositions, paiements, adresses et positions, préférés, alertes, consentements, sessions (fermeture), export JSON, suppression du compte. Barre mobile Accueil / Commandes / Ma boîte / Profil.
 
@@ -33,6 +33,8 @@
 
 **Tests** : unitaires (Vitest), 138 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
 
+- **Livraison par zones, paiements configurables, alertes de fournée, réseaux sociaux** : voir CHANGELOG. Migrations `20261029000001` à `20261029000003` et `supabase/seed/legal-publish-1.2.sql` à appliquer en production AVANT le déploiement du code ; retours arrière dans `supabase/rollbacks/`.
+
 ## Limites connues
 
 - Codes de connexion : WhatsApp Cloud API écrite d'après la documentation publique, **non vérifiée** faute de compte ; sans canal configuré en production, l'envoi échoue proprement.
@@ -40,3 +42,5 @@
 - Logos officiels Wave et Orange Money à fournir pour les boutons de paiement (couleurs officielles déjà appliquées).
 - Les alertes (nouvelle fournée) sont enregistrées ; leur envoi attend un canal de messagerie.
 - Recherche d'adresse : service public OpenStreetMap, non vérifié depuis l'environnement de développement (réseau fermé) ; à tester sur le site en ligne.
+
+- À fournir par Alimatou : zones, quartiers et tarifs de livraison ; vrai lien Orange Money (désactivé tant qu'absent) ; identifiant Snapchat (masqué tant qu'absent) ; WhatsApp Business reste inactif tant qu'il n'est pas configuré officiellement.
