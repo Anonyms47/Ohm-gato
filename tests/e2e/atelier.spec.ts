@@ -51,6 +51,8 @@ test.describe("Atelier — navigation et accueil", () => {
     await grantAdmin(e164(admin));
     await page.goto("/admin");
     await waitForHydration(page);
+    // Le badge « Insight » des outils de développement de Next recouvre la barre du bas : absent en production.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     const bar = page.getByRole("navigation", { name: "Accès rapides" });
     await expect(bar.getByRole("link", { name: "Aujourd'hui" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("link", { name: "Commandes" }).click();
