@@ -35,6 +35,13 @@
     text-size-adjust: 100%;
   }
 
+  /* Téléphone : un champ ou un message focalisé défile au-dessus de la barre du bas (navigation et action collée). */
+  @media (max-width: 767px) {
+    html {
+      scroll-padding-bottom: calc(var(--mobile-bottom, 4rem) + 1rem);
+    }
+  }
+
   body {
     background-color: var(--ohm-creme);
     color: var(--ohm-chocolat);

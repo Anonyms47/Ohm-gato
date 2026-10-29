@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { DeliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { PositionPicker } from "@/components/checkout/PositionPicker";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
+import { OhmegatoCombobox } from "@/components/ui/select/OhmegatoCombobox";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
+import { deliveryFeeLine, districtOptions, normalizePlace, zoneForDistrict, type DeliveryZone } from "@/lib/delivery/zones";
 import type { CheckoutFormValues } from "@/lib/validation/checkout-form";
 
 export interface SavedAddress {
@@ -22,7 +24,7 @@ export interface SavedAddress {
   longitude: number | null;
 }
 
-export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: SavedAddress[] }) {
+export function DeliveryFields({ savedAddresses = [], zones = [] }: { savedAddresses?: SavedAddress[]; zones?: DeliveryZone[] }) {
   const {
     register,
     setValue,
@@ -31,6 +33,13 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
     formState: { errors },
   } = useFormContext<{ delivery: CheckoutFormValues["delivery"] }>();
 
+  const district = watch("delivery.district") ?? "";
+  const options = useMemo(() => districtOptions(zones), [zones]);
+  const hasZones = options.length > 0;
+  const zone = hasZones ? zoneForDistrict(zones, district) : null;
+  // « Mon quartier n'est pas dans la liste » : saisie libre, tarif confirmé selon la position.
+  const [manual, setManual] = useState(false);
+  const selectedOption = options.find((o) => normalizePlace(o.value) === normalizePlace(district));
   const latitude = watch("delivery.latitude");
   const longitude = watch("delivery.longitude");
   const position = latitude !== null && longitude !== null ? { lat: latitude, lng: longitude } : null;
@@ -60,7 +69,9 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
         if (!response.ok || !body?.place) return;
         for (const field of ["addressLine", "district"] as const) {
           const current = getValues(`delivery.${field}`).trim();
-          const next = body.place[field];
+          let next = body.place[field];
+          // Avec des zones, le quartier se choisit dans la liste : on ne remplit que si la position correspond à un quartier connu.
+          if (field === "district" && hasZones) next = options.find((o) => normalizePlace(o.value) === normalizePlace(next ?? ""))?.value ?? "";
           if (next && (current === "" || current === autoFilled.current[field])) {
             setValue(`delivery.${field}`, next, { shouldDirty: true });
             autoFilled.current[field] = next;
@@ -74,7 +85,7 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [latitude, longitude, getValues, setValue]);
+  }, [latitude, longitude, getValues, setValue, hasZones, options]);
 
   const applySaved = (id: string) => {
     const saved = savedAddresses.find((a) => a.id === id);
@@ -109,6 +120,52 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
         />
       )}
 
+      {hasZones && (
+        <div className="flex flex-col gap-3" data-testid="choix-quartier">
+          {manual ? (
+            <Field id="delivery.district" label="Quartier" hint="Saisissez votre quartier : le tarif sera confirmé selon votre position." error={deliveryErrors?.district?.message}>
+              {({ id, describedBy, invalid }) => <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="address-level3" {...register("delivery.district")} />}
+            </Field>
+          ) : (
+            <OhmegatoCombobox
+              id="delivery.district"
+              label="Quartier"
+              hint="Choisissez votre quartier : la zone et le tarif de livraison s'affichent aussitôt."
+              value={selectedOption?.value ?? null}
+              displayValue={district || undefined}
+              onValueChange={(value) => setValue("delivery.district", value, { shouldDirty: true })}
+              options={options}
+              placeholder="Choisir mon quartier"
+              searchPlaceholder="Rechercher mon quartier…"
+              emptyLabel="Aucun quartier ne correspond."
+              error={deliveryErrors?.district?.message}
+              footer={(close) => (
+                <button
+                  type="button"
+                  className="min-h-11 w-full border-t-2 border-chocolat/15 px-4 text-left font-bold underline decoration-caramel decoration-2 underline-offset-4"
+                  onClick={() => {
+                    setManual(true);
+                    setValue("delivery.district", "", { shouldDirty: true });
+                    close();
+                  }}
+                >
+                  Mon quartier n&apos;est pas dans la liste
+                </button>
+              )}
+            />
+          )}
+          {manual && (
+            <button type="button" className="min-h-11 self-start font-bold underline decoration-caramel decoration-2 underline-offset-4" onClick={() => { setManual(false); setValue("delivery.district", "", { shouldDirty: true }); }}>
+              Choisir dans la liste des quartiers
+            </button>
+          )}
+          <div className="rounded-[10px] border-2 border-caramel-encre bg-blanc-casse px-3 py-2" data-testid="tarif-livraison" aria-live="polite">
+            {zone && <p className="text-[0.95rem] text-encre-douce">Zone : {zone.name}{zone.note ? ` · ${zone.note}` : ""}</p>}
+            <p className="font-bold text-caramel-encre">{deliveryFeeLine(zone ? zone.feeFcfa : null)}</p>
+          </div>
+        </div>
+      )}
+
       <PositionPicker id="delivery.latitude" position={position} onChange={setPosition} error={positionError} />
 
       <p className="text-encre-douce">Les champs ci-dessous sont facultatifs : ils se remplissent depuis la position quand c&apos;est possible. Complétez-les si besoin.</p>
@@ -118,11 +175,13 @@ export function DeliveryFields({ savedAddresses = [] }: { savedAddresses?: Saved
         )}
       </Field>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="delivery.district" label="Quartier" optional error={deliveryErrors?.district?.message}>
-          {({ id, describedBy, invalid }) => (
-            <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="address-level3" {...register("delivery.district")} />
-          )}
-        </Field>
+        {!hasZones && (
+          <Field id="delivery.district" label="Quartier" optional error={deliveryErrors?.district?.message}>
+            {({ id, describedBy, invalid }) => (
+              <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} autoComplete="address-level3" {...register("delivery.district")} />
+            )}
+          </Field>
+        )}
         <Field id="delivery.floorDoor" label="Étage ou porte" optional error={deliveryErrors?.floorDoor?.message}>
           {({ id, describedBy, invalid }) => (
             <TextInput id={id} aria-describedby={describedBy} aria-invalid={invalid} {...register("delivery.floorDoor")} />

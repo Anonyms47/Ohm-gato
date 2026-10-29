@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { FourneePoster } from "@/components/cycles/FourneePoster";
 import { brand } from "@/config/brand";
@@ -33,7 +34,7 @@ export default async function FourneesPage() {
           Nos fournées
         </BrandHeading>
         <p className="mt-3 max-w-prose text-[1.1rem]">
-          OHMEGATO cuisine par fournées. Vous commandez avant la date limite, Alima prépare selon les commandes reçues, puis livre ou remet votre
+          OHMEGATO cuisine par fournées. Vous commandez avant la date limite, l&apos;atelier prépare selon les commandes reçues, puis livre ou remet votre
           boîte le jour prévu. S&apos;il reste des douceurs après les commandes confirmées, elles peuvent être proposées ensuite.
         </p>
 
@@ -76,8 +77,9 @@ export default async function FourneesPage() {
                 <a href={brand.instagramUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
                   Instagram @{brand.instagramHandle}
                 </a>
-                . Avec un carnet OHMEGATO, vous pouvez aussi demander à être prévenu.
+                .
               </p>
+              <NextBatchAlert source="fournees" className="mt-4" />
             </div>
           )}
         </section>

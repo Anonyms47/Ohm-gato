@@ -8,7 +8,7 @@ Pour chaque produit, nous séparons trois informations :
 
 Une mention « sans ajout direct » ne signifie pas « sans allergène » : par exemple, un produit préparé sans ajout direct de lait peut contenir du lait ou des traces de lait provenant d'autres ingrédients, comme le chocolat. Les informations encore à vérifier ne sont pas affichées comme des certitudes.
 
-Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par Alima, fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
+Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par la fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
 
 > Les produits sont préparés dans un environnement artisanal. En cas d'allergie sévère, contactez OHMEGATO avant de commander afin que la faisabilité de votre commande puisse être vérifiée.
 

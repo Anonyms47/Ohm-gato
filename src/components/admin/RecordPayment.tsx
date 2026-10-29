@@ -21,7 +21,9 @@ export function RecordPayment({
   amountFcfa,
   customerName,
   notFoundAt,
+  method = "Wave",
 }: {
+  method?: string;
   orderId: string;
   reference: string;
   amountFcfa: number;
@@ -69,18 +71,18 @@ export function RecordPayment({
 
   return (
     <div className="flex flex-col gap-3 rounded-[12px] border-2 border-wave-encre bg-blanc-casse p-4">
-      <p className="font-bold">Paiement Wave à vérifier : {formatFcfa(amountFcfa)}</p>
+      <p className="font-bold">Paiement {method} à vérifier : {formatFcfa(amountFcfa)}</p>
       <p className="text-encre-douce">
-        Vérifiez dans l&apos;application Wave que {formatFcfa(amountFcfa)} est bien reçu pour {reference}. Sans paiement, rien n&apos;est annulé
+        Vérifiez dans l&apos;application {method} que {formatFcfa(amountFcfa)} est bien reçu pour {reference}. Sans paiement, rien n&apos;est annulé
         automatiquement : contactez la cliente.
       </p>
       {notFoundAt && <p className="text-[0.95rem] font-bold text-caramel-encre">Déjà cherché sans succès le {notFoundAt}.</p>}
-      <Field label="Référence de la transaction Wave" optional>
+      <Field label={`Référence de la transaction ${method}`} optional>
         {({ id }) => <TextInput id={id} value={waveRef} onChange={(e) => setWaveRef(e.target.value)} maxLength={80} />}
       </Field>
       <div className="flex flex-wrap gap-3">
         <ConfirmDialog
-          trigger={<Button variant="primary">Paiement Wave reçu</Button>}
+          trigger={<Button variant="primary">Paiement {method} reçu</Button>}
           title="Confirmer la réception du paiement ?"
           description={
             <div className="flex flex-col gap-2">
@@ -95,10 +97,10 @@ export function RecordPayment({
                 )}
                 <dt className="font-bold">Montant</dt>
                 <dd className="tabular-nums">{formatFcfa(amountFcfa)}</dd>
-                <dt className="font-bold">Réf. Wave</dt>
+                <dt className="font-bold">Réf. {method}</dt>
                 <dd>{waveRef.trim() || "non renseignée"}</dd>
               </dl>
-              <p>La cliente verra sa commande « Payée » et pourra télécharger son reçu. À faire seulement si {formatFcfa(amountFcfa)} est bien arrivé sur le compte Wave.</p>
+              <p>La cliente verra sa commande « Payée » et pourra télécharger son reçu. À faire seulement si {formatFcfa(amountFcfa)} est bien arrivé sur le compte {method}.</p>
             </div>
           }
           confirmLabel="Oui, paiement reçu"

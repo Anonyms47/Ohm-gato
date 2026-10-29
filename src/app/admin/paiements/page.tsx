@@ -3,14 +3,14 @@ import Link from "next/link";
 import { RecordPayment } from "@/components/admin/RecordPayment";
 import { listOrderNotes } from "@/lib/admin/data";
 import { hoursSince, humanDuration } from "@/lib/admin/tasks";
-import { getAutomationSettings, listVerifiedToday, listWaveToVerify, serverNow } from "@/lib/admin/today";
+import { getAutomationSettings, listVerifiedToday, listWaveToVerify, methodsLabel, serverNow } from "@/lib/admin/today";
 import { telLink, whatsappLink, whatsappMessage } from "@/lib/admin/whatsapp";
 import { requireAdmin } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 
-export const metadata: Metadata = { title: "Paiements Wave à vérifier" };
+export const metadata: Metadata = { title: "Paiements à vérifier" };
 
 /** File des paiements Wave : chaque paiement est constaté par Alima dans l'application Wave, jamais automatiquement. */
 export default async function WaveQueue() {
@@ -23,9 +23,9 @@ export default async function WaveQueue() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Paiements Wave à vérifier</h1>
+        <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Paiements {methodsLabel(queue)} à vérifier</h1>
         <p className="max-w-3xl text-encre-douce">
-          Ouvrez l&apos;application Wave, retrouvez le montant, puis confirmez. Une commande n&apos;entre dans la production qu&apos;une fois payée. Le reçu PDF
+          Ouvrez l&apos;application du moyen de paiement (Wave ou Orange Money), retrouvez le montant, puis confirmez. Une commande n&apos;entre dans la production qu&apos;une fois payée. Le reçu PDF
           devient disponible pour la cliente dès la confirmation.
         </p>
         {queue.length > 0 && (
@@ -38,7 +38,7 @@ export default async function WaveQueue() {
       {queue.length === 0 ? (
         <p className="atelier-ticket flex flex-wrap items-center gap-3 p-5 text-[1.05rem]">
           <span className="ohm-tampon text-succes">À jour</span>
-          Aucun paiement Wave n&apos;attend votre vérification.
+          Aucun paiement n&apos;attend votre vérification.
         </p>
       ) : (
         <ol className="flex flex-col gap-5">
@@ -53,6 +53,7 @@ export default async function WaveQueue() {
                       {o.reference}
                     </Link>
                     <span className="font-display text-[1.4rem] tabular-nums">{formatFcfa(o.totalFcfa)}</span>
+                    <span className="rounded-full bg-creme px-2.5 py-0.5 text-[0.9rem] font-bold" data-testid="moyen-paiement">{o.method}</span>
                   </p>
                   <p className="text-[1.05rem] font-bold">{o.customerName}</p>
                   <p className="text-encre-douce">
@@ -81,6 +82,7 @@ export default async function WaveQueue() {
                   orderId={o.id}
                   reference={o.reference}
                   amountFcfa={o.totalFcfa}
+                  method={o.method}
                   customerName={o.customerName}
                   notFoundAt={(() => {
                     const n = notes.get(o.id)?.find((x) => x.kind === "payment_not_found");

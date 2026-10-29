@@ -1,6 +1,6 @@
 ## Présentation
 
-OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
 OHMEGATO prépare des pâtisseries maison (cookies, brownies, moelleux, muffins, cake, choux, verrines…) par cycles de production appelés « fournées ». Le site ohmegato.com permet de découvrir les produits, de passer commande, de payer les produits, de suivre ses commandes et d'envoyer des demandes sur mesure pour un événement.
 
@@ -45,21 +45,21 @@ Une commande se passe en quelques étapes :
 
 Une commande enregistrée ou en attente de vérification du paiement n'est pas encore une commande payée. Elle n'est considérée comme payée qu'après vérification du paiement par OHMEGATO.
 
-## Paiement par Wave
+## Paiement par Wave ou Orange Money
 
-Le paiement se fait aujourd'hui par le lien marchand Wave d'OHMEGATO :
+Le paiement se fait par lien marchand : Wave, et Orange Money lorsqu'il est proposé sur le bon de commande :
 
-- vous utilisez le lien Wave affiché sur votre suivi de commande, pour le montant indiqué ;
-- votre commande est enregistrée dès que vous choisissez Wave ;
-- Alima vérifie ensuite manuellement la réception du paiement ;
+- vous utilisez le lien du moyen choisi, affiché sur votre suivi de commande, pour le montant indiqué ;
+- votre commande est enregistrée dès que vous choisissez le moyen de paiement ;
+- OHMEGATO vérifie ensuite manuellement la réception du paiement : ouvrir le lien ne vaut pas paiement ;
 - si le paiement est retrouvé, la commande est marquée « Payée » ;
 - si le paiement n'est pas reçu ou ne peut pas être identifié, la commande peut être annulée, et les produits réservés sont remis à disposition.
 
 Si vous avez payé mais que votre commande a été annulée faute de paiement identifié, contactez-nous avec la preuve de votre transaction : après vérification, nous rétablissons la commande ou nous vous remboursons.
 
-Wave est un prestataire de paiement indépendant. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par Wave. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave.
+Wave et Orange Money sont des prestataires de paiement indépendants. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par eux. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave ou Orange Money.
 
-Le paiement Orange Money n'est pas encore disponible.
+Un moyen de paiement n'est proposé que lorsqu'il est affiché sur le bon de commande.
 
 ## Retrait
 
@@ -71,7 +71,7 @@ Merci de respecter le créneau confirmé pour votre commande. La commande est re
 
 La livraison est possible dans Dakar, selon la disponibilité des livreurs. Pour une livraison, vous indiquez votre quartier, votre adresse, un point de repère et l'emplacement exact sur la carte.
 
-Le tarif de livraison dépend de la destination. Il n'est ni calculé ni payé sur le site : il vous est communiqué après la commande ou au moment de l'organisation de la livraison, et vous le réglez directement au livreur. Le montant payé à OHMEGATO concerne uniquement les produits.
+Le tarif de livraison dépend de la zone de votre quartier. Lorsque la zone est connue, le bon de commande l'affiche avec son tarif ; sinon, le tarif est confirmé selon votre position. Il n'est jamais ajouté au paiement en ligne : vous le réglez directement au livreur. Le tarif affiché au moment de la commande est celui enregistré avec elle. Le montant payé à OHMEGATO concerne uniquement les produits.
 
 Le détail du fonctionnement figure sur la page « Livraison et retrait ».
 

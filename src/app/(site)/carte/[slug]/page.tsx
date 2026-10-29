@@ -92,7 +92,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <AvailabilityBadge state={product.availability} />
             </div>
             <p className="max-w-prose text-[1.15rem]">{product.description}</p>
-            <AddToBox product={product} />
+            <AddToBox product={product} stickyCta />
             <FavoriteButton productId={product.id} productName={product.name} slug={product.slug} signedIn={user !== null} initial={favorites.includes(product.id)} />
           </div>
           <ProductVisual product={product} priority sizes="(min-width: 768px) 45vw, 90vw" className="order-1 mx-auto w-full max-w-[32rem] md:order-2" />

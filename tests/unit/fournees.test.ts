@@ -59,7 +59,7 @@ describe("fournée de la semaine du 19 octobre", () => {
     expect(phaseMessage("done", first)).toBe(DONE_MESSAGE);
     expect(PREORDER_CLOSED_MESSAGE).not.toMatch(/sera disponible|garanti/);
     expect(PREORDER_CLOSED_MESSAGE).toBe(
-      "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.",
+      "Les précommandes sont terminées. L’atelier prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.",
     );
   });
 

@@ -17,6 +17,9 @@ export interface ReceiptData {
   totalFcfa: number;
   paymentLabel: string | null;
   paymentReference: string | null;
+  /** Livraison : frais de la zone au moment de la commande (null = tarif confirmé selon la position). */
+  deliveryFeeFcfa?: number | null;
+  deliveryZoneName?: string | null;
 }
 
 export function receiptFilename(reference: string): string {
@@ -105,7 +108,7 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   y -= 12;
   text(`${brand.pickupAddress}, ${brand.city} · ${brand.phoneDisplay}`, { size: 9, color: DOUX, align: "center" });
   y -= 12;
-  text(`Activité individuelle de Madame ${brand.operator}, en cours de formalisation`, { size: 8.5, color: DOUX, align: "center" });
+  text("Activité individuelle de pâtisserie maison, en cours de formalisation", { size: 8.5, color: DOUX, align: "center" });
   y -= 6;
   rule();
 
@@ -149,9 +152,16 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   rule();
 
   ensure(40);
-  text("Total produits payé", { size: 11, font: bold });
+  text("Total produits payé en ligne", { size: 11, font: bold });
   text(formatFcfa(data.totalFcfa), { size: 13, font: bold, align: "right" });
   y -= 16;
+  if (data.fulfillment === "delivery") {
+    // La livraison se règle au livreur : jamais incluse dans le paiement en ligne.
+    const zone = data.deliveryZoneName ? ` (${data.deliveryZoneName})` : "";
+    text(clean(`Livraison à régler au livreur${zone}`), { size: 10.5, font: bold });
+    text(typeof data.deliveryFeeFcfa === "number" ? formatFcfa(data.deliveryFeeFcfa) : "selon votre position", { size: 10.5, font: bold, align: "right" });
+    y -= 15;
+  }
   if (data.paymentLabel) {
     text(`Paiement : ${data.paymentLabel}${data.paymentReference ? ` · réf. ${data.paymentReference}` : ""}`, { size: 9.5, color: DOUX });
     y -= 13;

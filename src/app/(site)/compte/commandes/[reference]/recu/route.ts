@@ -22,6 +22,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ref
     slot: order.slot,
     items: order.items,
     totalFcfa: order.totalFcfa,
+    deliveryFeeFcfa: order.deliveryFeeFcfa,
+    deliveryZoneName: order.deliveryZoneName,
     paymentLabel: paid ? providerLabel(paid.provider) : null,
     paymentReference: null,
   });

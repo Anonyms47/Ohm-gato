@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { sniffType } from "@/lib/file-type";
 import { serverEnv } from "@/lib/env";
 import { normalizeSenegalPhone } from "@/lib/phone";
+import { cleanSnapchatHandle, SNAPCHAT_KEY, snapchatUrl } from "@/lib/social";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const TEXT_KEYS = ["home.alima_note", "story.quote"] as const;
@@ -130,4 +131,31 @@ export async function revokeRole(userId: string, role: string): Promise<AdminSta
   await audit(admin.id, "role.revoke", userId, { role });
   revalidatePath("/admin/reglages");
   return { ok: true, message: "Rôle retiré." };
+}
+
+/**
+ * Snapchat : masqué tant que le véritable identifiant n'est pas renseigné et activé.
+ * L'URL est celle saisie (https, snapchat.com) ou déduite de l'identifiant.
+ */
+export async function saveSnapchat(input: { handle: string; url: string; enabled: boolean }): Promise<AdminState> {
+  const admin = await requireAdmin();
+  const db = supabaseAdmin();
+  const handleRaw = input.handle.trim();
+  if (!handleRaw) {
+    if (input.enabled) return { ok: false, message: "Indiquez l'identifiant Snapchat avant de l'activer : rien n'est affiché sans identifiant." };
+    await db.from("site_settings").delete().eq("key", SNAPCHAT_KEY);
+    await audit(admin.id, "social.snapchat.clear", SNAPCHAT_KEY, {});
+    revalidatePath("/", "layout");
+    return { ok: true, message: "Snapchat retiré : il reste masqué sur le site." };
+  }
+  const handle = cleanSnapchatHandle(handleRaw);
+  if (!handle) return { ok: false, message: "Identifiant invalide : 3 à 15 caractères, lettres, chiffres, point, tiret ou tiret bas, en commençant par une lettre." };
+  const url = snapchatUrl(handle, input.url);
+  if (!url) return { ok: false, message: "L'URL doit être une adresse https de snapchat.com (ou restez vide pour la déduire de l'identifiant)." };
+  const { error } = await db.from("site_settings").upsert({ key: SNAPCHAT_KEY, value: { handle, url, enabled: input.enabled }, is_public: true });
+  if (error) return { ok: false, message: "Enregistrement impossible." };
+  await audit(admin.id, "social.snapchat.update", SNAPCHAT_KEY, { enabled: input.enabled });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/reglages");
+  return { ok: true, message: input.enabled ? "Snapchat enregistré et affiché avec Instagram." : "Snapchat enregistré, mais désactivé : il reste masqué." };
 }

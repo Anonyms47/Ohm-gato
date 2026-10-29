@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useStickyCta } from "@/components/layout/StickyCta";
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
@@ -10,12 +11,13 @@ import type { CatalogProduct } from "@/lib/catalog-types";
 import { cn } from "@/lib/cn";
 import { cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
+import { useOffscreen } from "@/lib/use-offscreen";
 
 /**
  * Choix du format, du parfum et de la quantité, puis ajout à « Ma boîte »
  * sans quitter la page. Les formats (2 ou 3) restent visibles avec leur prix.
  */
-export function AddToBox({ product, tone = "light", compact = false }: { product: CatalogProduct; tone?: "light" | "dark"; compact?: boolean }) {
+export function AddToBox({ product, tone = "light", compact = false, stickyCta = false }: { product: CatalogProduct; tone?: "light" | "dark"; compact?: boolean; stickyCta?: boolean }) {
   const { add, resolved, catalog, setDrawerOpen, hydrated } = useCart();
   const groupId = useId();
   const cycleOpen = catalog.cycle?.isOpen ?? false;
@@ -37,6 +39,30 @@ export function AddToBox({ product, tone = "light", compact = false }: { product
 
   const variant = variants.find((v) => v.id === variantId) ?? null;
   const maxQty = variant ? maxQuantityFor(variant, unitsLeft) : 0;
+
+  // Fiche produit sur téléphone : « Ajouter à ma boîte » reste à portée de pouce quand le bouton de la page n'est plus visible.
+  const formRef = useRef<HTMLFormElement>(null);
+  const [actionRef, actionOffscreen] = useOffscreen<HTMLDivElement>();
+  const canAdd = hydrated && Boolean(variant) && maxQty > 0;
+  useStickyCta(
+    {
+      key: "ajout-boite",
+      label: state === "success" ? "Ajouté à Ma boîte" : "Ajouter à ma boîte",
+      disabled: !canAdd,
+      onClick: () => {
+        const form = formRef.current;
+        if (!form) return;
+        if (flavors.length > 0 && !flavorId) {
+          // Le parfum est obligatoire : on amène la personne au champ concerné (message d'erreur visible).
+          setFlavorError("Choisissez un parfum.");
+          form.scrollIntoView({ block: "center", behavior: "smooth" });
+          return;
+        }
+        form.requestSubmit();
+      },
+    },
+    stickyCta && actionOffscreen && cycleOpen && product.inCycle,
+  );
 
   useEffect(() => {
     if (state !== "success") return;
@@ -64,6 +90,7 @@ export function AddToBox({ product, tone = "light", compact = false }: { product
 
   return (
     <form
+      ref={formRef}
       className={cn("flex flex-col", compact ? "gap-3" : "gap-4")}
       onSubmit={(event) => {
         event.preventDefault();
@@ -153,7 +180,7 @@ export function AddToBox({ product, tone = "light", compact = false }: { product
       {soldOut ? (
         <p className={cn("font-bold", textTone)}>Épuisé pour cette fournée.</p>
       ) : (
-        <div className="flex flex-wrap items-center gap-3">
+        <div ref={actionRef} className="flex flex-wrap items-center gap-3">
           <QuantityStepper
             value={Math.min(quantity, Math.max(maxQty, 1))}
             onChange={setQuantity}

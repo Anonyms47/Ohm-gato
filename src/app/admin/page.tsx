@@ -3,7 +3,7 @@ import Link from "next/link";
 import { OnboardingGuide } from "@/components/admin/OnboardingGuide";
 import { DaySummary, NextStepCard, TaskList, TodayHeader } from "@/components/admin/TodayParts";
 import { humanDuration } from "@/lib/admin/tasks";
-import { loadToday } from "@/lib/admin/today";
+import { loadToday, methodsLabel } from "@/lib/admin/today";
 import { requireAdmin } from "@/lib/auth/session";
 import { cyclePhase, cyclePhaseLabel } from "@/lib/cycle-status";
 import { formatDay } from "@/lib/dates";
@@ -47,7 +47,7 @@ export default async function AdminToday() {
       {d.wave.length > 0 && (
         <section aria-labelledby="wave" className="flex flex-col gap-3">
           <h2 id="wave" className="font-display text-[1.5rem]">
-            Paiements Wave à vérifier ({d.wave.length})
+            Paiements {methodsLabel(d.wave)} à vérifier ({d.wave.length})
           </h2>
           <ul className="flex flex-col divide-y-2 divide-dashed divide-chocolat/15 rounded-[12px] border-2 border-chocolat/15 bg-blanc-casse">
             {d.wave.slice(0, 5).map((o) => (

@@ -10,6 +10,7 @@ import type {
   CycleSummary,
   SlotSummary,
 } from "@/lib/catalog-types";
+import type { DeliveryZone } from "@/lib/delivery/zones";
 import { serverEnv } from "@/lib/env";
 import type { StorageRule } from "@/lib/storage";
 import { supabasePublic } from "@/lib/supabase/public";
@@ -349,3 +350,39 @@ export const getPublicSettings = cache(async (): Promise<Record<string, unknown>
   if (error) throw error;
   return Object.fromEntries((data as { key: string; value: unknown }[]).map((s) => [s.key, s.value]));
 });
+
+/** Zones de livraison actives (tarifs publics) : quartiers proposés au bon de fournée. */
+export const getDeliveryZones = cache(async (): Promise<DeliveryZone[]> => {
+  const { data, error } = await supabasePublic()
+    .from("delivery_zones")
+    .select("id, name, districts, fee_fcfa, is_active, sort_order, note")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+  if (error) throw error;
+  return (data as ZoneRow[]).map(toZone);
+});
+
+export interface ZoneRow {
+  id: string;
+  name: string;
+  districts: string[] | null;
+  fee_fcfa: number | null;
+  is_active: boolean;
+  sort_order: number;
+  note: string | null;
+  updated_at?: string | null;
+}
+
+export function toZone(row: ZoneRow): DeliveryZone {
+  return {
+    id: row.id,
+    name: row.name,
+    districts: row.districts ?? [],
+    feeFcfa: row.fee_fcfa,
+    isActive: row.is_active,
+    sortOrder: row.sort_order,
+    note: row.note,
+    updatedAt: row.updated_at ?? null,
+  };
+}

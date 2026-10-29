@@ -96,7 +96,7 @@ export function preorderMessage(cycle: PreorderInput): string {
 }
 
 export const PREORDER_CLOSED_MESSAGE =
-  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
+  "Les précommandes sont terminées. L’atelier prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
 export const SURPLUS_MESSAGE =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 export const DONE_MESSAGE = "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
@@ -195,7 +195,7 @@ export function friseSteps(cycle: CycleSummary, phase: CyclePhase): FriseStep[] 
       detail: `Jusqu’au ${formatDay(cycle.closesAt)}, ${formatTime(cycle.closesAt)}.`,
       state: state(0),
     },
-    { key: "production", title: "Alima prépare votre fournée", detail: productionLabel(cycle), state: state(1) },
+    { key: "production", title: "L’atelier prépare votre fournée", detail: productionLabel(cycle), state: state(1) },
     {
       key: "fulfillment",
       title: `Livraison ou retrait ${formatDay(cycle.fulfillmentDate).split(" ")[0]}`,
@@ -208,7 +208,7 @@ export function friseSteps(cycle: CycleSummary, phase: CyclePhase): FriseStep[] 
       detail:
         phase === "surplus"
           ? "Le surplus est en vente, dans la limite du stock réellement restant."
-          : "Seulement s’il en reste après les commandes confirmées, publié par Alima.",
+          : "Seulement s’il en reste après les commandes confirmées, publié par l’atelier.",
       state: state(3),
     },
   ];

@@ -498,6 +498,8 @@ export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> 
 
 export interface AdminOrderDetail extends AdminOrderRow {
   idempotencyKey: string;
+  deliveryFeeFcfa: number | null;
+  deliveryZoneName: string | null;
   customerEmail: string | null;
   addressLine: string | null;
   landmark: string | null;
@@ -555,6 +557,8 @@ export async function getOrderDetail(id: string): Promise<AdminOrderDetail | nul
     id: o.id,
     reference: o.reference,
     idempotencyKey: o.idempotency_key,
+    deliveryFeeFcfa: o.delivery_fee_fcfa,
+    deliveryZoneName: o.delivery_zone_name,
     status: o.status,
     paymentStatus: o.payment_status,
     fulfillment: o.fulfillment,
@@ -626,13 +630,16 @@ export interface DeliveryStop {
   slotEndsAt: string | null;
   courierName: string | null;
   courierPhone: string | null;
+  /** Zone et frais enregistrés avec la commande (à encaisser auprès de la cliente, hors paiement en ligne). */
+  zoneName: string | null;
+  deliveryFeeFcfa: number | null;
 }
 
 export async function listDeliveries(cycleId: string | null): Promise<DeliveryStop[]> {
   let query = db()
     .from("orders")
     .select(
-      "id, reference, status, customer_name, recipient_name, recipient_phone, address_line, district, landmark, floor_door, delivery_instructions, latitude, longitude, courier_name, courier_phone, delivery_slots(starts_at, ends_at)",
+      "id, reference, status, customer_name, recipient_name, recipient_phone, address_line, district, landmark, floor_door, delivery_instructions, latitude, longitude, courier_name, courier_phone, delivery_zone_name, delivery_fee_fcfa, delivery_slots(starts_at, ends_at)",
     )
     .eq("fulfillment", "delivery")
     .in("status", ["confirmed", "preparing", "finishing", "ready", "out_for_delivery", "delivered"])
@@ -660,6 +667,8 @@ export async function listDeliveries(cycleId: string | null): Promise<DeliverySt
       slotEndsAt: slot?.ends_at ?? null,
       courierName: o.courier_name as string | null,
       courierPhone: o.courier_phone as string | null,
+      zoneName: o.delivery_zone_name as string | null,
+      deliveryFeeFcfa: o.delivery_fee_fcfa as number | null,
     };
   });
 }

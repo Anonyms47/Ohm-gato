@@ -26,6 +26,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
     slot: order.slot,
     items: order.items,
     totalFcfa: order.totalFcfa,
+    deliveryFeeFcfa: order.deliveryFeeFcfa,
+    deliveryZoneName: order.deliveryZoneName,
     paymentLabel: order.lastPaymentProvider ? providerLabel(order.lastPaymentProvider) : null,
     paymentReference: null,
   });

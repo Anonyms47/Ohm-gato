@@ -20,10 +20,14 @@ type IconName =
   | "plus"
   | "recherche"
   | "cloche"
+  | "zone"
+  | "alerte"
   | "aide"
   | "chiffres";
 
 const paths: Record<IconName, string> = {
+  zone: "M12 21s-6-5.6-6-11a6 6 0 1 1 12 0c0 5.4-6 11-6 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  alerte: "M4 6h16v12H4zM4 7l8 6 8-6",
   jour: "M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0",
   liste: "M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2",
   fournee: "M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 10l2-5h12l2 5M9 14h6",

@@ -49,6 +49,12 @@ export interface TaskInput {
   identityMissing: boolean;
   /** E-mails aux clientes : envois suspendus (message lisible) et messages en pause ou en échec. */
   emails?: { blockedLabel: string | null; toReview: number };
+  /** Éléments à compléter dans l'atelier (zones, moyens de paiement, alertes de fournée). Absent : aucune tâche. */
+  setup?: {
+    zonesActive: number;
+    paymentsWithoutLink: string[];
+    alerts: { activeSubscribers: number; sendsToReview: number; openCycleNumber: number | null; openCycleAnnounced: boolean };
+  };
 }
 
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
@@ -229,6 +235,57 @@ export function buildTasks(input: TaskInput): AdminTask[] {
       href: "/admin/notifications#emails",
       action: "Vérifier",
     });
+  }
+
+  const setup = input.setup;
+  if (setup) {
+    if (setup.alerts.sendsToReview > 0) {
+      const n = setup.alerts.sendsToReview;
+      tasks.push({
+        key: "alerts-to-review",
+        priority: "urgent",
+        title: `${n} ${plural(n, "alerte de fournée n'est pas partie", "alertes de fournée ne sont pas parties")}`,
+        detail: "En pause ou en échec (service d'e-mail) : elles restent en attente, rien n'est perdu.",
+        count: n,
+        href: "/admin/alertes",
+        action: "Voir les envois",
+      });
+    }
+    if (setup.paymentsWithoutLink.length > 0) {
+      const names = setup.paymentsWithoutLink.join(" et ");
+      tasks.push({
+        key: "payments-without-link",
+        priority: "today",
+        title: `${names} ${setup.paymentsWithoutLink.length > 1 ? "sont activés" : "est activé"} sans lien marchand`,
+        detail: "Tant qu'aucun lien n'est enregistré, le moyen de paiement reste masqué pour les clientes.",
+        count: setup.paymentsWithoutLink.length,
+        href: "/admin/moyens-de-paiement",
+        action: "Enregistrer le lien",
+      });
+    }
+    if (setup.alerts.openCycleNumber !== null && !setup.alerts.openCycleAnnounced && setup.alerts.activeSubscribers > 0) {
+      const n = setup.alerts.activeSubscribers;
+      tasks.push({
+        key: `alert-announce-${setup.alerts.openCycleNumber}`,
+        priority: "today",
+        title: `La fournée n°${setup.alerts.openCycleNumber} est ouverte : ${n} ${plural(n, "personne attend", "personnes attendent")} d'être prévenue${n > 1 ? "s" : ""}`,
+        detail: "Rien n'est envoyé sans votre action.",
+        count: n,
+        href: "/admin/alertes",
+        action: "Prévenir",
+      });
+    }
+    if (setup.zonesActive === 0) {
+      tasks.push({
+        key: "zones-missing",
+        priority: "soon",
+        title: "Aucune zone de livraison n'est configurée",
+        detail: "Les clientes voient « Tarif confirmé selon votre position ». Aucune commande n'est bloquée.",
+        count: 1,
+        href: "/admin/zones",
+        action: "Configurer les zones",
+      });
+    }
   }
 
   if (input.allergensToVerify > 0) {

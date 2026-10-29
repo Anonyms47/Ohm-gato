@@ -22,9 +22,11 @@ test.describe("Nos fournées — le journal du four", () => {
 });
 
 test.describe("Notre histoire", () => {
-  test("Oumy Gâteau → OHMEGATO → Ω, le café présenté comme un projet", async ({ page }) => {
+  test("OHMEGATO = OMEGA (Ω) + TO (Τ), l'histoire des premiers muffins, le café présenté comme un projet", async ({ page }) => {
     await page.goto("/notre-histoire");
-    await expect(page.getByText("Oumy Gâteau, devenu OHMEGATO, puis Ω.")).toBeAttached();
+    await expect(page.getByText("OHMEGATO associe OMEGA (Ω) et TO (Τ).").first()).toBeAttached();
+    await expect(page.getByText(/Oumou Gâteau/).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/Oumy|prononcé d.une traite/);
     await expect(page.getByText(/troisième année à l'ESP/)).toBeVisible();
     await expect(page.getByText(/n'existe pas encore/)).toBeVisible();
     // Aucun emplacement vide : citation, photos et audio absents tant qu'ils ne sont pas fournis.

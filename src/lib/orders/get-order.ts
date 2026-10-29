@@ -21,6 +21,8 @@ export interface OrderView {
   pickupCode: string | null;
   subtotalFcfa: number;
   deliveryFeeFcfa: number | null;
+  /** Zone de livraison au moment de la commande (instantané). */
+  deliveryZoneName: string | null;
   totalFcfa: number;
   reservationExpiresAt: string | null;
   paidAt: string | null;
@@ -61,6 +63,7 @@ interface OrderRow {
   pickup_code: string | null;
   subtotal_fcfa: number;
   delivery_fee_fcfa: number | null;
+  delivery_zone_name: string | null;
   total_fcfa: number;
   reservation_expires_at: string | null;
   paid_at: string | null;
@@ -97,7 +100,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     .select(
       `id, reference, status, payment_status, fulfillment, order_kind, customer_name, customer_phone,
        address_line, district, landmark, latitude, longitude, pickup_code,
-       subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
+       subtotal_fcfa, delivery_fee_fcfa, delivery_zone_name, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
        production_cycles(number), delivery_slots(starts_at, ends_at),
        order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
          products(name, storage_rule, storage_note, storage_confirmed)),
@@ -127,6 +130,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     pickupCode: data.payment_status === "paid" ? data.pickup_code : null,
     subtotalFcfa: data.subtotal_fcfa,
     deliveryFeeFcfa: data.delivery_fee_fcfa,
+    deliveryZoneName: data.delivery_zone_name,
     totalFcfa: data.total_fcfa,
     reservationExpiresAt: data.reservation_expires_at,
     paidAt: data.paid_at,

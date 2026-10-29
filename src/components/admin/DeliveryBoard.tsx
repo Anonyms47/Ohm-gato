@@ -79,6 +79,14 @@ export function DeliveryBoard({ stops }: { stops: DeliveryStop[] }) {
                 </dd>
               </div>
               <div>
+                <dt className="font-bold">Frais de livraison à encaisser</dt>
+                <dd data-testid="frais-a-encaisser">
+                  {typeof selected.deliveryFeeFcfa === "number"
+                    ? `${selected.deliveryFeeFcfa.toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g, " ")} FCFA${selected.zoneName ? ` · zone ${selected.zoneName}` : ""} — payés au livreur, pas en ligne`
+                    : "Tarif à confirmer selon la position — payé au livreur, pas en ligne"}
+                </dd>
+              </div>
+              <div>
                 <dt className="font-bold">Point de repère</dt>
                 <dd>{selected.landmark ?? "—"}</dd>
               </div>

@@ -26,7 +26,7 @@ test.describe("Pages légales", () => {
 
   test("informations publiques : statut d'activité, coordonnées, livraison payée au livreur", async ({ page }) => {
     await page.goto("/mentions-legales");
-    await expect(page.getByText("OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.")).toBeVisible();
+    await expect(page.getByText("OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.")).toBeVisible();
     await expect(page.getByText("contact@ohmegato.com").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/SARL|SUARL|NINEA|RCCM/);
     await page.goto("/livraison-retrait");

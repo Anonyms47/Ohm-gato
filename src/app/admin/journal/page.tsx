@@ -21,9 +21,9 @@ const LABELS: Record<string, string> = {
   "slot.disable": "Créneau désactivé",
   "slot.delete": "Créneau supprimé",
   "order.status": "Statut de commande",
-  "order.payment_recorded": "Paiement Wave enregistré",
+  "order.payment_recorded": "Paiement vérifié et enregistré",
   "order.note": "Note interne ajoutée",
-  "order.payment_not_found": "Paiement Wave introuvable pour le moment",
+  "order.payment_not_found": "Paiement introuvable pour le moment",
   "order.bulk_status": "Statut changé pour plusieurs commandes",
   "cycle.duplicate": "Fournée créée depuis la précédente",
   "cycle.production_print": "Fiche de production imprimée",
@@ -54,6 +54,21 @@ const LABELS: Record<string, string> = {
   "legal.discard": "Brouillon de document abandonné",
   "refund.record": "Remboursement enregistré",
   "account.delete": "Compte supprimé par son titulaire",
+  "zone.create": "Zone de livraison créée",
+  "zone.update": "Zone de livraison modifiée",
+  "zone.duplicate": "Zone de livraison dupliquée",
+  "zone.activate": "Zone de livraison activée",
+  "zone.deactivate": "Zone de livraison désactivée",
+  "zone.reorder": "Zones réorganisées",
+  "zones.import": "Grille de zones importée (CSV)",
+  "zones.export": "Grille de zones exportée (CSV)",
+  "payment_method.update": "Moyen de paiement modifié",
+  "social.snapchat.update": "Snapchat modifié",
+  "social.snapchat.clear": "Snapchat retiré",
+  "alert.trigger": "Alerte de prochaine fournée déclenchée",
+  "alert.retry": "Envois d'alerte repris",
+  "alert.unsubscribe": "Inscrit désinscrit par l'équipe",
+  "alert.export": "Liste des inscrits exportée",
 };
 
 const CYCLE_STATUS: Record<string, string> = {
@@ -91,6 +106,16 @@ function describe(action: string, details: unknown): string | null {
       return text(d.reference);
     case "legal.publish":
       return [text(d.slug), d.version ? `version ${text(d.version)}` : null].filter(Boolean).join(", ") || null;
+    case "zone.create":
+    case "zone.update":
+    case "zone.duplicate":
+      return text(d.name);
+    case "zones.import":
+      return d.created !== undefined || d.updated !== undefined ? `${text(d.created) ?? 0} créée(s), ${text(d.updated) ?? 0} mise(s) à jour` : null;
+    case "payment_method.update":
+      return d.enabled === true ? "activé" : d.enabled === false ? "désactivé" : null;
+    case "alert.trigger":
+      return [d.cycle ? `fournée n°${text(d.cycle)}` : null, d.recipients !== undefined ? `${text(d.recipients)} destinataire(s)` : null].filter(Boolean).join(", ") || null;
     case "refund.record":
       return d.amount_fcfa ? `${text(d.amount_fcfa)} FCFA` : null;
     case "settings.update":
