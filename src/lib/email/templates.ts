@@ -74,7 +74,7 @@ export function renderOrderEmail(template: Exclude<EmailTemplate, "admin_digest"
         d.receiptUrl ? "Votre reçu est disponible depuis la page de suivi." : "",
       ].filter(Boolean), follow);
     case "order_preparing":
-      return wrap(`${d.reference} : en préparation`, [hello, `Alima prépare votre commande ${d.reference}.`, slot ? `${d.fulfillment === "pickup" ? "Retrait" : "Livraison"} prévu : ${slot}.` : ""].filter(Boolean), follow);
+      return wrap(`${d.reference} : en préparation`, [hello, `Nous préparons votre commande ${d.reference}.`, slot ? `${d.fulfillment === "pickup" ? "Retrait" : "Livraison"} prévu : ${slot}.` : ""].filter(Boolean), follow);
     case "pickup_ready":
       return wrap(`${d.reference} est prête au retrait`, [
         hello,

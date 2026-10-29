@@ -409,7 +409,7 @@ Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10
 where not exists (select 1 from public.legal_document_versions where document_slug = 'mentions-legales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'allergenes-conservation', '1.1', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
+select 'allergenes-conservation', '1.2', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
 
 Pour chaque produit, nous séparons trois informations :
 
@@ -419,7 +419,7 @@ Pour chaque produit, nous séparons trois informations :
 
 Une mention « sans ajout direct » ne signifie pas « sans allergène » : par exemple, un produit préparé sans ajout direct de lait peut contenir du lait ou des traces de lait provenant d'autres ingrédients, comme le chocolat. Les informations encore à vérifier ne sont pas affichées comme des certitudes.
 
-Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par Alima, fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
+Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par la fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
 
 > Les produits sont préparés dans un environnement artisanal. En cas d'allergie sévère, contactez OHMEGATO avant de commander afin que la faisabilité de votre commande puisse être vérifiée.
 
@@ -432,5 +432,5 @@ Les descriptions, les informations de recette et les conseils de conservation de
 
 Respectez la chaîne du froid pour les produits contenant de la crème, une sauce ou des fruits. Ne consommez pas un produit présentant une odeur, une texture ou un aspect anormal.
 
-Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-10-10', timestamptz '2026-10-10 14:00:00+00'
+Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'allergenes-conservation');

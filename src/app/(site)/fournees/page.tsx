@@ -33,7 +33,7 @@ export default async function FourneesPage() {
           Nos fournées
         </BrandHeading>
         <p className="mt-3 max-w-prose text-[1.1rem]">
-          OHMEGATO cuisine par fournées. Vous commandez avant la date limite, Alima prépare selon les commandes reçues, puis livre ou remet votre
+          OHMEGATO cuisine par fournées. Vous commandez avant la date limite, l&apos;atelier prépare selon les commandes reçues, puis livre ou remet votre
           boîte le jour prévu. S&apos;il reste des douceurs après les commandes confirmées, elles peuvent être proposées ensuite.
         </p>
 

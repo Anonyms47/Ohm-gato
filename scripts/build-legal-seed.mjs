@@ -16,7 +16,8 @@ const documents = [
 // 1.1 du 17 octobre 2026 : identité officielle de l'exploitante (Madame Alimatou Sadiya Thiam).
 const identity = { version: "1.1", publishedAt: "2026-10-17 08:00:00+00", effectiveAt: "2026-10-17" };
 const versions = {
-  "allergenes-conservation": { version: "1.1", publishedAt: "2026-10-10 14:00:00+00" },
+  // 1.2 du 29 octobre 2026 : le prénom de la fondatrice n'apparaît plus.
+  "allergenes-conservation": { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" },
   "conditions-generales": identity,
   confidentialite: identity,
   "mentions-legales": identity,

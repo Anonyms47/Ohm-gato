@@ -12,8 +12,6 @@ export const brand = {
   instagramHandle: "ohmegato",
   instagramUrl: "https://www.instagram.com/ohmegato/",
   pickupAddress: "Rue GY-69, Cité Sonatel 2, Sud Foire",
-  /** Exploitante (activité individuelle en cours de formalisation : ni NINEA, ni RCCM, ni siège à ce jour). */
-  operator: "Alimatou Sadiya Thiam",
   /**
    * Logo officiel en vecteur, vectorisé depuis le médaillon fourni par la marque
    * (palette d'origine conservée, aucun texte retapé).

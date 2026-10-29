@@ -64,7 +64,7 @@ export function SiteFooter() {
       <div className="border-t border-creme/15">
         <p className="mx-auto max-w-7xl px-4 py-5 text-[0.9rem] text-creme/75 sm:px-6" data-testid="signature-site">
           © {new Intl.DateTimeFormat("fr-SN", { year: "numeric", timeZone: "Africa/Dakar" }).format(new Date())} {brand.name} · Tous droits réservés · Activité
-          individuelle de pâtisserie maison de Madame {brand.operator}, {brand.city}.
+          individuelle de pâtisserie maison, {brand.city}.
         </p>
       </div>
     </footer>

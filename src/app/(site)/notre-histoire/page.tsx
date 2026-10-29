@@ -7,7 +7,7 @@ import { getPublicSettings } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Notre histoire",
-  description: "D'Oumy Gâteau à OHMEGATO : les premiers muffins d'Alima à l'ESP, puis une carte qui grandit, et l'envie d'un futur café.",
+  description: "D'Oumou Gâteau à OHMEGATO : les premiers muffins à l'ESP, puis une carte qui grandit, et l'envie d'un futur café.",
 };
 
 interface StoryPhoto {
@@ -51,14 +51,14 @@ export default async function NotreHistoirePage() {
       <section aria-labelledby="debut" className="bg-blanc-casse">
         <div className="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1fr_1.2fr] md:items-center">
           <div>
-            <p className="font-script text-[2rem] text-caramel-encre">Oumy Gâteau</p>
+            <p className="font-script text-[2rem] text-caramel-encre">Oumou Gâteau</p>
             <h2 id="debut" className="font-display text-[clamp(1.8rem,4.5vw,2.6rem)] leading-[1.05]">
-              Au commencement, il y avait Oumy Gâteau.
+              Au commencement, il y avait Oumou Gâteau.
             </h2>
           </div>
           <div className="flex flex-col gap-4 text-[1.1rem]">
             <p>
-              Avant OHMEGATO, il y avait « Oumy Gâteau ». Le nom s&apos;est transformé : prononcé d&apos;une traite, il est devenu{" "}
+              Avant OHMEGATO, il y avait « Oumou Gâteau ». Le nom s&apos;est transformé : prononcé d&apos;une traite, il est devenu{" "}
               <strong>OHMEGATO</strong>.
             </p>
             <p>
@@ -77,7 +77,7 @@ export default async function NotreHistoirePage() {
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:-rotate-1">
               <p className="font-script text-[1.5rem] text-caramel-encre">1.</p>
-              <p className="text-[1.1rem]">Pendant sa troisième année à l&apos;ESP, Alima prépare ses premiers muffins.</p>
+              <p className="text-[1.1rem]">Pendant sa troisième année à l&apos;ESP, la fondatrice d&apos;OHMEGATO prépare ses premiers muffins.</p>
             </li>
             <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:translate-y-4">
               <p className="font-script text-[1.5rem] text-caramel-encre">2.</p>
@@ -116,12 +116,12 @@ export default async function NotreHistoirePage() {
             {quote && (
               <blockquote className="mt-2 border-l-4 border-caramel pl-4">
                 <p className="font-script text-[1.6rem] leading-snug text-creme">{quote}</p>
-                <footer className="mt-2 font-bold text-creme/80">— Alima</footer>
+                <footer className="mt-2 font-bold text-creme/80">— La fondatrice d&apos;OHMEGATO</footer>
               </blockquote>
             )}
             {audio && (
               <figure className="mt-2">
-                <figcaption className="mb-2 font-bold text-creme">Alima raconte (audio)</figcaption>
+                <figcaption className="mb-2 font-bold text-creme">La fondatrice raconte (audio)</figcaption>
                 {/* Jamais de lecture automatique. */}
                 <audio controls preload="none" src={audio.url} className="w-full" />
                 {audio.transcript && (

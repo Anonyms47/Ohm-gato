@@ -51,7 +51,6 @@ export default async function FourneePage() {
     email: brand.email,
     address: { "@type": "PostalAddress", addressLocality: brand.city, addressCountry: "SN" },
     areaServed: { "@type": "City", name: brand.city },
-    founder: { "@type": "Person", name: brand.operator },
     sameAs: [brand.instagramUrl],
   };
 
@@ -195,11 +194,11 @@ export default async function FourneePage() {
         <section aria-labelledby="note" className="ohm-grille">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
             <h2 id="note" className="sr-only">
-              Le mot d&apos;Alima
+              Le mot de l&apos;atelier
             </h2>
             <blockquote className="-rotate-1 rounded-[4px] bg-blanc-casse p-6 shadow-[0_2px_0_var(--ohm-grille)] sm:p-10">
               <p className="font-script text-[clamp(1.5rem,4vw,2.1rem)] leading-snug text-chocolat">{alimaNote}</p>
-              <footer className="mt-4 font-bold">— Alima</footer>
+              <footer className="mt-4 font-bold">— OHMEGATO</footer>
             </blockquote>
           </div>
         </section>

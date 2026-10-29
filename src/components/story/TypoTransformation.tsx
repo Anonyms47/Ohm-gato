@@ -7,7 +7,7 @@ const FROM = ["Ou", "my", " Gâ", "teau"];
 const TO = ["OH", "ME", "GA", "TO"];
 
 /**
- * Oumy Gâteau → OHMEGATO → Ω : les syllabes glissent d'un nom à l'autre, puis se
+ * Oumou Gâteau → OHMEGATO → Ω : les syllabes glissent d'un nom à l'autre, puis se
  * replient en Oméga. Joué une fois à l'entrée dans l'écran ; version fixe sans animation.
  */
 export function TypoTransformation() {
@@ -43,8 +43,8 @@ export function TypoTransformation() {
 
   if (!animated) {
     return (
-      <div className="flex flex-col items-center gap-3 text-center" aria-label="Oumy Gâteau, devenu OHMEGATO, puis Ω">
-        <p className="font-script text-[clamp(2rem,7vw,3.4rem)] text-caramel-encre">Oumy Gâteau</p>
+      <div className="flex flex-col items-center gap-3 text-center" aria-label="Oumou Gâteau, devenu OHMEGATO, puis Ω">
+        <p className="font-script text-[clamp(2rem,7vw,3.4rem)] text-caramel-encre">Oumou Gâteau</p>
         <p aria-hidden className="text-[1.6rem]">↓</p>
         <p className="font-display text-[clamp(2.4rem,9vw,5rem)] tracking-[0.04em]">OHMEGATO</p>
         <p aria-hidden className="text-[1.6rem]">↓</p>
@@ -55,7 +55,7 @@ export function TypoTransformation() {
 
   return (
     <div ref={ref} className="flex flex-col items-center gap-4">
-      <p className="sr-only">Oumy Gâteau, devenu OHMEGATO, puis Ω.</p>
+      <p className="sr-only">Oumou Gâteau, devenu OHMEGATO, puis Ω.</p>
       <div aria-hidden className="relative grid min-h-[clamp(9rem,26vw,13rem)] w-full place-items-center">
         {/* Étapes 1 et 2 : les syllabes changent d'écriture sans changer de place */}
         <p

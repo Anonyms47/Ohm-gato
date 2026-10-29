@@ -3,7 +3,7 @@ import { acceptTermsAndContinue, addToBox, db, e164, fillPickupCheckout, grantAd
 
 const CYCLE = "00000000-0000-4000-8000-000000000012";
 const PREORDER_CLOSED =
-  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
+  "Les précommandes sont terminées. L’atelier prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
 const SURPLUS =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 
@@ -25,7 +25,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
     await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée (pendant la semaine|le )/);
     const frise = page.getByRole("list", { name: "Les quatre moments de la fournée" });
     await expect(frise.getByRole("listitem")).toHaveCount(4);
-    await expect(frise.getByText("Alima prépare votre fournée")).toBeVisible();
+    await expect(frise.getByText("L’atelier prépare votre fournée")).toBeVisible();
     await expect(frise.getByText("Les douceurs restantes peuvent revenir en stock")).toBeVisible();
     await expect(frise.locator('[aria-current="step"]')).toHaveCount(1);
     // Frise verticale sur téléphone et petite tablette, horizontale à partir de 768 px.

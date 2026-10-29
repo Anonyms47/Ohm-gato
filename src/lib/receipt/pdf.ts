@@ -105,7 +105,7 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   y -= 12;
   text(`${brand.pickupAddress}, ${brand.city} · ${brand.phoneDisplay}`, { size: 9, color: DOUX, align: "center" });
   y -= 12;
-  text(`Activité individuelle de Madame ${brand.operator}, en cours de formalisation`, { size: 8.5, color: DOUX, align: "center" });
+  text("Activité individuelle de pâtisserie maison, en cours de formalisation", { size: 8.5, color: DOUX, align: "center" });
   y -= 6;
   rule();
 
