@@ -68,7 +68,7 @@ function ProductionRow({
             <TextInput id={id} aria-describedby={describedBy} type="number" min={0} value={extra} onChange={(e) => setExtra(e.target.value)} />
           )}
         </Field>
-        <Field label="Quantité réellement produite" optional={!canRecord} hint={canRecord ? undefined : "Après la clôture des précommandes."}>
+        <Field label="Quantité réellement produite" optional={!canRecord} hint={canRecord ? undefined : "Une fois la fournée passée en production."}>
           {({ id, describedBy }) => (
             <TextInput
               id={id}

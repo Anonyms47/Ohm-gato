@@ -9,17 +9,14 @@ import { formatDay } from "@/lib/dates";
 export const metadata = { title: "Nouvelle fournée" };
 
 const WEEK = 7 * 86_400_000;
-const localDateTime = (ms: number) => new Date(ms).toISOString().slice(0, 16);
 const localDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 /** Dates proposées : celles de la fournée source, décalées de semaines entières jusqu'à être à venir. */
-function suggestedDates(source: { opensAt: string; closesAt: string; productionDate: string; fulfillmentDate: string }, now: number) {
-  const closes = Date.parse(source.closesAt);
-  const weeks = Math.max(1, Math.ceil((now - closes) / WEEK) + 1);
+function suggestedDates(source: { productionDate: string; fulfillmentDate: string }, now: number) {
+  const fulfillment = Date.parse(`${source.fulfillmentDate}T12:00:00Z`);
+  const weeks = Math.max(1, Math.ceil((now - fulfillment) / WEEK) + 1);
   const shift = weeks * WEEK;
   return {
-    opensAt: localDateTime(Math.max(now, Date.parse(source.opensAt) + shift)),
-    closesAt: localDateTime(closes + shift),
     productionDate: localDate(Date.parse(`${source.productionDate}T12:00:00Z`) + shift),
     fulfillmentDate: localDate(Date.parse(`${source.fulfillmentDate}T12:00:00Z`) + shift),
   };

@@ -10,8 +10,8 @@ import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
 import { getCatalog, getPublicSettings } from "@/lib/catalog";
 import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
-import { cyclePhaseLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
-import { formatDay, formatTime } from "@/lib/dates";
+import { phaseBadgeLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
+import { formatDay } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import { socialLinks } from "@/lib/social";
 
@@ -66,7 +66,7 @@ export default async function FourneePage() {
           <div className="relative z-10 flex flex-col gap-5 motion-safe:animate-[ohm-entree_520ms_var(--ohm-courbe)_both]">
             <p className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-chocolat bg-blanc-casse px-3 py-1 font-bold">
               <span aria-hidden className={cycle?.isOpen ? "size-2.5 rounded-full bg-succes" : "size-2.5 rounded-full bg-encre-douce"} />
-              {phase ? cyclePhaseLabel[phase] : "Fournée fermée"}
+              {cycle && phase ? phaseBadgeLabel(cycle, phase) : "Aucune fournée annoncée"}
             </p>
             {/* Ordinateur et tablette : « La fournée n°1 » sur une seule ligne ; téléphone : deux lignes. */}
             <BrandHeading as="h1" size="affiche" id="couverture" className={cycle ? "md:whitespace-nowrap md:text-[clamp(2.75rem,6vw,5rem)]" : undefined}>
@@ -275,10 +275,8 @@ export default async function FourneePage() {
             <dl className="mt-4 divide-y-2 divide-dashed divide-chocolat/25">
               {cycle && (
                 <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
-                  <dt className="font-bold">Date limite de commande</dt>
-                  <dd>
-                    {formatDay(cycle.closesAt)}, {formatTime(cycle.closesAt)}
-                  </dd>
+                  <dt className="font-bold">Commande</dt>
+                  <dd>À tout moment, rattachée à la fournée n°{cycle.number}</dd>
                 </div>
               )}
               <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">

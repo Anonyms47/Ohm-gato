@@ -30,7 +30,6 @@ interface CycleRow {
   title: string;
   message: string | null;
   opens_at: string;
-  closes_at: string;
   production_date: string;
   production_days: number | null;
   production_dates: string[] | null;
@@ -50,14 +49,13 @@ interface CycleRow {
 }
 
 function toCycle(r: CycleRow): AdminCycle {
-  const orderKind = orderKindFor({ status: r.status, opensAt: r.opens_at, closesAt: r.closes_at, surplusEndsAt: r.surplus_ends_at });
+  const orderKind = orderKindFor({ status: r.status, fulfillmentDate: r.fulfillment_date, surplusEndsAt: r.surplus_ends_at });
   return {
     id: r.id,
     number: r.number,
     title: r.title,
     message: r.message,
     opensAt: r.opens_at,
-    closesAt: r.closes_at,
     productionDate: r.production_date,
     productionDays: r.production_days,
     productionDates: r.production_dates ?? [],
@@ -66,6 +64,7 @@ function toCycle(r: CycleRow): AdminCycle {
     surplusEndsAt: r.surplus_ends_at,
     surplusDeliveryAllowed: r.surplus_delivery_allowed,
     isOpen: orderKind !== null,
+    composable: orderKind !== null,
     orderKind,
     featuredProductSlug: r.featured?.slug ?? null,
     palette: r.palette,
@@ -82,7 +81,7 @@ function toCycle(r: CycleRow): AdminCycle {
 }
 
 const CYCLE_SELECT =
-  "id, number, title, message, opens_at, closes_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, closed_at, production_started_at, fulfillment_started_at, surplus_opened_at, completed_at, palette, capacity_units, featured_product_id, featured:products!production_cycles_featured_product_id_fkey(slug)";
+  "id, number, title, message, opens_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, closed_at, production_started_at, fulfillment_started_at, surplus_opened_at, completed_at, palette, capacity_units, featured_product_id, featured:products!production_cycles_featured_product_id_fkey(slug)";
 
 export async function listCycles(): Promise<AdminCycle[]> {
   const { data, error } = await db().from("production_cycles").select(CYCLE_SELECT).order("number", { ascending: false }).returns<CycleRow[]>();

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Countdown } from "@/components/admin/Countdown";
 import { CycleForm, CycleProductsEditor, CycleStatusActions, SlotsEditor } from "@/components/admin/CycleEditors";
 import { ProductionEditor, SurplusPublisher, WithdrawSurplus } from "@/components/admin/CycleProduction";
 import { getCycleReport, lastProductionPrint } from "@/lib/admin/cycle-report";
@@ -10,7 +9,7 @@ import { serverNow } from "@/lib/admin/today";
 import { cn } from "@/lib/cn";
 import { formatFcfa } from "@/lib/money";
 import { requireAdmin } from "@/lib/auth/session";
-import { cyclePhase, cyclePhaseLabel, isUpcoming, productionLabel } from "@/lib/cycle-status";
+import { cyclePhase, hasUpcomingFulfillment, cyclePhaseLabel, isUpcoming, productionLabel } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
 
 export const metadata = { title: "Fournée" };
@@ -125,22 +124,18 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
   const [products, flavors, setup, report, lastPrint] = await Promise.all([listProducts(), listFlavors(), getCycleSetup(id), getCycleReport(id), lastProductionPrint(id)]);
   const demand = await getCycleDemand(id, products);
   const phase = cycle.status === "draft" ? null : cyclePhase(cycle, now);
-  const deadlinePassed = cycle.status === "open" && phase === "closed";
-  const afterClose = ["closed", "preparing", "delivering", "surplus", "done"].includes(cycle.status) || phase === "closed";
+  const datesPassed = cycle.status === "open" && !hasUpcomingFulfillment(cycle, now);
+  const afterClose = ["closed", "preparing", "delivering", "surplus", "done"].includes(cycle.status);
   const hasSurplusSlots = setup.slots.some((s) => s.phase === "surplus" && s.isActive && isUpcoming(s.endsAt));
   const step = currentCycleStep(cycle, now);
   const stepIndex = CYCLE_STEPS.findIndex((s) => s.key === step);
   const checks = openingChecks({
     products: setup.products.length,
     preorderSlots: setup.slots.filter((s) => s.phase === "preorder" && s.isActive).length,
-    opensAt: cycle.opensAt,
-    closesAt: cycle.closesAt,
+    productionDate: cycle.productionDate,
     fulfillmentDate: cycle.fulfillmentDate,
     now,
   });
-  const opensMs = Date.parse(cycle.opensAt);
-  const closesMs = Date.parse(cycle.closesAt);
-  const progress = Math.round(Math.min(1, Math.max(0, (now - opensMs) / Math.max(1, closesMs - opensMs))) * 100);
   const produced = demand.reduce((s, d) => s + (d.produced ?? 0), 0);
   const lost = demand.reduce((s, d) => s + (d.lost ?? 0), 0);
   const surplusSold = demand.reduce((s, d) => s + (d.surplusSold ?? 0), 0);
@@ -155,12 +150,12 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
           Fournée n°{cycle.number} · {phase ? cyclePhaseLabel[phase] : "Brouillon"}
         </h1>
         <p className="text-encre-douce">
-          Précommandes jusqu&apos;au {formatDay(cycle.closesAt)} à {formatTime(cycle.closesAt)} (heure de Dakar) · {productionLabel(cycle)} · Livraison et
-          retrait le {formatDay(cycle.fulfillmentDate)}.
+          Commandes possibles à tout moment · {productionLabel(cycle)} · Livraison et retrait le {formatDay(cycle.fulfillmentDate)}.
         </p>
-        {deadlinePassed && (
+        {datesPassed && (
           <p className="font-bold text-orange-encre">
-            La date limite est passée : plus aucune précommande n&apos;est acceptée. La clôture se fait toute seule dans quelques minutes (ou tout de suite avec le bouton ci-dessous).
+            La date de livraison de cette fournée est passée : plus aucune commande ni aucun paiement n&apos;est possible tant que vous n&apos;avez pas annoncé les dates de la prochaine fournée.
+            Aucune commande existante n&apos;est déplacée.
           </p>
         )}
         <p className="flex flex-wrap gap-4">
@@ -207,14 +202,14 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         <p id="action-principale" className="atelier-annotation text-[1.15rem] text-rose">
           Action de l&apos;étape
         </p>
-        {cycle.status === "open" && !deadlinePassed && phase === "open" && (
+        {cycle.status === "open" && !datesPassed && (
           <p className="text-creme/90">
-            Les précommandes se fermeront automatiquement <Countdown target={cycle.closesAt} serverNow={now} /> (le {formatDay(cycle.closesAt)} à{" "}
-            {formatTime(cycle.closesAt)}), même si personne ne se connecte.
+            Les clientes commandent à toute heure. Pour passer à la fournée suivante, ouvrez-la : les nouvelles commandes iront à elle, celles-ci restent
+            rattachées à cette fournée.
           </p>
         )}
         <div className="rounded-[12px] bg-blanc-casse p-4 text-chocolat">
-          <CycleStatusActions cycle={cycle} deadlinePassed={deadlinePassed} />
+          <CycleStatusActions cycle={cycle} datesPassed={datesPassed} />
         </div>
       </section>
 
@@ -253,38 +248,24 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </details>
       </Step>
 
-      <Step step="ouvrir" current={step} title="Ouvrir" intro="L'ouverture rend la fournée visible et permet de précommander jusqu'à la date limite. Elle demande toujours votre confirmation." visibleToClients="oui, dès l'ouverture.">
+      <Step step="ouvrir" current={step} title="Ouvrir" intro="L'ouverture désigne cette fournée pour les nouvelles commandes : les clientes commandent à toute heure, avec les dates que vous avez fixées. Elle remplace la fournée précédente pour les nouvelles commandes seulement, et demande toujours votre confirmation." visibleToClients="oui, dès l'ouverture.">
         <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-[auto_1fr]">
-          <dt className="font-bold">Ouverture</dt>
-          <dd>
-            {formatDay(cycle.opensAt)} à {formatTime(cycle.opensAt)}
-          </dd>
-          <dt className="font-bold">Date limite</dt>
-          <dd>
-            {formatDay(cycle.closesAt)} à {formatTime(cycle.closesAt)}
-          </dd>
+          <dt className="font-bold">Commandes</dt>
+          <dd>À toute heure, tant que la fournée est ouverte</dd>
           <dt className="font-bold">Produits</dt>
           <dd>{setup.products.length}</dd>
-          <dt className="font-bold">Créneaux de précommande</dt>
+          <dt className="font-bold">Créneaux de commande</dt>
           <dd>{setup.slots.filter((s) => s.phase === "preorder" && s.isActive).length}</dd>
         </dl>
       </Step>
 
-      <Step step="suivre" current={step} title="Suivre les commandes" intro="Les commandes arrivent pendant la période de précommande. Une commande ne compte vraiment qu'une fois son paiement vérifié." visibleToClients="la date limite et les produits.">
+      <Step step="suivre" current={step} title="Suivre les commandes" intro="Les commandes arrivent à toute heure tant que la fournée est ouverte. Une commande ne compte vraiment qu'une fois son paiement vérifié." visibleToClients="les dates de production, de livraison et de retrait, et les produits.">
         <div className="flex flex-wrap gap-3">
           <Figure value={report.orders} label={report.orders > 1 ? "commandes" : "commande"} />
           <Figure value={report.paid} label={report.paid > 1 ? "payées" : "payée"} />
           {report.waveToVerify > 0 && <Figure value={report.waveToVerify} label="paiements à vérifier" />}
           <Figure value={formatFcfa(report.confirmedFcfa)} label="confirmés (produits)" />
         </div>
-        {cycle.status === "open" && phase === "open" && (
-          <div className="flex flex-col gap-1">
-            <p className="font-bold">Avancement vers la date limite : {progress} %</p>
-            <span aria-hidden className="h-3 overflow-hidden rounded-full bg-chocolat/10">
-              <span className="block h-full rounded-full bg-caramel" style={{ width: `${progress}%` }} />
-            </span>
-          </div>
-        )}
         {report.waveToVerify > 0 && (
           <Link href="/admin/paiements" className={link}>
             Vérifier les paiements Wave
@@ -311,7 +292,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </section>
       </Step>
 
-      <Step step="produire" current={step} title="Produire" intro="À la date limite, les précommandes se clôturent seules et les quantités sont figées. Le jour de production, la fournée et les commandes payées passent seules en préparation. Imprimez la fiche, puis saisissez la production réelle." visibleToClients="« Précommandes terminées » après la date limite.">
+      <Step step="produire" current={step} title="Produire" intro="Quand vous passez à l'étape de production, les quantités sont figées. Le jour de production, la fournée et les commandes payées passent seules en préparation. Imprimez la fiche, puis saisissez la production réelle." visibleToClients="un message indiquant que les nouvelles commandes iront à la prochaine fournée.">
         <p>
           <Link href={`/admin/fournees/${cycle.id}/production`} className={link}>
             Ouvrir la fiche de production
@@ -393,7 +374,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
             )}
           </section>
         ) : (
-          <p className="text-encre-douce">Le surplus se prépare après la clôture des précommandes et la saisie de la production réelle.</p>
+          <p className="text-encre-douce">Le surplus se prépare après le passage en production et la saisie de la production réelle.</p>
         )}
       </Step>
 

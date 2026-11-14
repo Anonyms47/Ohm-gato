@@ -44,7 +44,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const user = await getCurrentUser();
   const favorites = user ? await getMyFavorites(user.id) : [];
   // Quand la commande est possible, les formats et leurs prix sont déjà dans le choix du format.
-  const orderable = product.inCycle && (catalog.cycle?.isOpen ?? false);
+  const orderable = product.inCycle && (catalog.cycle?.composable ?? false);
   const fromPrice = (p: CatalogProduct) => {
     const prices = p.variants.map((v) => v.priceFcfa);
     return prices.length ? Math.min(...prices) : null;

@@ -328,7 +328,7 @@ export function OrderTracker({
         <div className="mt-4 flex flex-col gap-1">
           {order.cycleNumber !== null && (
             <p data-testid="type-commande-suivi">
-              <strong>{order.orderKind === "surplus" ? "Commande tardive (surplus)" : "Précommande"}</strong> · fournée n°{order.cycleNumber}
+              <strong>{order.orderKind === "surplus" ? "Commande tardive (surplus)" : "Commande"}</strong> · fournée n°{order.cycleNumber}
             </p>
           )}
           <p>

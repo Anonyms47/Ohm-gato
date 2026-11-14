@@ -18,7 +18,7 @@ import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { DeliveryFeeNotice, deliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { zoneForDistrict, type DeliveryZone } from "@/lib/delivery/zones";
 import { cn } from "@/lib/cn";
-import { SURPLUS_MESSAGE, cycleStatusLine, preorderMessage } from "@/lib/cycle-status";
+import { NO_CALENDAR_MESSAGE, SURPLUS_MESSAGE, cycleStatusLine, preorderMessage } from "@/lib/cycle-status";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import { formatSenegalPhone, normalizeSenegalPhone } from "@/lib/phone";
@@ -284,8 +284,8 @@ export function CheckoutFlow({
   }
   if (!cycle?.isOpen) {
     return (
-      <div className="mt-6 flex flex-col gap-3 text-[1.1rem]" data-testid="commande-fermee">
-        <p>{cycle ? cycleStatusLine(cycle) : "Les commandes sont fermées pour le moment. Votre boîte est conservée."}</p>
+      <div className="mt-6 flex flex-col gap-3 text-[1.1rem]" data-testid="commande-en-attente">
+        <p>{cycle ? cycleStatusLine(cycle) : NO_CALENDAR_MESSAGE}</p>
         <p>
           <Link href="/fournees" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
             Voir Nos fournées
@@ -296,7 +296,7 @@ export function CheckoutFlow({
           </a>
           .
         </p>
-        {!cycle && <NextBatchAlert source="autre" className="mt-2" />}
+        <NextBatchAlert source="autre" className="mt-2" />
       </div>
     );
   }
@@ -349,7 +349,7 @@ export function CheckoutFlow({
         <p className="rounded-[12px] border-2 border-chocolat bg-rose/30 p-4 font-bold" data-testid="type-commande">
           {cycle.orderKind === "surplus"
             ? `Commande tardive — ${SURPLUS_MESSAGE} Les créneaux proposés sont ceux réellement disponibles pour le surplus.`
-            : `Précommande — ${preorderMessage(cycle)}`}
+            : `Fournée n°${cycle.number} — ${preorderMessage(cycle)}`}
         </p>
         <ol className="flex flex-col gap-4">
           {STEPS.map((s, index) => {

@@ -28,8 +28,6 @@ const openCycle = {
   id: "c1",
   number: 1,
   status: "open",
-  opensAt: "2026-10-10T00:00:00Z",
-  closesAt: "2026-10-18T23:59:00Z",
   fulfillmentDate: "2026-10-23",
   surplusEndsAt: null,
   productionRecorded: false,
@@ -56,10 +54,16 @@ describe("tâches de l'atelier", () => {
     expect(buildTasks({ ...empty, paymentAlertHours: 1, waveToVerify: { count: 1, oldestAt: "2026-10-15T08:00:00Z" } })[0]!.priority).toBe("urgent");
   });
 
-  it("date limite passée sans clôture : tâche « Clôturer et imprimer », jamais avant", () => {
-    expect(buildTasks({ ...empty, cycle: openCycle }).some((t) => t.key.endsWith("-close"))).toBe(false);
-    const after = buildTasks({ ...empty, now: Date.parse("2026-10-19T00:00:00Z"), cycle: openCycle });
-    expect(after.find((t) => t.key === "cycle-c1-close")?.action).toBe("Clôturer et imprimer");
+  it("commandes permanentes : alerte seulement sans date de remise à venir, aucune clôture automatique", () => {
+    const setup = { zonesActive: 1, paymentsWithoutLink: [], alerts: { activeSubscribers: 0, sendsToReview: 0, openCycleNumber: 1, openCycleAnnounced: true } };
+    // Fournée ouverte à date de livraison future : aucune alerte, même après l'ancienne date limite.
+    expect(buildTasks({ ...empty, setup, now: Date.parse("2026-10-19T00:00:00Z"), cycle: openCycle }).some((t) => t.key === "no-open-cycle")).toBe(false);
+    // Date de livraison passée : alerte urgente, sans déplacer aucune commande.
+    const late = buildTasks({ ...empty, setup, now: Date.parse("2026-10-24T00:00:00Z"), cycle: openCycle }).find((t) => t.key === "no-open-cycle");
+    expect(late?.priority).toBe("urgent");
+    expect(late?.detail).toMatch(/Aucune commande existante n'est déplacée/);
+    // Aucune fournée du tout : alerte également.
+    expect(buildTasks({ ...empty, setup }).some((t) => t.key === "no-open-cycle")).toBe(true);
   });
 
   it("production réelle non saisie signalée pendant la production", () => {
@@ -75,10 +79,11 @@ describe("tâches de l'atelier", () => {
 describe("prochaine étape de la fournée", () => {
   it("suit le parcours de la fournée", () => {
     expect(nextCycleStep(null, 0, NOW).action).toBe("Créer une fournée");
-    expect(nextCycleStep({ ...openCycle, status: "draft" }, 0, NOW).title).toBe("Ouvrir les précommandes");
+    expect(nextCycleStep({ ...openCycle, status: "draft" }, 0, NOW).title).toBe("Ouvrir les commandes de la fournée");
     expect(nextCycleStep(openCycle, 2, NOW).title).toBe("Vérifier les paiements");
-    expect(nextCycleStep(openCycle, 0, NOW).title).toBe("Suivre les précommandes");
-    expect(nextCycleStep(openCycle, 0, Date.parse("2026-10-19T00:00:00Z")).title).toBe("Clôturer administrativement");
+    expect(nextCycleStep(openCycle, 0, NOW).title).toBe("Suivre les commandes");
+    expect(nextCycleStep(openCycle, 0, Date.parse("2026-10-19T00:00:00Z")).title).toBe("Suivre les commandes");
+    expect(nextCycleStep(openCycle, 0, Date.parse("2026-10-24T00:00:00Z")).title).toBe("Annoncer la prochaine fournée");
     expect(nextCycleStep({ ...openCycle, status: "closed" }, 0, NOW).title).toBe("Imprimer la fiche de production");
     expect(nextCycleStep({ ...openCycle, status: "delivering" }, 0, NOW).title).toBe("Saisir la production réelle");
   });

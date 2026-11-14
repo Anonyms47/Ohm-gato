@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import type { CatalogProduct, CycleSummary, SlotSummary } from "@/lib/catalog-types";
 import { cn } from "@/lib/cn";
-import { COME_BACK_MESSAGE, cyclePhaseLabel, phaseAction, phaseMessage, productionLabel, type CyclePhase } from "@/lib/cycle-status";
+import { COME_BACK_MESSAGE, phaseBadgeLabel, phaseAction, phaseMessage, productionLabel, type CyclePhase } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 
@@ -137,7 +137,7 @@ export function FourneePoster({
             {cycle.title}
           </Heading>
         </div>
-        <p className={cn("ohm-tampon ohm-tampon-pose text-[1.05rem]", tone[phase] ?? "text-chocolat")}>{cyclePhaseLabel[phase]}</p>
+        <p className={cn("ohm-tampon ohm-tampon-pose text-[1.05rem]", tone[phase] ?? "text-chocolat")}>{phaseBadgeLabel(cycle, phase)}</p>
       </div>
       {cycle.message && <p className="relative mt-4 max-w-prose text-[1.1rem]">{cycle.message}</p>}
 
@@ -159,13 +159,8 @@ export function FourneePoster({
       {phase !== "cancelled" && (
         <dl className="relative mt-8 grid gap-4 rounded-[12px] bg-creme p-4 sm:grid-cols-3">
           <div>
-            <dt className="font-bold">Date limite de commande</dt>
-            <dd>
-              <time dateTime={cycle.closesAt}>
-                {formatDay(cycle.closesAt)} à {formatTime(cycle.closesAt)}
-              </time>{" "}
-              <span className="text-encre-douce">(heure de Dakar)</span>
-            </dd>
+            <dt className="font-bold">Commande</dt>
+            <dd>À tout moment, rattachée à cette fournée tant qu’elle est la prochaine annoncée.</dd>
           </div>
           <div>
             <dt className="font-bold">Production</dt>

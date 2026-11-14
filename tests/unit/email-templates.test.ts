@@ -36,7 +36,7 @@ describe("e-mails transactionnels", () => {
   it("commande remise : livrée ou retirée, avec le logo OHMEGATO", () => {
     expect(renderOrderEmail("order_delivered", data).subject).toContain("retirée");
     expect(renderOrderEmail("order_delivered", { ...data, fulfillment: "delivery" }).subject).toContain("livrée");
-    expect(renderOrderEmail("order_delivered", data).html).toContain("https://ohmegato.com/brand/logo-ohmegato.png");
+    expect(renderOrderEmail("order_delivered", data).html).toContain("https://ohmegato.com/brand/logotype-ohmegato.png");
   });
 
   it("le HTML échappe les données saisies", () => {

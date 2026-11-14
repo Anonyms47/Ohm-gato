@@ -66,6 +66,8 @@ interface OrderRow {
   pickup_code: string | null;
   production_cycles: { number: number } | null;
   delivery_slots: { starts_at: string; ends_at: string } | null;
+  slot_starts_at_snapshot: string | null;
+  slot_ends_at_snapshot: string | null;
   order_items: {
     product_id: string | null;
     variant_id: string | null;
@@ -84,7 +86,7 @@ interface OrderRow {
 
 const ORDER_SELECT = `id, reference, idempotency_key, status, payment_status, fulfillment, total_fcfa, delivery_fee_fcfa, delivery_zone_name, created_at, paid_at,
   custom_request_id, address_line, district, landmark, latitude, longitude, pickup_code,
-  production_cycles(number), delivery_slots(starts_at, ends_at),
+  production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot,
   order_items(product_id, variant_id, flavor_id, product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
     products(storage_rule, storage_note, storage_confirmed)),
   payments(provider, status, amount_fcfa, created_at, paid_at),
@@ -104,7 +106,12 @@ function toOrder(row: OrderRow): MemberOrder {
     paidAt: row.paid_at,
     cycleNumber: row.production_cycles?.number ?? null,
     isCustom: row.custom_request_id !== null,
-    slot: row.delivery_slots ? { startsAt: row.delivery_slots.starts_at, endsAt: row.delivery_slots.ends_at } : null,
+    slot:
+      row.slot_starts_at_snapshot && row.slot_ends_at_snapshot
+        ? { startsAt: row.slot_starts_at_snapshot, endsAt: row.slot_ends_at_snapshot }
+        : row.delivery_slots
+          ? { startsAt: row.delivery_slots.starts_at, endsAt: row.delivery_slots.ends_at }
+          : null,
     items: row.order_items.map((i) => ({
       productId: i.product_id,
       variantId: i.variant_id,

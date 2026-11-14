@@ -1,11 +1,11 @@
 /** Messages des refus métier renvoyés par les fonctions SQL d'administration. */
 const messages: Record<string, string> = {
   TRANSITION_INVALID: "Ce changement de statut n'est pas possible depuis le statut actuel.",
-  ANOTHER_CYCLE_OPEN: "Une autre fournée est déjà ouverte. Clôturez-la avant d'en ouvrir une nouvelle.",
+  ANOTHER_CYCLE_OPEN: "Un surplus est en cours : terminez-le avant d'ouvrir une nouvelle fournée.",
   CYCLE_EMPTY: "Ajoutez au moins un produit à la fournée avant de l'ouvrir.",
-  CYCLE_DATES_PAST: "L'heure de clôture est déjà passée : modifiez les dates avant d'ouvrir.",
+  CYCLE_DATES_PAST: "La date de livraison est déjà passée : modifiez les dates avant d'ouvrir.",
   CYCLE_NOT_FOUND: "Fournée introuvable.",
-  CYCLE_DATES_INVALID: "Dates invalides : la date limite doit suivre l'ouverture et la livraison suivre la production.",
+  CYCLE_DATES_INVALID: "Dates invalides : la livraison doit suivre la production.",
   STOCK_INVALID: "Le stock doit être un nombre entier positif.",
   STOCK_BELOW_COMMITTED: "Impossible : des unités sont déjà réservées ou vendues au-delà de ce total.",
   NOT_IN_CYCLE: "Ce produit ne fait pas partie de la fournée.",
@@ -18,7 +18,7 @@ const messages: Record<string, string> = {
   CYCLE_STOCK_MISSING: "Indiquez la capacité de précommande de chaque produit proposé avant d'ouvrir les commandes.",
   CYCLE_SLOTS_MISSING: "Ajoutez au moins un créneau de retrait ou de livraison (précommande) avant d'ouvrir les commandes.",
   SURPLUS_SLOTS_MISSING: "Ajoutez au moins un créneau à venir pour les commandes tardives (surplus) avant de publier.",
-  PRODUCTION_NOT_ALLOWED: "La production se saisit après la clôture des précommandes.",
+  PRODUCTION_NOT_ALLOWED: "La production se saisit une fois la fournée passée en production.",
   PRODUCTION_INVALID: "Quantités invalides : les pertes ne peuvent pas dépasser la production.",
   PRODUCTION_BELOW_COMMITTED: "La production commercialisable ne peut pas être inférieure à ce qui est déjà vendu, réservé ou publié.",
   PRODUCTION_MISSING: "Saisissez la production réelle de ce produit avant de publier son surplus.",

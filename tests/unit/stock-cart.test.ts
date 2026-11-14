@@ -31,7 +31,9 @@ describe("stock en unités réelles", () => {
     const base = { cycleIsOpen: true, inCycle: true, variants, unlimited: true };
     expect(productAvailability({ ...base, stock: null })).toBe("available");
     expect(productAvailability({ ...base, stock: { totalUnits: 0, reservedUnits: 0, soldUnits: 0 } })).toBe("available");
-    expect(productAvailability({ ...base, cycleIsOpen: false, stock: null })).toBe("closed");
+    // Sans date de remise annoncée, le catalogue et la boîte restent accessibles : seul le surplus terminé est « fermé ».
+    expect(productAvailability({ ...base, cycleIsOpen: false, stock: null })).toBe("available");
+    expect(productAvailability({ cycleIsOpen: false, inCycle: true, variants, surplus: true, stock: null })).toBe("closed");
     expect(orderableUnits({ unitsLeft: null, unlimited: true })).toBe(Number.POSITIVE_INFINITY);
     expect(orderableUnits({ unitsLeft: 4, unlimited: false })).toBe(4);
     expect(maxQuantityFor(variants[2]!, Number.POSITIVE_INFINITY)).toBe(50);
@@ -73,8 +75,8 @@ describe("Ma boîte", () => {
 
 describe("revalidation de Ma boîte", () => {
   const cycle: CycleSummary = {
-    id: "c12", number: 12, title: "", message: null, opensAt: "", closesAt: "", productionDate: "", productionDays: null, productionDates: [],
-    fulfillmentDate: "", status: "open", surplusEndsAt: null, surplusDeliveryAllowed: false, isOpen: true, orderKind: "preorder",
+    id: "c12", number: 12, title: "", message: null, opensAt: "", productionDate: "", productionDays: null, productionDates: [],
+    fulfillmentDate: "", status: "open", surplusEndsAt: null, surplusDeliveryAllowed: false, isOpen: true, composable: true, orderKind: "preorder",
     featuredProductSlug: null, palette: "caramel",
   };
   const cookies: CatalogProduct = {
@@ -97,13 +99,15 @@ describe("revalidation de Ma boîte", () => {
     expect(resolved.lines[1]!.issue).toBe("insufficient_stock");
     expect(resolved.subtotal).toBe(4500 + 5 * 800);
   });
-  it("fournée fermée et format retiré", () => {
+  it("aucune fournée et format retiré", () => {
     const cart = { ...emptyCart("c11"), lines: [
       { variantId: "box6", flavorId: null, quantity: 1 },
       { variantId: "disparu", flavorId: null, quantity: 1 },
     ] };
-    const closed = resolveCart(cart, [cookies], { ...cycle, isOpen: false });
-    expect(closed.lines.map((l) => l.issue)).toEqual(["closed", "unknown"]);
-    expect(closed.fromOtherCycle).toBe(true);
+    // Sans date de remise (fournée non validable) la boîte reste valide ; sans aucune fournée elle est signalée.
+    const noDates = resolveCart(cart, [cookies], { ...cycle, isOpen: false });
+    expect(noDates.lines.map((l) => l.issue)).toEqual([null, "unknown"]);
+    expect(noDates.fromOtherCycle).toBe(true);
+    expect(resolveCart(cart, [cookies], null).lines.map((l) => l.issue)).toEqual(["closed", "unknown"]);
   });
 });

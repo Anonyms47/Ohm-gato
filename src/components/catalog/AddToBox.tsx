@@ -9,7 +9,7 @@ import { OhmegatoSelect } from "@/components/ui/select/OhmegatoSelect";
 import { maxQuantityFor, orderableUnits } from "@/lib/availability";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { cn } from "@/lib/cn";
-import { cycleStatusLine } from "@/lib/cycle-status";
+import { NO_CALENDAR_MESSAGE, cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
 import { useOffscreen } from "@/lib/use-offscreen";
 
@@ -20,7 +20,7 @@ import { useOffscreen } from "@/lib/use-offscreen";
 export function AddToBox({ product, tone = "light", compact = false, stickyCta = false }: { product: CatalogProduct; tone?: "light" | "dark"; compact?: boolean; stickyCta?: boolean }) {
   const { add, resolved, catalog, setDrawerOpen, hydrated } = useCart();
   const groupId = useId();
-  const cycleOpen = catalog.cycle?.isOpen ?? false;
+  const cycleOpen = catalog.cycle?.composable ?? false;
   const variants = product.variants.filter((v) => v.enabledInCycle);
   const flavors = product.flavors.filter((f) => f.availableInCycle);
 
@@ -80,7 +80,7 @@ export function AddToBox({ product, tone = "light", compact = false, stickyCta =
   if (!cycleOpen) {
     return (
       <p className={cn("font-bold", tone === "dark" ? "text-creme/85" : "text-encre-douce")}>
-        {catalog.cycle ? cycleStatusLine(catalog.cycle) : "Les commandes sont fermées pour le moment."}
+        {catalog.cycle ? cycleStatusLine(catalog.cycle) : NO_CALENDAR_MESSAGE}
       </p>
     );
   }

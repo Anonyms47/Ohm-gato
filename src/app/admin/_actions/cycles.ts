@@ -13,8 +13,6 @@ const cycleSchema = z
     number: z.coerce.number().int().min(1, "Numéro invalide."),
     title: z.string().trim().min(2, "Indiquez un titre.").max(80),
     message: z.string().trim().max(400).optional(),
-    opensAt: z.string().min(1, "Date d'ouverture requise."),
-    closesAt: z.string().min(1, "Date de clôture requise."),
     productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Début de la période de production requis."),
     productionDays: z.union([z.literal(""), z.coerce.number().int().min(1).max(7)]).optional(),
     fulfillmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date de livraison requise."),
@@ -22,7 +20,6 @@ const cycleSchema = z
     palette: z.enum(["caramel", "chocolate", "orange", "rose"]),
     featuredProductId: z.union([z.literal(""), z.uuid()]).optional(),
   })
-  .refine((v) => Date.parse(`${v.closesAt}Z`) > Date.parse(`${v.opensAt}Z`), { message: "La clôture doit suivre l'ouverture.", path: ["closesAt"] })
   .refine((v) => v.fulfillmentDate >= v.productionDate, { message: "La livraison ne peut pas précéder la préparation.", path: ["fulfillmentDate"] });
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
@@ -53,8 +50,6 @@ function row(data: z.infer<typeof cycleSchema>, productionDates: string[]) {
     number: data.number,
     title: data.title,
     message: data.message || null,
-    opens_at: toIso(data.opensAt),
-    closes_at: toIso(data.closesAt),
     production_date: data.productionDate,
     fulfillment_date: data.fulfillmentDate,
     capacity_units: data.capacityUnits === "" || data.capacityUnits === undefined ? null : data.capacityUnits,
@@ -70,7 +65,7 @@ export async function createCycle(_: AdminState, form: FormData): Promise<AdminS
   const dates = readProductionDates(form);
   if (!dates) return { ok: false, message: "Une date de production est invalide." };
   const db = supabaseAdmin();
-  const { data, error } = await db.from("production_cycles").insert({ ...row(parsed.data, dates), status: "draft" }).select("id").single();
+  const { data, error } = await db.from("production_cycles").insert({ ...row(parsed.data, dates), opens_at: new Date().toISOString(), closes_at: null, status: "draft" }).select("id").single();
   if (error) return { ok: false, message: error.code === "23505" ? "Ce numéro de fournée existe déjà." : "Création impossible." };
   await db.rpc("write_audit", { p_actor: admin.id, p_action: "cycle.create", p_entity: "production_cycles", p_entity_id: data.id, p_details: { number: parsed.data.number } });
   redirect(`/admin/fournees/${data.id}`);
@@ -84,7 +79,7 @@ export async function updateCycle(_: AdminState, form: FormData): Promise<AdminS
   const dates = readProductionDates(form);
   if (!dates) return { ok: false, message: "Une date de production est invalide." };
   const db = supabaseAdmin();
-  const { data: before } = await db.from("production_cycles").select("opens_at, closes_at, production_date, fulfillment_date, production_dates").eq("id", id).maybeSingle();
+  const { data: before } = await db.from("production_cycles").select("production_date, fulfillment_date, production_dates").eq("id", id).maybeSingle();
   const values = row(parsed.data, dates);
   const { error } = await db.from("production_cycles").update(values).eq("id", id);
   if (error) return { ok: false, message: error.code === "23505" ? "Ce numéro de fournée existe déjà." : "Enregistrement impossible." };
@@ -299,12 +294,9 @@ const duplicateSchema = z
   .object({
     sourceId: z.uuid(),
     number: z.coerce.number().int().min(1, "Numéro invalide."),
-    opensAt: z.string().min(1, "Date d'ouverture requise."),
-    closesAt: z.string().min(1, "Date limite requise."),
     productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Début de la production requis."),
     fulfillmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Jour de livraison requis."),
   })
-  .refine((v) => Date.parse(`${v.closesAt}Z`) > Date.parse(`${v.opensAt}Z`), { message: "La date limite doit suivre l'ouverture.", path: ["closesAt"] })
   .refine((v) => v.fulfillmentDate >= v.productionDate, { message: "La livraison ne peut pas précéder la production.", path: ["fulfillmentDate"] });
 
 /**
@@ -318,8 +310,6 @@ export async function duplicateCycle(_: AdminState, form: FormData): Promise<Adm
   const { data, error } = await supabaseAdmin().rpc("admin_duplicate_cycle", {
     p_source: parsed.data.sourceId,
     p_number: parsed.data.number,
-    p_opens_at: toIso(parsed.data.opensAt),
-    p_closes_at: toIso(parsed.data.closesAt),
     p_production_date: parsed.data.productionDate,
     p_fulfillment_date: parsed.data.fulfillmentDate,
     p_actor: admin.id,

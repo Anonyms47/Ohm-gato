@@ -146,8 +146,6 @@ export async function loadToday(): Promise<TodayData> {
         id: cycle.id,
         number: cycle.number,
         status: cycle.status,
-        opensAt: cycle.opensAt,
-        closesAt: cycle.closesAt,
         fulfillmentDate: cycle.fulfillmentDate,
         surplusEndsAt: cycle.surplusEndsAt,
         productionRecorded: (produced.count ?? 0) > 0,

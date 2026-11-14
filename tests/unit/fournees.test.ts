@@ -3,7 +3,9 @@ import { productAvailability } from "@/lib/availability";
 import type { CycleSummary } from "@/lib/catalog-types";
 import {
   DONE_MESSAGE,
-  PREORDER_CLOSED_MESSAGE,
+  BATCH_IN_PROGRESS_MESSAGE,
+  NO_CALENDAR_MESSAGE,
+  hasUpcomingFulfillment,
   SURPLUS_MESSAGE,
   cyclePhase,
   friseSteps,
@@ -15,14 +17,13 @@ import {
 } from "@/lib/cycle-status";
 import { theoreticalSurplus } from "@/lib/production";
 
-/** Première fournée : semaine du 19 octobre 2026, date limite dimanche 18 octobre à 23 h 59 (Dakar). */
+/** Première fournée : semaine du 19 octobre 2026, livraison le vendredi 23 octobre (Dakar). */
 const first: CycleSummary = {
   id: "c1",
   number: 1,
   title: "Fournée de la semaine du 19 octobre",
   message: null,
   opensAt: "2026-10-10T00:00:00Z",
-  closesAt: "2026-10-18T23:59:00Z",
   productionDate: "2026-10-19",
   productionDays: 3,
   productionDates: [],
@@ -31,6 +32,7 @@ const first: CycleSummary = {
   surplusEndsAt: null,
   surplusDeliveryAllowed: false,
   isOpen: true,
+  composable: true,
   orderKind: "preorder",
   featuredProductSlug: null,
   palette: "caramel",
@@ -38,29 +40,35 @@ const first: CycleSummary = {
 const at = (iso: string) => Date.parse(iso);
 
 describe("fournée de la semaine du 19 octobre", () => {
-  it("précommandes ouvertes jusqu'au dimanche 18 octobre à 23 h 59, heure de Dakar", () => {
-    expect(cyclePhase(first, at("2026-10-18T23:58:59Z"))).toBe("open");
-    expect(orderKindFor(first, at("2026-10-18T23:58:59Z"))).toBe("preorder");
-    expect(cyclePhase(first, at("2026-10-18T23:59:00Z"))).toBe("closed");
-    expect(orderKindFor(first, at("2026-10-18T23:59:00Z"))).toBeNull();
+  it("commandes permanentes : aucune heure limite ne ferme la fournée ouverte", () => {
+    expect(cyclePhase(first, at("2026-10-18T23:59:00Z"))).toBe("open");
+    expect(cyclePhase(first, at("2026-10-22T08:00:00Z"))).toBe("open");
+    expect(orderKindFor(first, at("2026-10-22T08:00:00Z"))).toBe("preorder");
+  });
+
+  it("sans date de remise à venir : ni commande ni paiement, état exact (aucune fermeture inventée)", () => {
+    expect(hasUpcomingFulfillment(first, at("2026-10-23T12:00:00Z"))).toBe(true);
+    expect(hasUpcomingFulfillment(first, at("2026-10-24T00:00:00Z"))).toBe(false);
+    expect(orderKindFor(first, at("2026-10-24T00:00:00Z"))).toBeNull();
+    expect(cyclePhase(first, at("2026-10-24T00:00:00Z"))).toBe("open");
+    expect(phaseMessage("open", { ...first, fulfillmentDate: "2020-01-01" })).toBe(NO_CALENDAR_MESSAGE);
+    expect(NO_CALENDAR_MESSAGE).toMatch(/boîte.*conservée/);
   });
 
   it("messages officiels, sans date de production inventée", () => {
     expect(preorderMessage(first)).toBe(
-      "Commandez avant le dimanche 18 octobre à 23 h 59. Votre commande sera préparée pendant la semaine et livrée ou retirée le vendredi 23 octobre.",
+      "Vous pouvez commander à tout moment. Votre commande sera préparée pendant la semaine et livrée ou retirée le vendredi 23 octobre.",
     );
     expect(preorderMessage({ ...first, productionDates: ["2026-10-19"] })).toBe(
-      "Commandez avant le dimanche 18 octobre à 23 h 59. Votre commande sera préparée le lundi 19 octobre et livrée ou retirée le vendredi 23 octobre.",
+      "Vous pouvez commander à tout moment. Votre commande sera préparée le lundi 19 octobre et livrée ou retirée le vendredi 23 octobre.",
     );
     expect(productionLabel(first)).toBe("Production organisée sur trois jours pendant la semaine du 19 octobre.");
     expect(productionLabel({ ...first, productionDates: ["2026-10-21", "2026-10-19"] })).toBe("Production le lundi 19 octobre et mercredi 21 octobre.");
-    expect(phaseMessage("closed", first)).toBe(PREORDER_CLOSED_MESSAGE);
+    expect(phaseMessage("closed", first)).toBe(BATCH_IN_PROGRESS_MESSAGE);
     expect(phaseMessage("surplus", first)).toBe(SURPLUS_MESSAGE);
     expect(phaseMessage("done", first)).toBe(DONE_MESSAGE);
-    expect(PREORDER_CLOSED_MESSAGE).not.toMatch(/sera disponible|garanti/);
-    expect(PREORDER_CLOSED_MESSAGE).toBe(
-      "Les précommandes sont terminées. L’atelier prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.",
-    );
+    expect(BATCH_IN_PROGRESS_MESSAGE).not.toMatch(/sera disponible|garanti|précommandes sont terminées|fermé/i);
+    expect(BATCH_IN_PROGRESS_MESSAGE).toMatch(/prochaine fournée/);
   });
 
   it("boutons adaptés à chaque phase, aucune fausse alerte", () => {

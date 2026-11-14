@@ -21,7 +21,6 @@ const PALETTES = [
 ];
 
 /** Champ date-heure à l'heure de Dakar (UTC+0). */
-const local = (iso: string) => iso.slice(0, 16);
 
 export function CycleForm({ cycle, products, nextNumber }: { cycle: AdminCycle | null; products: AdminProduct[]; nextNumber: number }) {
   const [palette, setPalette] = useState<string>(cycle?.palette ?? "caramel");
@@ -41,16 +40,6 @@ export function CycleForm({ cycle, products, nextNumber }: { cycle: AdminCycle |
         {({ id }) => <TextArea id={id} name="message" rows={3} maxLength={400} defaultValue={cycle?.message ?? ""} />}
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Ouverture des commandes" hint="Heure de Dakar (Africa/Dakar). À l'ouverture manuelle, la date devient celle du clic si elle est plus tardive.">
-          {({ id, describedBy }) => (
-            <TextInput id={id} aria-describedby={describedBy} name="opensAt" type="datetime-local" required defaultValue={cycle ? local(cycle.opensAt) : ""} />
-          )}
-        </Field>
-        <Field label="Date limite de précommande" hint="Heure de Dakar. Les précommandes se ferment automatiquement à cette heure.">
-          {({ id, describedBy }) => (
-            <TextInput id={id} aria-describedby={describedBy} name="closesAt" type="datetime-local" required defaultValue={cycle ? local(cycle.closesAt) : ""} />
-          )}
-        </Field>
         <Field label="Début de la période de production" hint="Premier jour de la semaine de production.">
           {({ id, describedBy }) => (
             <TextInput id={id} aria-describedby={describedBy} name="productionDate" type="date" required defaultValue={cycle?.productionDate ?? ""} />
@@ -106,12 +95,12 @@ const TRANSITIONS: Record<string, { to: string; label: string; confirm?: string;
     { to: "cancelled", label: "Annuler la fournée", confirm: "La fournée sera annulée.", destructive: true },
   ],
   open: [
-    { to: "closed", label: "Clôturer les précommandes", confirm: "Plus aucune précommande ne sera acceptée pour cette fournée." },
+    { to: "closed", label: "Passer à l'étape de production", confirm: "Cette fournée ne recevra plus de nouvelles commandes : elles iront à la prochaine fournée que vous ouvrirez. Les commandes déjà passées restent rattachées à celle-ci." },
     { to: "cancelled", label: "Annuler la fournée", confirm: "Commandes en attente annulées ; commandes payées signalées pour remboursement.", destructive: true },
   ],
   closed: [
     { to: "preparing", label: "Passer en production", confirm: "La fournée passe en production." },
-    { to: "open", label: "Rouvrir les précommandes", confirm: "Les clients pourront de nouveau précommander jusqu'à la date limite." },
+    { to: "open", label: "Rouvrir les commandes", confirm: "Les clientes pourront de nouveau commander pour cette fournée. Une autre fournée ouverte sera fermée aux nouvelles commandes." },
     { to: "cancelled", label: "Annuler la fournée", confirm: "Commandes en attente annulées ; commandes payées signalées pour remboursement.", destructive: true },
   ],
   preparing: [
@@ -138,16 +127,16 @@ const PRIMARY: Record<string, string> = {
   surplus: "done",
 };
 
-export function CycleStatusActions({ cycle, deadlinePassed = false }: { cycle: AdminCycle; deadlinePassed?: boolean }) {
+export function CycleStatusActions({ cycle, datesPassed = false }: { cycle: AdminCycle; datesPassed?: boolean }) {
   const options = TRANSITIONS[cycle.status] ?? [];
   if (options.length === 0) return <p className="text-encre-douce">Aucune action possible : la fournée est {cycle.status === "done" ? "terminée" : "annulée"}.</p>;
-  // Fournée ouverte : la clôture ne devient l'action principale qu'après la date limite (avant, elle se fait toute seule).
-  const primaryTo = cycle.status === "open" ? (deadlinePassed ? "closed" : null) : (PRIMARY[cycle.status] ?? null);
+  // Fournée ouverte : aucune clôture automatique ; l'étape suivante devient l'action principale une fois les dates passées.
+  const primaryTo = cycle.status === "open" ? (datesPassed ? "closed" : null) : (PRIMARY[cycle.status] ?? null);
   const primary = options.find((t) => t.to === primaryTo) ?? null;
   const others = options.filter((t) => t !== primary);
   const openNote =
     cycle.status === "draft" || cycle.status === "scheduled"
-      ? "Avant d'ouvrir : vérifiez les produits, les formats, les parfums et les créneaux. La précommande est sans limite de quantité."
+      ? "Avant d'ouvrir : vérifiez les produits, les formats, les parfums et les créneaux. La commande est permanente et sans limite de quantité : ouvrir cette fournée remplace la précédente pour les nouvelles commandes."
       : null;
   const button = (t: (typeof options)[number], variant: "primary" | "secondary" | "destructive") => (
     <ActionButton
@@ -277,7 +266,7 @@ export function CycleProductsEditor({
         })}
       </ul>
       <p className="text-encre-douce">
-        Pas de stock à saisir : chaque client précommande la quantité voulue jusqu&apos;à la date limite. Après la livraison, vous saisissez la
+        Pas de stock à saisir : chaque cliente commande la quantité voulue, à toute heure. Après la livraison, vous saisissez la
         production réelle et publiez le surplus restant.
       </p>
       <StateMessage state={state} />

@@ -78,11 +78,11 @@ export async function processBatchAlerts(limit = 50): Promise<BatchAlertResult> 
       if (!messages.has(row.alert_id)) {
         const { data: alert } = await db.from("batch_alerts").select("cycle_id").eq("id", row.alert_id).maybeSingle();
         const { data: cycle } = alert
-          ? await db.from("production_cycles").select("number, closes_at, production_date, production_dates, fulfillment_date").eq("id", alert.cycle_id as string).maybeSingle()
+          ? await db.from("production_cycles").select("number, production_date, production_dates, fulfillment_date").eq("id", alert.cycle_id as string).maybeSingle()
           : { data: null };
-        const c = cycle as { number: number; closes_at: string; production_dates: string[] | null; fulfillment_date: string } | null;
+        const c = cycle as { number: number; production_dates: string[] | null; fulfillment_date: string } | null;
         // Dates réelles de la fournée : rien n'est inventé.
-        messages.set(row.alert_id, c ? { cycleNumber: c.number, message: preorderMessage({ closesAt: c.closes_at, fulfillmentDate: c.fulfillment_date, productionDates: c.production_dates ?? [] }) } : null);
+        messages.set(row.alert_id, c ? { cycleNumber: c.number, message: preorderMessage({ fulfillmentDate: c.fulfillment_date, productionDates: c.production_dates ?? [] }) } : null);
       }
       const info = messages.get(row.alert_id);
       const { data: sub } = await db.from("batch_alert_subscribers").select("unsubscribe_token, status").eq("id", row.subscriber_id).maybeSingle();

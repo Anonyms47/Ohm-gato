@@ -63,7 +63,7 @@ export function BoxPage() {
           Vider ma boîte
         </button>
         {resolved.hasIssues || !cycle?.isOpen ? (
-          <span className="text-encre-douce">Commande impossible pour le moment.</span>
+          <span className="text-encre-douce">{resolved.hasIssues ? "Corrigez les articles signalés pour continuer." : "La validation ouvrira dès que les dates de la prochaine fournée seront annoncées."}</span>
         ) : (
           <div ref={orderRef}>
             <ButtonLink href="/commande">Remplir le bon de fournée</ButtonLink>

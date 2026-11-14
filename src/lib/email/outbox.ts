@@ -102,12 +102,15 @@ async function render(row: OutboxRow): Promise<RenderedEmail | null> {
   if (!row.order_id) return null;
   const { data: o, error } = await supabaseAdmin()
     .from("orders")
-    .select("reference, customer_name, total_fcfa, fulfillment, pickup_code, idempotency_key, payment_status, delivery_fee_fcfa, delivery_zone_name, delivery_slots(starts_at, ends_at), payments(provider, created_at)")
+    .select("reference, customer_name, total_fcfa, fulfillment, pickup_code, idempotency_key, payment_status, delivery_fee_fcfa, delivery_zone_name, slot_starts_at_snapshot, slot_ends_at_snapshot, delivery_slots(starts_at, ends_at), payments(provider, created_at)")
     .eq("id", row.order_id)
     .maybeSingle();
   if (error) throw error;
   if (!o) return null;
-  const slot = o.delivery_slots as unknown as { starts_at: string; ends_at: string } | null;
+  const live = o.delivery_slots as unknown as { starts_at: string; ends_at: string } | null;
+  const snap = o as unknown as { slot_starts_at_snapshot: string | null; slot_ends_at_snapshot: string | null };
+  // Créneau figé à la commande (les e-mails reprennent ce qui a été promis).
+  const slot = snap.slot_starts_at_snapshot && snap.slot_ends_at_snapshot ? { starts_at: snap.slot_starts_at_snapshot, ends_at: snap.slot_ends_at_snapshot } : live;
   const token = generateTrackingToken(o.idempotency_key as string).token;
   const lastPayment = [...((o.payments as unknown as { provider: string; created_at: string }[] | null) ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
   return renderOrderEmail(row.template, {

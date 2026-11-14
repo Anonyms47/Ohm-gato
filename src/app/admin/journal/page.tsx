@@ -75,7 +75,7 @@ const CYCLE_STATUS: Record<string, string> = {
   draft: "brouillon",
   scheduled: "programmée",
   open: "ouverte",
-  closed: "précommandes clôturées",
+  closed: "nouvelles commandes vers la fournée suivante",
   preparing: "en production",
   delivering: "en livraison",
   surplus: "surplus en vente",

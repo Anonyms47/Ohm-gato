@@ -14,7 +14,7 @@ reset role;
 set local role authenticated;
 select throws_ok($$ select * from public.order_notes $$, '42501', null, 'cliente connectée : notes internes inaccessibles');
 select throws_ok($$ select * from public.email_outbox $$, '42501', null, 'cliente connectée : e-mails inaccessibles');
-select throws_ok($$ select public.admin_duplicate_cycle('00000000-0000-4000-8000-000000000012', 999, now(), now() + interval '1 day', current_date, current_date + 2, null) $$,
+select throws_ok($$ select public.admin_duplicate_cycle('00000000-0000-4000-8000-000000000012', 999, current_date, current_date + 2, null) $$,
   '42501', null, 'cliente connectée : duplication de fournée interdite');
 reset role;
 
@@ -84,7 +84,6 @@ select throws_ok($$ insert into public.admin_notifications (dedupe_key, kind, pr
 
 -- Nouvelle fournée depuis la n°12 : brouillon, produits et créneaux de précommande repris et décalés.
 create temp table d as select public.admin_duplicate_cycle('00000000-0000-4000-8000-000000000012', 4242,
-  now() + interval '7 days', now() + interval '9 days',
   (select fulfillment_date + 6 from public.production_cycles where id = '00000000-0000-4000-8000-000000000012'),
   (select fulfillment_date + 7 from public.production_cycles where id = '00000000-0000-4000-8000-000000000012'), null) as id;
 select is((select status::text from public.production_cycles where id = (select id from d)), 'draft', 'la nouvelle fournée reste un brouillon');

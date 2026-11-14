@@ -61,7 +61,6 @@ export interface CycleSummary {
   title: string;
   message: string | null;
   opensAt: string;
-  closesAt: string;
   /** Début de la période de production (semaine de la fournée). */
   productionDate: string;
   /** Nombre de jours de production (null si non renseigné). */
@@ -76,6 +75,8 @@ export interface CycleSummary {
   surplusDeliveryAllowed: boolean;
   /** Commande possible maintenant : précommande ouverte ou surplus publié et disponible. */
   isOpen: boolean;
+  /** La boîte peut être composée (catalogue et panier restent accessibles même sans date de remise annoncée). */
+  composable: boolean;
   /** Type de commande accepté maintenant (null si aucune commande possible). */
   orderKind: "preorder" | "surplus" | null;
   /** Surplus entièrement vendu (fermeture automatique). */
