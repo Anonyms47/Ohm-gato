@@ -142,7 +142,11 @@ test.describe("Administration des documents", () => {
     await page.getByRole("button", { name: "Aperçu public" }).click();
     await expect(page.getByTestId("apercu-document")).toContainText(marker);
     await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
-    await expect(page.getByText(/Brouillon enregistré/)).toBeVisible();
+    // Le message de confirmation est passager : on vérifie le brouillon enregistré, durable.
+    await expect(async () => {
+      const drafts = (await db("legal_document_versions?select=content&document_slug=eq.cookies&status=eq.draft")) as { content: string }[];
+      expect(drafts.some((d) => d.content.includes(marker))).toBe(true);
+    }).toPass();
 
     // Le brouillon n'est pas encore en ligne.
     const pub = await page.context().newPage();
