@@ -47,7 +47,7 @@ export default async function FourneePage() {
     "@type": "Bakery",
     name: brand.name,
     url: siteUrl,
-    logo: `${siteUrl}/brand/logo-ohmegato.png`,
+    logo: `${siteUrl}/brand/symbole-ohmegato.png`,
     image: `${siteUrl}/opengraph-image`,
     description: "Pâtisseries faites maison à Dakar, commandées par fournées : livraison dans Dakar ou retrait à Sud Foire.",
     telephone: brand.phoneE164,
@@ -234,7 +234,7 @@ export default async function FourneePage() {
             <h2 id="note" className="sr-only">
               Le mot de l&apos;atelier
             </h2>
-            <blockquote className="-rotate-1 rounded-[4px] bg-blanc-casse p-6 shadow-[0_2px_0_var(--ohm-grille)] sm:p-10">
+            <blockquote className="rounded-[4px] bg-blanc-casse p-6 shadow-[0_2px_0_var(--ohm-grille)] sm:p-10">
               <p className="font-script text-[clamp(1.5rem,4vw,2.1rem)] leading-snug text-chocolat">{alimaNote}</p>
               <footer className="mt-4 font-bold">— OHMEGATO</footer>
             </blockquote>

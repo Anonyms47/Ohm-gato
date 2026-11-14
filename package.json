@@ -21,9 +21,7 @@
     "admin:grant": "node scripts/grant-admin.mjs"
   },
   "dependencies": {
-    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
-    "@fontsource/gochi-hand": "^5.3.0",
-    "@fontsource/young-serif": "^5.3.0",
+    "@fontsource-variable/jost": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-dialog": "^1.2.0",
     "@radix-ui/react-popover": "^1.2.0",

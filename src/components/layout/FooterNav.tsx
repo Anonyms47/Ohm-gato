@@ -17,7 +17,7 @@ export interface FooterGroup {
 
 const linkClass = "inline-flex min-h-11 items-center underline decoration-caramel decoration-2 underline-offset-4 hover:decoration-[3px]";
 const chipClass =
-  "inline-flex min-h-11 items-center rounded-full border border-creme/35 px-4 font-bold hover:border-creme hover:bg-creme/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-rose";
+  "inline-flex min-h-11 items-center rounded-full border border-chocolat/35 px-4 font-bold hover:border-chocolat hover:bg-chocolat/10 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-rose";
 
 function FooterAnchor({ link, className }: { link: FooterLink; className: string }) {
   return link.external ? (
@@ -37,7 +37,7 @@ function Group({ group, mobileOnly = false }: { group: FooterGroup; mobileOnly?:
   const [open, setOpen] = useState(false);
   const listId = useId();
   return (
-    <div className={cn("border-b border-creme/20", mobileOnly ? "sm:hidden" : "sm:border-0")}>
+    <div className={cn("border-b border-chocolat/20", mobileOnly ? "sm:hidden" : "sm:border-0")}>
       <h2 className="font-bold">
         <button
           type="button"

@@ -4,28 +4,18 @@ import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
 
 /**
- * Logo officiel (image ou vecteur fourni par la marque, jamais retapé).
- * En attendant le fichier, le nom apparaît en texte simple.
+ * Logotype officiel (SVG fourni par l'agence, jamais retapé), à placer sur fond clair.
+ * Le lien ramène à l'accueil ; le nom accessible remplace l'image pour les lecteurs d'écran.
  */
-export function Logo({ className, tone = "chocolat" }: { className?: string; tone?: "chocolat" | "creme" }) {
+export function Logo({ className }: { className?: string }) {
   return (
-    <Link
-      href="/"
-      aria-label={`${brand.name} — accueil`}
-      className={cn("inline-flex min-h-11 items-center", className)}
-    >
-      {brand.logo ? (
-        <Image src={brand.logo.src} width={brand.logo.width} height={brand.logo.height} alt="" priority unoptimized className="size-12 sm:size-14" />
-      ) : (
-        <span
-          className={cn(
-            "font-text text-lg font-bold tracking-[0.18em]",
-            tone === "creme" ? "text-creme" : "text-chocolat",
-          )}
-        >
-          {brand.name}
-        </span>
-      )}
+    <Link href="/" aria-label={`${brand.name} — accueil`} className={cn("inline-flex min-h-11 items-center", className)}>
+      <Image src={brand.logotype.src} width={brand.logotype.width} height={brand.logotype.height} alt="" priority unoptimized className="h-8 w-auto sm:h-9" />
     </Link>
   );
+}
+
+/** Symbole officiel (muffin / Ω et losange rose), décoratif : proportions d'origine conservées. */
+export function BrandSymbol({ className }: { className?: string }) {
+  return <Image src={brand.symbol.src} width={brand.symbol.width} height={brand.symbol.height} alt="" unoptimized className={cn("h-auto", className)} />;
 }

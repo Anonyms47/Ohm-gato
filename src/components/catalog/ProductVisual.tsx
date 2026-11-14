@@ -50,7 +50,7 @@ export function ProductVisual({
         <span
           aria-hidden
           className={cn(
-            "max-w-[70%] -rotate-6 text-center font-display text-[clamp(1.5rem,5vw,3.2rem)] leading-[0.95]",
+            "max-w-[70%] text-center font-display text-[clamp(1.5rem,5vw,3.2rem)] leading-[0.95]",
             ink[product.accent],
           )}
         >

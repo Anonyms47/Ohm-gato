@@ -19,7 +19,7 @@ export type EmailTemplate =
   | "admin_digest";
 
 /** Logo servi par le site (adresse publique, lisible par les messageries). */
-const LOGO_URL = "https://ohmegato.com/brand/logo-ohmegato.png";
+const LOGO_URL = "https://ohmegato.com/brand/logotype-ohmegato.png";
 
 export interface OrderEmailData {
   customerName: string;
@@ -50,12 +50,12 @@ const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").rep
 
 function wrap(subject: string, paragraphs: string[], link: { label: string; url: string } | null, extra?: { note: string; unsubscribeUrl: string; oneClickUrl?: string }): RenderedEmail {
   const text = [...paragraphs, link ? `${link.label} : ${link.url}` : null, "", `${brand.name} · ${brand.phoneDisplay} · ohmegato.com`, extra ? `${extra.note}\nSe désinscrire : ${extra.unsubscribeUrl}` : null].filter((l) => l !== null).join("\n\n");
-  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5e9d6;font-family:Arial,sans-serif;color:#4a2a1c">
+  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5e9d6;font-family:Arial,sans-serif;color:#3a2418">
 <div style="max-width:560px;margin:0 auto;padding:24px">
-<p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="88" height="88" style="display:inline-block;width:88px;height:88px;border:0"></p>
+<p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="200" height="66" style="display:inline-block;width:200px;height:auto;border:0"></p>
 <div style="background:#fbf6ee;border-radius:12px;padding:20px">
 ${paragraphs.map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escape(p)}</p>`).join("\n")}
-${link ? `<p style="margin:16px 0 0"><a href="${escape(link.url)}" style="display:inline-block;background:#4a2a1c;color:#f5e9d6;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${escape(link.label)}</a></p>` : ""}
+${link ? `<p style="margin:16px 0 0"><a href="${escape(link.url)}" style="display:inline-block;background:#3a2418;color:#f5e9d6;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${escape(link.label)}</a></p>` : ""}
 </div>
 <p style="font-size:13px;color:#6b4a3a;margin:16px 0 0">${escape(brand.name)} · ${escape(brand.phoneDisplay)} · ohmegato.com</p>
 ${extra ? `<p style="font-size:12px;color:#6b4a3a;margin:12px 0 0">${escape(extra.note)} <a href="${escape(extra.unsubscribeUrl)}" style="color:#6b4a3a">Se désinscrire</a></p>` : ""}
