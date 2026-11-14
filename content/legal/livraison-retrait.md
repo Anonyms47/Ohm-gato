@@ -1,6 +1,6 @@
 ## Livraison dans Dakar
 
-Nous livrons dans Dakar, selon la disponibilité des livreurs. Pour être sûr d'être servi, commandez idéalement au moins 24 heures à l'avance.
+Nous livrons dans Dakar, selon la disponibilité des livreurs. La date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande.
 
 La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande.
 

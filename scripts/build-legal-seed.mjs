@@ -15,13 +15,15 @@ const documents = [
 // Version publiée de chaque texte de content/legal (les autres restent en 1.0 du 10 octobre 2026).
 // 1.2 du 29 octobre 2026 : formulation neutre (activité en cours de formalisation), zones de livraison, Orange Money, alertes de fournée.
 const update = { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" };
+const update13 = { version: "1.3", publishedAt: "2026-11-14 08:00:00+00", effectiveAt: "2026-11-14" };
 const versions = {
   // 1.2 du 29 octobre 2026 : le prénom de la fondatrice n'apparaît plus.
   "allergenes-conservation": { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" },
-  "conditions-generales": update,
   confidentialite: update,
   "mentions-legales": update,
-  "livraison-retrait": update,
+  // 1.3 du 14 novembre 2026 : commandes permanentes (fournée désignée par l'atelier, dates et créneau figés à la commande).
+  "conditions-generales": update13,
+  "livraison-retrait": update13,
 };
 
 const q = (s) => `'${s.replaceAll("'", "''")}'`;
@@ -47,21 +49,26 @@ console.log(`supabase/seed/legal.sql : ${documents.length} documents`);
 
 // Publication en production : les nouvelles versions (1.2) sont créées en brouillon puis publiées par la fonction de l'atelier
 // (l'ancienne version est archivée, les preuves d'acceptation déjà enregistrées restent valables). Rejouable sans doublon.
-const changed = Object.entries(versions).filter(([, v]) => v === update || v.version === "1.2").map(([slug]) => slug);
-let publish = `-- OHMEGATO — publication des documents légaux en version 1.2 (29 octobre 2026).
+const publishFile = (version, date, label, slugs, note) => {
+  let publish = `-- OHMEGATO — publication des documents légaux en version ${version} (${label}).
 -- Généré par scripts/build-legal-seed.mjs. À exécuter une fois en production (SQL Editor) après les migrations ;
--- équivalent à « Publier » dans l'atelier (Documents et règles). Rejouable : sans effet si la 1.2 existe déjà.
-`;
-for (const slug of changed) {
-  const title = documents.find((d) => d[0] === slug)[1];
-  const content = readFileSync(`content/legal/${slug}.md`, "utf8").trim();
-  publish += `
+-- équivalent à « Publier » dans l'atelier (Documents et règles). Rejouable : sans effet si la ${version} existe déjà.
+${note}`;
+  for (const slug of slugs) {
+    const title = documents.find((d) => d[0] === slug)[1];
+    const content = readFileSync(`content/legal/${slug}.md`, "utf8").trim();
+    publish += `
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at)
-select ${q(slug)}, '1.2', 'draft', ${q(title)}, $md$${content}$md$, date '2026-10-29'
-where not exists (select 1 from public.legal_document_versions where document_slug = ${q(slug)} and version = '1.2');
+select ${q(slug)}, '${version}', 'draft', ${q(title)}, $md$${content}$md$, date '${date}'
+where not exists (select 1 from public.legal_document_versions where document_slug = ${q(slug)} and version = '${version}');
 select public.admin_publish_legal_version(id, null) from public.legal_document_versions
- where document_slug = ${q(slug)} and version = '1.2' and status = 'draft';
+ where document_slug = ${q(slug)} and version = '${version}' and status = 'draft';
 `;
-}
-writeFileSync("supabase/seed/legal-publish-1.2.sql", publish);
-console.log(`supabase/seed/legal-publish-1.2.sql : ${changed.length} documents`);
+  }
+  writeFileSync(`supabase/seed/legal-publish-${version}.sql`, publish);
+  console.log(`supabase/seed/legal-publish-${version}.sql : ${slugs.length} documents`);
+};
+// 1.2 (29 octobre) : documents modifiés ce jour-là ; 1.3 (14 novembre) : conditions générales et livraison/retrait (commandes permanentes).
+// À exécuter dans l'ordre 1.2 puis 1.3.
+publishFile("1.2", "2026-10-29", "29 octobre 2026", Object.entries(versions).filter(([, v]) => v === update || v.version === "1.2").map(([slug]) => slug), "");
+publishFile("1.3", "2026-11-14", "14 novembre 2026", Object.entries(versions).filter(([, v]) => v === update13).map(([slug]) => slug), "-- Commandes permanentes : conditions générales et livraison/retrait.\n");

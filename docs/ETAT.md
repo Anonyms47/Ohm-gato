@@ -33,6 +33,7 @@
 
 **Tests** : unitaires (Vitest), 138 pgTAP, parcours Playwright (téléphone, tablette, ordinateur), dont les pages légales et l'acceptation au paiement.
 
+- **Charte et commandes permanentes** (14 novembre 2026) : logo officiel SVG, Jost, commandes à toute heure rattachées à la fournée désignée par Alima, dates figées à la commande. Migration `20261114000001` (retour arrière dans `supabase/rollbacks/`) et `supabase/seed/legal-publish-1.3.sql` à appliquer en production AVANT le déploiement.
 - **Livraison par zones, paiements configurables, alertes de fournée, réseaux sociaux** : voir CHANGELOG. Migrations `20261029000001` à `20261029000003` et `supabase/seed/legal-publish-1.2.sql` à appliquer en production AVANT le déploiement du code ; retours arrière dans `supabase/rollbacks/`.
 
 ## Limites connues

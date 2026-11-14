@@ -15,8 +15,8 @@ export function BoxPage() {
   const { resolved, hydrated, catalog, clear } = useCart();
   const [orderRef, orderOffscreen] = useOffscreen<HTMLDivElement>();
   const canOrder = hydrated && resolved.lines.length > 0 && !resolved.hasIssues && Boolean(catalog.cycle?.isOpen);
-  // Téléphone : « Remplir le bon de fournée » reste accessible sans atteindre le bas d'une longue boîte.
-  useStickyCta({ key: "bon-de-fournee", label: "Remplir le bon de fournée", href: "/commande" }, canOrder && orderOffscreen);
+  // Téléphone : « Continuer ma commande » reste accessible sans atteindre le bas d'une longue boîte.
+  useStickyCta({ key: "bon-de-fournee", label: "Continuer ma commande", href: "/commande" }, canOrder && orderOffscreen);
   if (!hydrated) {
     return <p className="mt-6 text-encre-douce" aria-busy="true">Ouverture de votre boîte…</p>;
   }
@@ -66,7 +66,7 @@ export function BoxPage() {
           <span className="text-encre-douce">{resolved.hasIssues ? "Corrigez les articles signalés pour continuer." : "La validation ouvrira dès que les dates de la prochaine fournée seront annoncées."}</span>
         ) : (
           <div ref={orderRef}>
-            <ButtonLink href="/commande">Remplir le bon de fournée</ButtonLink>
+            <ButtonLink href="/commande">Continuer ma commande</ButtonLink>
           </div>
         )}
       </div>

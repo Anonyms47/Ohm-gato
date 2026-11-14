@@ -9,16 +9,13 @@ import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
 import { getCatalog, getPublicSettings } from "@/lib/catalog";
-import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
+import type { CycleSummary } from "@/lib/catalog-types";
 import { phaseBadgeLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
 import { formatDay } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
+import { startingFormat } from "@/lib/starting-format";
 import { socialLinks } from "@/lib/social";
 
-function fromPrice(product: CatalogProduct) {
-  const prices = product.variants.filter((v) => v.enabledInCycle).map((v) => v.priceFcfa);
-  return prices.length ? Math.min(...prices) : null;
-}
 
 function cycleLine(cycle: CycleSummary | null): string {
   if (!cycle) return "Aucune fournée n'est ouverte pour le moment.";
@@ -153,7 +150,7 @@ export default async function FourneePage() {
           ) : (
             <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
               {inCycle.map((product, index) => {
-                const price = fromPrice(product);
+                const smallest = startingFormat(product.variants.filter((v) => v.enabledInCycle));
                 return (
                   <li key={product.id} className={cn(index % 2 === 1 && "sm:translate-y-6")}>
                     <Link
@@ -164,9 +161,9 @@ export default async function FourneePage() {
                       <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)] group-hover:-rotate-2" />
                       <span className="font-display text-[1.3rem] leading-tight">{product.name}</span>
                       <span className="flex flex-wrap items-center gap-2">
-                        {price !== null && (
+                        {smallest && (
                           <span className="tabular-nums text-encre-douce">
-                            dès <strong className="text-caramel-encre">{formatFcfa(price)}</strong>
+                            {smallest.label} : <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
                           </span>
                         )}
                         {product.availability !== "available" && <AvailabilityBadge state={product.availability} />}

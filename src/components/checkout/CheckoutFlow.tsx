@@ -273,7 +273,7 @@ export function CheckoutFlow({
 
   // Téléphone : l'action de l'étape active reste à portée de pouce quand son bouton n'est plus visible (jamais pendant la saisie).
   const [actionRef, actionOffscreen] = useOffscreen<HTMLDivElement>();
-  const stickyLabel = step === "verification" ? "Tout est bon, payer" : step === "paiement" ? null : "Continuer";
+  const stickyLabel = step === "verification" ? "Valider ma commande" : step === "paiement" ? null : "Continuer";
   useStickyCta(
     stickyLabel ? { key: `bon-${step}`, label: stickyLabel, onClick: () => continueFrom(step), disabled: step === "verification" && !acceptance } : null,
     hydrated && Boolean(cycle?.isOpen) && resolved.lines.length > 0 && !resolved.hasIssues && actionOffscreen && stickyLabel !== null,
@@ -543,7 +543,7 @@ export function CheckoutFlow({
                             Modifier
                           </Button>
                           <Button onClick={() => continueFrom("verification")} disabled={!acceptance} className="flex-col py-2">
-                            Tout est bon, payer
+                            Valider ma commande
                             {fulfillment === "delivery" && (
                               <span className="text-[0.9rem] font-normal">Livraison à régler séparément au livreur</span>
                             )}

@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 import { COME_BACK_MESSAGE, phaseBadgeLabel, phaseAction, phaseMessage, productionLabel, type CyclePhase } from "@/lib/cycle-status";
 import { formatDay, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
+import { startingFormat } from "@/lib/starting-format";
 
 const tone: Partial<Record<CyclePhase, string>> = {
   open: "text-succes",
@@ -32,7 +33,7 @@ function slotWindow(slots: SlotSummary[], kind: "delivery" | "pickup") {
 function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; canOrder: boolean; surplus: boolean }) {
   const variants = product.variants.filter((v) => v.enabledInCycle);
   const orderable = canOrder && product.availability !== "sold_out";
-  const from = variants.length ? Math.min(...variants.map((v) => v.priceFcfa)) : null;
+  const smallest = startingFormat(variants);
   return (
     <li className="grid grid-cols-[5rem_minmax(0,1fr)] content-start items-start gap-x-4 gap-y-3 border-b-2 border-dashed border-chocolat/20 py-5 sm:grid-cols-[7rem_minmax(0,1fr)]">
       <Link href={`/carte/${product.slug}`} className="w-20 sm:w-28" aria-label={`Voir la fiche ${product.name}`}>
@@ -55,9 +56,9 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
           )}
         </div>
         {orderable ? (
-          from !== null && (
+          smallest && (
             <p className="tabular-nums text-encre-douce">
-              dès <strong className="text-caramel-encre">{formatFcfa(from)}</strong>
+              {smallest.label} : <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
             </p>
           )
         ) : (
@@ -79,7 +80,7 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
       {orderable && (
         <details className="group col-span-2 sm:col-start-2 sm:col-span-1">
           <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border-2 border-chocolat bg-blanc-casse px-5 font-bold [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">Choisir le format</span>
+            <span className="group-open:hidden">Choisir mon format</span>
             <span className="hidden group-open:inline">Masquer les formats</span>
             <span aria-hidden className="transition-transform duration-[var(--ohm-duree-courte)] group-open:rotate-180">
               ⌄

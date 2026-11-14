@@ -54,7 +54,7 @@ export function NextBatchAlert({ source, className }: { source: Source; classNam
         Prévenez-moi pour la prochaine fournée
       </h2>
       <p className="mt-2 max-w-prose">
-        Les fournées OHMEGATO sont ouvertes périodiquement, jamais en continu. Dites-nous comment vous prévenir dès l&apos;ouverture de la prochaine.
+        Les dates de la prochaine fournée sont annoncées par l&apos;atelier. Dites-nous comment vous prévenir dès qu&apos;elles sont connues.
       </p>
 
       {done ? (

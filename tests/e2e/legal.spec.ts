@@ -71,7 +71,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(acceptance).toContainText("Les informations saisies sont utilisées pour traiter votre commande");
 
     // Sans la case : le paiement reste bloqué.
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Valider ma commande" }).click();
     await expect(page.getByText(/Cochez la case pour accepter/)).toBeVisible();
     await expect(box).toBeFocused();
     await expect(page.getByRole("button", { name: /Payer avec/ })).toHaveCount(0);
@@ -83,7 +83,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(page.getByText("Ceci n'est pas encore une confirmation.")).toBeVisible();
 
     await box.check();
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Valider ma commande" }).click();
     await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
     await expect(page).toHaveURL(/\/paiement-test\//);
     const [published] = (await db("legal_document_versions?select=id,content_hash&document_slug=eq.conditions-generales&status=eq.published")) as {
@@ -120,7 +120,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(page.getByTestId("rappel-livraison")).toHaveText(
       "Les frais de livraison ne sont pas inclus dans ce paiement. Ils seront réglés séparément au livreur.",
     );
-    await expect(page.getByRole("button", { name: /Tout est bon, payer/ })).toContainText("Livraison à régler séparément au livreur");
+    await expect(page.getByRole("button", { name: /Valider ma commande/ })).toContainText("Livraison à régler séparément au livreur");
   });
 });
 

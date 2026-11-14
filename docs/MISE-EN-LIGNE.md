@@ -60,3 +60,11 @@ Limite connue : sans SMTP personnel, Supabase n'envoie que quelques e-mails par 
    ```
 
 3. Dans `/admin` → **Fournées** : créer la première fournée, ses produits, son stock et ses créneaux, puis **Ouvrir les commandes**.
+
+## Mise à jour : charte, zones, paiements, alertes, commandes permanentes (ordre à respecter)
+
+1. **Avant le déploiement du code** (Supabase → SQL Editor, ou connecteur) : appliquer dans l'ordre les migrations `20261029000001`, `20261029000002`, `20261029000003`, puis `20261114000001_permanent_orders.sql`. Aucune donnée n'est supprimée ; chaque migration a son retour arrière dans `supabase/rollbacks/`.
+2. Publier les textes légaux : `supabase/seed/legal-publish-1.2.sql` puis `supabase/seed/legal-publish-1.3.sql` (rejouables). Les preuves d'acceptation déjà enregistrées restent valables.
+3. Vérifier dans l'atelier qu'une fournée est **ouverte avec une date de livraison à venir** (sinon les clientes ne peuvent pas valider : alerte « Aucune fournée n'est ouverte aux commandes »).
+4. Déployer le code (aperçu Vercel d'abord, puis production après validation).
+5. Retour arrière du code : redéployer la version précédente ; les migrations sont rétrocompatibles (colonnes ajoutées, fonctions remplaçables par les fichiers `.down.sql`).

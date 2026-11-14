@@ -20,9 +20,13 @@ Les photographies sont présentées à titre d'illustration. Nos pâtisseries so
 
 ## Fournées et disponibilité
 
-La production se fait par fournées, généralement environ trois fois par semaine. Chaque ouverture de fournée est annoncée sur le site et sur nos réseaux sociaux.
+La production se fait par fournées. Vous pouvez commander à toute heure : chaque commande est rattachée à la prochaine fournée désignée par l'atelier, avec les dates de production, de livraison et de retrait affichées au moment de la commande. Vous ne proposez pas de date : celles de la fournée s'appliquent.
 
-Une commande standard doit normalement être passée au moins 24 heures à l'avance. Une commande n'est possible que pour les produits, quantités, stocks et créneaux réellement ouverts au moment de la commande. Le stock affiché est le stock réel restant ; nous n'affichons ni faux stock ni compte à rebours artificiel.
+Les dates et le créneau affichés lors de la validation sont conservés pour votre commande. Une modification ultérieure du calendrier de l'atelier ne change pas une commande déjà enregistrée, et aucune commande n'est reportée d'une fournée à l'autre sans votre accord. Une nouvelle fournée ne reçoit que les nouvelles commandes.
+
+Tant que l'atelier n'a pas annoncé de date de livraison ou de retrait à venir, vous pouvez composer votre boîte, mais vous ne pouvez ni valider la commande ni payer. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
+
+La production suit les commandes : les commandes d'une fournée ne sont pas limitées par un stock affiché. Pour le surplus (douceurs restantes que l'atelier choisit de proposer après la production), seule la quantité réellement restante est commandable. Nous n'affichons ni faux stock ni compte à rebours artificiel.
 
 ## Prix
 
@@ -34,7 +38,7 @@ Le montant payé en ligne couvre uniquement les produits. Les frais de livraison
 
 Une commande se passe en quelques étapes :
 
-1. choisir une fournée ouverte ;
+1. consulter la prochaine fournée annoncée et ses dates ;
 2. choisir les produits, leur format et, le cas échéant, leur parfum ;
 3. les ajouter dans « Ma boîte » ;
 4. choisir le retrait gratuit ou la livraison dans Dakar ;

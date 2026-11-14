@@ -1,28 +1,28 @@
 # Fournées : mode d'emploi pour Alima
 
-## Le principe
+## Le principe (commandes permanentes)
 
-1. Les clients **précommandent la quantité qu'ils veulent**, sans limite de stock, jusqu'à la date limite (heure de Dakar). Après, le site refuse toute précommande, même si la page est restée ouverte.
-2. Alima **produit selon la demande** : la synthèse de la demande (admin → Fournées → la fournée) donne, par produit, ce qui est payé, ce qui est à vérifier et ce qu'il faut produire.
-3. Les commandes **payées et confirmées sont prioritaires** : leur stock n'est jamais proposé à d'autres clients.
-4. Après la production (et en général après les livraisons), Alima peut **publier le surplus** réellement disponible. Rien n'est publié automatiquement.
-5. Les clients qui ont raté la précommande peuvent alors commander **dans la limite du surplus publié**, jusqu'à épuisement ou jusqu'à la dernière date de vente.
+1. Les clientes **commandent à toute heure**. Aucune date limite ne ferme plus une fournée.
+2. **Vous fixez la prochaine fournée** et ses dates (production, livraison, retrait). Les commandes sont rattachées automatiquement à la fournée **ouverte** ; la cliente ne propose ni ne négocie aucune date.
+3. **Désigner une nouvelle fournée** (« Ouvrir les commandes ») la fait remplacer la précédente pour les **nouvelles commandes seulement**. Les commandes déjà passées restent rattachées à leur fournée, avec leurs dates : rien n'est reporté automatiquement.
+4. Les **dates et le créneau** affichés à la validation sont **figés** sur la commande. Modifier ensuite le calendrier de la fournée ne change pas les commandes existantes.
+5. **Sans date de livraison ou de retrait à venir**, la boîte et le catalogue restent accessibles, mais la validation et le paiement sont bloqués avec un message exact ; l'atelier affiche une alerte « Aucune fournée n'est ouverte aux commandes » (ou « La date de livraison est passée »). Rien n'est fermé automatiquement.
+6. Alima **produit selon la demande** (synthèse de la demande : admin → Fournées → la fournée). Aucun plafond de stock sur les commandes d'une fournée.
+7. Les commandes **payées et confirmées sont prioritaires**. Après la production, Alima peut **publier le surplus** réellement disponible (jamais automatique) : seule la quantité restante est alors commandable, de façon atomique (aucune survente).
 
-## Ouvrir les précommandes
+## Préparer et ouvrir la prochaine fournée
 
 Admin → Fournées → la fournée (en brouillon) :
 
-1. **Configuration de la fournée** : vérifier le titre, la date d'ouverture, la **date limite de précommande**, le début de la période de production, le **nombre de jours de production** (et les dates exactes si elles sont fixées), le **jour principal de livraison et de retrait**. Enregistrer.
-2. **Produits, formats et parfums** : cocher les produits proposés, les formats et parfums. Aucun stock à saisir : la précommande est sans limite de quantité. Enregistrer.
-3. **Créneaux** : ajouter les créneaux « Précommandes » (retrait et/ou livraison) du jour principal, avec leur capacité.
-4. En haut de la page, cliquer sur **« Ouvrir les commandes »** et confirmer. Le site refuse l'ouverture tant qu'aucun produit n'est coché ou qu'aucun créneau de précommande n'existe.
+1. **Configuration** : titre, début de la période de production, nombre de jours (et dates exactes si fixées), **jour principal de livraison et de retrait**. Enregistrer.
+2. **Produits, formats et parfums** : cocher les produits proposés. Aucun stock à saisir.
+3. **Créneaux** : ajouter les créneaux (retrait et/ou livraison) du jour principal, avec leur capacité.
+4. **« Ouvrir les commandes »** et confirmer. Le site refuse l'ouverture sans produit, sans créneau ou si la date de livraison est passée. L'ancienne fournée ouverte passe à l'étape de production pour les nouvelles commandes (ses commandes ne bougent pas).
 
-## Après la date limite
+## Passer à la production
 
-1. Cliquer sur **« Clôturer les précommandes »** (le site les a déjà fermées à l'heure limite ; ce clic fait passer la fournée à l'étape suivante).
-2. **Fiche de production (imprimable)** : la liste de ce qu'il faut produire.
-3. Vérifier les paiements Wave des commandes (Commandes → filtre de la fournée), annuler celles qui ne sont pas payées.
-4. **« Passer en production »**.
+1. Quand vous le décidez : **« Passer à l'étape de production »** (aucune clôture automatique) fige les quantités ; imprimez la **fiche de production**.
+2. Vérifiez les paiements Wave, annulez les commandes non payées si besoin, puis **« Passer en production »**.
 
 ## Pendant et après la production
 
@@ -33,8 +33,9 @@ Admin → Fournées → la fournée (en brouillon) :
 
 ## Règles garanties par la base de données
 
-- Aucune précommande après la date limite ; aucune commande tardive hors du surplus publié ni hors des créneaux de commandes tardives.
+- Aucune commande sans date de remise à venir (heure de Dakar) ni sur un créneau passé ; aucune commande tardive hors du surplus publié ni hors des créneaux de commandes tardives.
+- Dates et créneau figés à la création de la commande (colonnes `*_snapshot`), non modifiables par une mise à jour ultérieure.
 - Le stock ne limite que la vente du surplus : la quantité publiée par Alima est le maximum vendu aux clients tardifs.
 - Aucune quantité négative, aucune double vente de la même unité (deux clients pour la dernière : un seul l'obtient).
-- Une précommande annulée pendant la vente du surplus garde ses unités en stock interne : c'est Alima qui décide de les republier.
+- Une commande annulée pendant la vente du surplus garde ses unités en stock interne : c'est Alima qui décide de les republier.
 - Les quantités produites, pertes et notes internes ne sont jamais visibles des clients.
