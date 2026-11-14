@@ -328,8 +328,8 @@ test.describe("Administration d'Alima", () => {
     await waitForHydration(page);
     const number = String(100 + Math.floor(Math.random() * 800));
     await page.getByLabel("Numéro").fill(number);
-    await page.getByLabel("Ouverture des commandes").fill("2030-01-10T09:00");
-    await page.getByLabel("Date limite de précommande").fill("2030-01-12T18:00");
+    // Commandes permanentes : ni ouverture programmée ni date limite à saisir.
+    await expect(page.getByLabel("Date limite de précommande")).toHaveCount(0);
     await page.getByLabel("Début de la période de production").fill("2030-01-13");
     await page.getByLabel("Jour principal de livraison et de retrait").fill("2030-01-14");
     await page.getByRole("button", { name: "Créer la fournée (brouillon)" }).click();

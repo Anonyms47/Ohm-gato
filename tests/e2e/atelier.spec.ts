@@ -215,7 +215,8 @@ test.describe("Atelier — cockpit de fournée", () => {
     await expect(steps.locator('[aria-current="step"]')).toHaveCount(1);
     await expect(page.getByText("Étape 3 · Suivre les commandes")).toBeVisible();
     await expect(page.getByText("← vous êtes ici")).toBeVisible();
-    await expect(page.getByText(/se fermeront automatiquement/)).toBeVisible();
+    await expect(page.getByText(/Les clientes commandent à toute heure/)).toBeVisible();
+    await expect(page.getByText(/se fermeront automatiquement/)).toHaveCount(0);
     await expect(page.getByText("Étape 7 · Terminer")).toBeVisible();
 
     // Fiche de production : l'impression est tracée.
