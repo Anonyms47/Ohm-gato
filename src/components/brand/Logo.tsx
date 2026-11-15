@@ -17,5 +17,5 @@ export function Logo({ className }: { className?: string }) {
 
 /** Symbole officiel (muffin / Ω et losange rose), décoratif : proportions d'origine conservées. */
 export function BrandSymbol({ className }: { className?: string }) {
-  return <Image src={brand.symbol.src} width={brand.symbol.width} height={brand.symbol.height} alt="" unoptimized className={cn("h-auto", className)} />;
+  return <Image src={brand.symbol.src} width={brand.symbol.width} height={brand.symbol.height} alt="" unoptimized className={cn("w-auto", className)} />;
 }

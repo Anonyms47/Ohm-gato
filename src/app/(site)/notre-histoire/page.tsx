@@ -71,7 +71,7 @@ export default async function NotreHistoirePage() {
             Les premiers muffins, à l&apos;ESP
           </h2>
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
-            <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:-rotate-1">
+            <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5">
               <p className="font-script text-[1.5rem] text-caramel-encre">1.</p>
               <p className="text-[1.1rem]">Pendant notre troisième année à l&apos;ESP, on prépare nos premiers muffins pour un événement.</p>
             </li>
@@ -79,7 +79,7 @@ export default async function NotreHistoirePage() {
               <p className="font-script text-[1.5rem] text-caramel-encre">2.</p>
               <p className="text-[1.1rem]">Lors d&apos;un événement étudiant, ils rencontrent un vrai succès.</p>
             </li>
-            <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5 md:rotate-1">
+            <li className="rounded-[12px] border-2 border-chocolat bg-blanc-casse p-5">
               <p className="font-script text-[1.5rem] text-caramel-encre">3.</p>
               <p className="text-[1.1rem]">Viennent ensuite les essais auprès de l&apos;entourage, puis une carte qui s&apos;élargit.</p>
             </li>
@@ -89,7 +89,7 @@ export default async function NotreHistoirePage() {
             <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {archives.map((photo) => (
                 <li key={photo.url}>
-                  <figure className="rotate-[-0.8deg] bg-blanc-casse p-3 shadow-[0_3px_0_var(--ohm-grille)]">
+                  <figure className="bg-blanc-casse p-3 shadow-[0_3px_0_var(--ohm-grille)]">
                     <Image src={photo.url} alt={photo.alt} width={photo.width ?? 800} height={photo.height ?? 600} className="h-auto w-full" sizes="(min-width: 1024px) 30vw, 90vw" />
                     {photo.caption && <figcaption className="mt-2 font-script text-[1.2rem] text-caramel-encre">{photo.caption}</figcaption>}
                   </figure>
@@ -130,7 +130,7 @@ export default async function NotreHistoirePage() {
             )}
           </div>
           {alimaPhoto && (
-            <figure className="mx-auto w-full max-w-sm rotate-1 bg-creme p-3">
+            <figure className="mx-auto w-full max-w-sm bg-creme p-3">
               <Image src={alimaPhoto.url} alt={alimaPhoto.alt} width={alimaPhoto.width ?? 800} height={alimaPhoto.height ?? 1000} className="h-auto w-full" sizes="(min-width: 768px) 24rem, 90vw" />
               {alimaPhoto.caption && <figcaption className="mt-2 font-script text-[1.2rem] text-caramel-encre">{alimaPhoto.caption}</figcaption>}
             </figure>

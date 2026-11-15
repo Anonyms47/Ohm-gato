@@ -158,7 +158,7 @@ export default async function FourneePage() {
                       className="group flex flex-col gap-2 rounded-[12px] focus-visible:outline-offset-4 motion-safe:animate-[ohm-entree_420ms_var(--ohm-courbe)_both]"
                       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
                     >
-                      <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)] group-hover:-rotate-2" />
+                      <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)]" />
                       <span className="font-display text-[1.3rem] leading-tight">{product.name}</span>
                       <span className="flex flex-wrap items-center gap-2">
                         {smallest && (
@@ -265,7 +265,7 @@ export default async function FourneePage() {
       {/* Acte 5 — ticket de sortie */}
       <section aria-labelledby="ticket" className="ohm-grille">
         <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
-          <div className="rotate-[0.6deg] bg-blanc-casse px-6 pb-8 pt-6 shadow-[0_2px_0_var(--ohm-grille)]">
+          <div className="bg-blanc-casse px-6 pb-8 pt-6 shadow-[0_2px_0_var(--ohm-grille)]">
             <h2 id="ticket" className="text-center font-display text-[1.6rem]">
               Bon à savoir
             </h2>
