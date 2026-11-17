@@ -1,0 +1,1 @@
+-- Aucun retour nécessaire : les droits retirés n'avaient aucun usage légitime (fonctions de déclencheur).
