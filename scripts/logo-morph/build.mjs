@@ -16,14 +16,14 @@ const STEP = 2; // pas du rail (px de scène)
 // elles glissent ensuite sur leur rail jusqu'à leur pièce ; tout est en place à 4,5 s.
 // via : points de passage du rail entre la lettre et sa pièce (coordonnées de scène 1920 × 1080).
 export const CHOREO = {
-  o1: { head: "s1", target: "rev", t0: 1.0, t1: 4.45, lag: 0.1, hn: 9, via: [[490, 690], [580, 775], [700, 772]] },
-  h: { head: "s1", target: "fwd", t0: 1.07, t1: 4.0, lag: 0.1, hn: 9, via: [[615, 690], [660, 750], [730, 752]], rail: ["o1:rev"] },
-  m: { head: "s0", target: "fwd", t0: 1.14, t1: 3.6, lag: 0.08, hn: 9, via: [[688, 680], [742, 724]], rail: ["o1:rev", "h"] },
+  o1: { head: "s1", target: "rev", t0: 1.0, t1: 4.45, lag: 0.12, warp: 1.6, hn: 9, via: [[455, 720], [470, 860], [580, 945], [705, 905]] },
+  h: { head: "s1", target: "fwd", t0: 1.07, t1: 3.85, lag: 0.12, warp: 1.3, hn: 9, via: [[610, 720], [625, 815], [700, 850], [745, 800]], rail: ["o1:rev"] },
+  m: { head: "s0", target: "fwd", t0: 1.14, t1: 3.3, lag: 0.1, hn: 9, via: [[690, 705], [725, 770], [765, 765]], rail: ["o1:rev", "h"] },
   e: { head: "s1", target: "fwd", t0: 1.21, t1: 3.4, lag: 0.1, warp: 1.7, hn: 9, via: [[1045, 512], [1042, 452], [1022, 410], [1025, 368], [1045, 340]] },
   g: { head: "s1", target: "fwd", t0: 1.28, t1: 3.0, lag: 0.02, lead: -1, hn: 13.5, ds: 30, smoothLam: 40, gTrack: true, via: [] },
-  a: { head: "s1", target: "fwd", t0: 1.35, t1: 3.75, lag: 0.1, hn: 9, via: [[1225, 680], [1185, 800], [1135, 885], [1060, 905], [960, 914]] },
-  t: { head: "s0", target: "fwd", t0: 1.42, t1: 4.1, lag: 0.1, hn: 9, via: [[1372, 700], [1290, 800], [1200, 870], [1130, 896], [1060, 906]] },
-  o2: { head: "s1", target: "fwd", t0: 1.49, t1: 4.45, lag: 0.1, hn: 9, via: [[1470, 680], [1350, 800], [1230, 870], [1140, 892]] },
+  a: { head: "s1", target: "fwd", t0: 1.35, t1: 3.35, lag: 0.12, hn: 9, via: [[1265, 700], [1290, 830], [1230, 905], [1130, 912], [1040, 912], [960, 914]] },
+  t: { head: "s0", target: "fwd", t0: 1.42, t1: 3.95, lag: 0.12, warp: 1.35, hn: 9, via: [[1400, 730], [1450, 880], [1340, 950], [1180, 925], [1100, 908], [1060, 906]] },
+  o2: { head: "s1", target: "fwd", t0: 1.49, t1: 4.45, lag: 0.12, warp: 1.5, hn: 9, via: [[1600, 680], [1640, 870], [1500, 990], [1300, 975], [1170, 915]] },
 };
 
 function smoothLam(uSrc, uTgt, ds, dt, radius) {
