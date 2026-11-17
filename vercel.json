@@ -5,5 +5,8 @@
       "path": "/api/cron/atelier",
       "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
