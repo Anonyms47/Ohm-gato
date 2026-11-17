@@ -31,6 +31,7 @@ import {
   type CheckoutFormValues,
 } from "@/lib/validation/checkout-form";
 import { rememberPendingOrder } from "@/components/order/pending-orders";
+import { LoadingScreen } from "@/components/brand/LoadingScreen";
 
 export interface PaymentMethodView {
   id: "wave" | "wave_link" | "orange_money" | "test";
@@ -280,7 +281,7 @@ export function CheckoutFlow({
   );
 
   if (!hydrated) {
-    return <p className="mt-6 text-encre-douce" aria-busy="true">Préparation de votre bon…</p>;
+    return <LoadingScreen size="section" label="Préparation de votre bon de fournée…" />;
   }
   if (!cycle?.isOpen) {
     return (
