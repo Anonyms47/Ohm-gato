@@ -42,17 +42,20 @@ const s = LOGO_T.s * ZOOM;
 const tx = 960 + (LOGO_T.tx - 960) * ZOOM;
 const ty = 540 + (LOGO_T.ty - 540) * ZOOM;
 /** Données d'écriture (lettres officielles en rubans, scène 1920 × 1080). n : paires par lettre. */
-export function buildWritingData(n = 260, plan = PLAN, writeEnd = FINAL) {
+export function buildWritingData(n = 260, plan = PLAN, writeEnd = FINAL, zoom = ZOOM) {
+  // zoom = 1 : même échelle que la scène du morphing (logotype à 0,75)
+  const Zz = ([x, y]) => [960 + (x - 960) * zoom, 540 + (y - 540) * zoom];
+  const sz = LOGO_T.s * zoom;
   const shapes = loadShapes(n);
   const r2 = (v) => Math.round(v * 10) / 10;
   return {
     width: 1920,
     height: 1080,
-    logo: { d: logoD, transform: [s, tx, ty] },
+    logo: { d: logoD, transform: [sz, 960 + (LOGO_T.tx - 960) * zoom, 540 + (LOGO_T.ty - 540) * zoom] },
     writeEnd,
     letters: plan.map((p) => {
       const r = p.rev ? reverseRibbon(shapes.letters[p.id]) : shapes.letters[p.id];
-      const pts = r.L.flatMap((q, k) => [...Z(q), ...Z(r.R[k])]).map(r2);
+      const pts = r.L.flatMap((q, k) => [...Zz(q), ...Zz(r.R[k])]).map(r2);
       const { id, t0, t1 } = p;
       return { id, pts, t0, t1, ...(p.out ? { out: p.out } : {}), ...(p.in ? { in: p.in } : {}) };
     }),
