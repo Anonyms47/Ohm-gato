@@ -41,10 +41,12 @@
   #browser .url { position: absolute; left: 50%; top: 11px; width: 420px; margin-left: -210px; height: 36px; border-radius: 18px;
     background: #fbf4ea; font-family: "Inter", sans-serif; font-size: 19px; line-height: 36px; text-align: center; color: #5b4031; }
   #browser .view { position: absolute; left: 0; right: 0; top: 60px; bottom: 0; overflow: hidden; }
-  #browser .view img, #phone .view img { position: absolute; left: 0; top: 0; display: block; }
-  #phone { position: absolute; overflow: hidden; background: #3a2418; }
-  #phone .view { position: absolute; overflow: hidden; background: #f5e9d6; }
-  #phone .navbar { position: absolute; left: 0; bottom: 0; display: block; }
+  #browser .view img, .phone .view img { position: absolute; left: 0; top: 0; display: block; }
+  .phone { position: absolute; overflow: hidden; background: #3a2418; transform-origin: 50% 100%; }
+  .phone .view { position: absolute; overflow: hidden; background: #f5e9d6; }
+  .phone .view img.navbar { position: absolute; left: 0; bottom: 0; top: auto; display: block; }
+  #tap, #tap2 { position: absolute; border-radius: 50%; border: 7px solid #dca7ae; pointer-events: none; z-index: 5; }
+  #tapDot { position: absolute; border-radius: 50%; background: rgba(220,167,174,0.55); z-index: 5; }
   .cap { position: absolute; font-family: "Jost", sans-serif; font-weight: 600; color: #3a2418; font-size: 100px; line-height: 1.02; white-space: nowrap; }
   .cap .w { display: inline-block; white-space: pre; }
   .cap .w i { display: inline-block; font-style: normal; }
@@ -59,7 +61,9 @@
 <div id="stage">
   <div id="chat"></div>
   <div id="browser"><div class="bar"><div class="url">ohmegato.com</div></div><div class="view"><img id="homeImg" /></div></div>
-  <div id="phone"><div class="view"><img id="carteImg" /><img id="barImg" class="navbar" /></div></div>
+  <div id="phoneL" class="phone"><div class="view"><img id="progImg" /></div></div>
+  <div id="phoneR" class="phone"><div class="view"><img id="fourImg" /></div></div>
+  <div id="phone" class="phone"><div class="view"><img id="carteImg" /><img id="barImg" class="navbar" /><div id="tap"></div><div id="tap2"></div><div id="tapDot"></div></div></div>
   <div id="caps"></div>
   <div id="brand">
     <svg viewBox="0 0 1920 1080">

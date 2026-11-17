@@ -26,7 +26,7 @@ const args = process.argv.slice(2);
 const opt = (k, d) => (args.includes(k) ? Number(args[args.indexOf(k) + 1]) : d);
 const out = path.resolve(args.find((a) => a.endsWith(".mp4")) ?? path.join(ROOT, "docs/animations/ohmegato-presentation-1920x1080-60fps.mp4"));
 const FPS = 60;
-const DURATION = 53.5;
+const DURATION = 56.8;
 
 // Conversation : bulles bleues (envoyées) à droite, grises (reçues) à gauche, sans noms. Rythme de lecture naturel.
 const msgs = [
@@ -42,22 +42,32 @@ const msgs = [
   { side: "l", t: 16.6, typing: 0.9, text: "Envoie le lien !" },
   { side: "r", t: 17.6, text: "ohmegato.com", link: true, meta: "Distribué" },
 ];
-const times = { browser: 19.0, tour: 20.3, phone: 31.2, phoneTour: 32.5, brand: 37.4, write: 38.5, morph: 42.6, final: 48.2 };
+const times = { browser: 19.0, tour: 20.3, phone: 31.2, phoneTour: 32.4, tap: 35.4, trio: 36.4, merge: 39.6, brand: 40.7, write: 41.8, morph: 45.9, final: 51.5 };
 
 // Parcours de la page d'accueil (secondes depuis « tour » → position en px de page) et titres associés.
 const homeScroll = [[0, 0], [2.3, 0], [3.3, 1090], [5.6, 1090], [6.6, 2090], [8.4, 2090], [9.4, 2880], [10.9, 2880]];
-const carteScroll = [[0, 0], [1.2, 0], [2.2, 640], [3.3, 640], [4.3, 1480], [5.2, 1480]];
+// carte mobile : défilement jusqu'à la fiche Cookies, toucher sur « Ajouter · 800 FCFA » (coordonnées de la page)
+const carteScroll = [[0, 0], [0.6, 0], [2.6, 440], [9, 440]];
+const tapAt = [263, 1186];
 const CAP_X = 1360;
 const captions = [
   { lines: ["Par", "fournées."], accent: ["fournées."], x: CAP_X, y: 380, t0: times.tour + 0.2, t1: times.tour + 2.4 },
   { lines: ["Fait", "maison."], accent: ["maison."], x: CAP_X, y: 380, t0: times.tour + 3.2, t1: times.tour + 5.7 },
   { lines: ["Livré", "dans Dakar."], accent: ["Dakar."], x: CAP_X, y: 380, t0: times.tour + 6.5, t1: times.tour + 8.5 },
   { lines: ["Ou retiré à", "Sud Foire."], accent: ["Foire."], x: CAP_X, y: 380, t0: times.tour + 9.3, t1: times.tour + 10.7 },
-  { lines: ["Commande", "depuis ton", "téléphone."], accent: ["téléphone."], x: 220, y: 330, t0: times.phone + 1.2, t1: times.brand - 0.6 },
+  { lines: ["Choisis."], accent: ["Choisis."], x: 190, y: 430, t0: times.phone + 1.4, t1: times.tap - 0.1 },
+  { lines: ["Ajoute."], accent: ["Ajoute."], x: 1290, y: 430, t0: times.tap + 0.05, t1: times.trio + 0.4 },
+  { lines: ["Ta fournée, livrée à Dakar."], accent: ["Dakar."], center: true, size: 76, y: 70, t0: times.trio + 0.5, t1: times.merge - 0.1 },
 ];
 
 const C = (f) => "file://" + path.join(ROOT, "scripts/promo/captures", f);
-const captures = { home: C("accueil.webp"), carte: C("carte.webp"), bar: C("carte-barre.webp") };
+const captures = {
+  home: C("accueil.webp"),
+  carte: C("carte.webp"),
+  bar: C("carte-barre.webp"),
+  programme: C("programme.webp"),
+  fournees: C("fournees.webp"),
+};
 
 // losange officiel dans la scène : centre et côté
 const dpts = [...morph.diamond.d.matchAll(/(-?\d+\.?\d*),(-?\d+\.?\d*)/g)].map((m) => [Number(m[1]), Number(m[2])]);
@@ -76,6 +86,7 @@ const scene = {
   captions,
   homeScroll,
   carteScroll,
+  tapAt,
   captures,
   diamond,
   diamondD: morph.diamond.d,

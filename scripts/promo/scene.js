@@ -107,13 +107,22 @@
   homeImg.src = S.captures.home;
   carteImg.src = S.captures.carte;
   barImg.src = S.captures.bar;
+  const phoneL = $("phoneL");
+  const phoneR = $("phoneR");
+  $("progImg").src = S.captures.programme;
+  $("fourImg").src = S.captures.fournees;
+  const tap = $("tap");
   const pill = $("pill");
   pill.textContent = S.pillText;
   const tagline = $("tagline");
   tagline.textContent = S.tagline;
 
   const BROWSER = { x: 110, y: 110, w: 1180, h: 860, r: 24 };
-  const PHONE = { x: 1200, y: 95, w: 424, h: 890, r: 64 };
+  // téléphone seul (grand, centré), puis trio incliné
+  const PHONE = { x: 724, y: 43, w: 472, h: 994, r: 70 };
+  const TRIO_C = { x: 760, y: 190, w: 400, h: 842, r: 60 };
+  const TRIO_L = { x: 300, y: 250, w: 380, h: 800, r: 58 };
+  const TRIO_R = { x: 1240, y: 250, w: 380, h: 800, r: 58 };
   const PILL = { x: 560, y: 700, w: 800, h: 108, r: 54 };
   const FULL = { x: 0, y: 0, w: 1920, h: 1080, r: 0 };
   const place = (el, r) => {
@@ -140,7 +149,12 @@
   const capEls = S.captions.map((c) => {
     const el = document.createElement("div");
     el.className = "cap";
-    el.style.left = c.x + "px";
+    if (c.center) {
+      el.style.left = "0px";
+      el.style.width = "1920px";
+      el.style.textAlign = "center";
+      el.style.fontSize = (c.size ?? 100) + "px";
+    } else el.style.left = c.x + "px";
     el.style.top = c.y + "px";
     const letters = [];
     c.lines.forEach((line, li) => {
@@ -187,34 +201,82 @@
       homeImg.style.transform = `translateY(${-keyed(S.homeScroll, u) * scale}px)`;
       homeImg.style.opacity = String(ease((t - T.browser - 1.2) / 0.45));
     }
-    // fenêtre → téléphone → plein écran crème
+    // fenêtre → grand téléphone → trio → retour au centre → plein écran crème
     const showP = t >= T.phone && t < T.brand + 1.25;
     phone.style.display = showP ? "block" : "none";
+    const kTrio = ease((t - T.trio) / 1.2) * (1 - ease((t - T.merge) / 1.0));
     if (showP) {
       const k = ease((t - T.phone) / 1.3);
       const kf = ease((t - T.brand) / 1.2);
       let r = lerpRect(BROWSER, PHONE, k);
+      r = lerpRect(r, TRIO_C, kTrio);
       r = lerpRect(r, FULL, kf);
       place(phone, r);
-      phone.style.background = mixColor(k < 1 ? "e4d2b8" : "3a2418", "3a2418", k);
-      if (kf > 0) phone.style.background = mixColor("3a2418", "f5e9d6", kf);
-      const border = lerp(2, 12, k) * (1 - kf);
+      phone.style.zIndex = "3";
+      phone.style.background = kf > 0 ? mixColor("3a2418", "f5e9d6", kf) : mixColor("e4d2b8", "3a2418", k);
+      const border = lerp(2, 13, k) * (1 - kf);
+      dressPhone(phone, r, border);
       const view = phone.querySelector(".view");
-      view.style.left = border + "px";
-      view.style.top = border + "px";
-      view.style.right = border + "px";
-      view.style.bottom = border + "px";
-      view.style.borderRadius = Math.max(0, r.r - border) + "px";
       view.style.background = mixColor("fbf4ea", "f5e9d6", k);
       const innerW = r.w - 2 * border;
       const sc = innerW / 390;
       const content = clamp((t - T.phone - 1.0) / 0.4) * (1 - clamp(kf / 0.35));
+      const scrollY = keyed(S.carteScroll, t - T.phoneTour);
       carteImg.style.width = innerW + "px";
-      carteImg.style.transform = `translateY(${-keyed(S.carteScroll, t - T.phoneTour) * sc}px)`;
+      carteImg.style.transform = `translateY(${-scrollY * sc}px)`;
       carteImg.style.opacity = String(content);
       barImg.style.width = innerW + "px";
       barImg.style.opacity = String(content);
+      // toucher sur « Ajouter » : doigt (disque) puis deux ondes roses qui s'ouvrent
+      const cx = S.tapAt[0] * sc;
+      const cy = (S.tapAt[1] - scrollY) * sc;
+      const dot = $("tapDot");
+      const dk = (t - T.tap + 0.25) / 0.6;
+      dot.style.display = dk > 0 && dk < 1 ? "block" : "none";
+      if (dk > 0 && dk < 1) {
+        const rr = 26 * sc * (1 - 0.25 * Math.sin(Math.PI * clamp(dk * 1.6)));
+        dot.style.left = cx - rr + "px";
+        dot.style.top = cy - rr + "px";
+        dot.style.width = dot.style.height = 2 * rr + "px";
+        dot.style.opacity = String(Math.sin(Math.PI * dk));
+      }
+      for (const [el, delay] of [[tap, 0], [$("tap2"), 0.16]]) {
+        const tk = (t - T.tap - delay) / 0.75;
+        el.style.display = tk > 0 && tk < 1 ? "block" : "none";
+        if (tk > 0 && tk < 1) {
+          const rad = lerp(18, 120, easeOut(tk)) * sc;
+          el.style.left = cx - rad + "px";
+          el.style.top = cy - rad + "px";
+          el.style.width = el.style.height = 2 * rad + "px";
+          el.style.opacity = String(1 - tk);
+        }
+      }
     }
+    // écrans voisins : sortent du téléphone central en s'inclinant, puis y reviennent
+    for (const [el, target, angle] of [[phoneL, TRIO_L, -7], [phoneR, TRIO_R, 7]]) {
+      const show = kTrio > 0.001 && t < T.brand;
+      el.style.display = show ? "block" : "none";
+      if (!show) continue;
+      const bob = Math.sin((t - T.trio) * 2.2 + angle) * 6;
+      const r = lerpRect(TRIO_C, target, kTrio);
+      r.y += bob * kTrio;
+      place(el, r);
+      el.style.zIndex = "2";
+      el.style.transform = `rotate(${angle * kTrio}deg)`;
+      dressPhone(el, r, 13);
+      const img = el.querySelector("img");
+      img.style.width = r.w - 26 + "px";
+      img.style.opacity = String(clamp((kTrio - 0.4) / 0.6));
+    }
+  }
+
+  function dressPhone(el, r, border) {
+    const view = el.querySelector(".view");
+    view.style.left = border + "px";
+    view.style.top = border + "px";
+    view.style.right = border + "px";
+    view.style.bottom = border + "px";
+    view.style.borderRadius = Math.max(0, r.r - border) + "px";
   }
 
   function renderFinal(t) {

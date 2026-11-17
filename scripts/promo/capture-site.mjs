@@ -49,7 +49,20 @@ const bar = await m.evaluate(() => {
 if (bar) await m.screenshot({ path: path.join(OUT, "carte-barre.png"), clip: { x: 0, y: bar.y, width: 390, height: bar.h } });
 await m.evaluate(() => [...document.querySelectorAll("body *")].filter((e) => getComputedStyle(e).position === "fixed").forEach((e) => (e.style.visibility = "hidden")));
 await m.screenshot({ path: path.join(OUT, "carte.png"), fullPage: true });
+// écrans de téléphone (vue réelle, barre du bas comprise) : fournée et livraison
+const shots = [
+  ["/fournees", 300, "fournees.png"],
+  ["/fournees", 1960, "programme.png"],
+  ["/livraison-retrait", 480, "livraison.png"],
+];
+for (const [url, y, file] of shots) {
+  await m.goto(BASE + url, { waitUntil: "networkidle" });
+  await loadAll(m);
+  await m.evaluate((y) => window.scrollTo(0, y), y);
+  await m.waitForTimeout(500);
+  await m.screenshot({ path: path.join(OUT, file) });
+}
 await browser.close();
-for (const f of ["accueil.png", "carte.png", "carte-barre.png"]) toWebp(path.join(OUT, f));
+for (const f of ["accueil.png", "carte.png", "carte-barre.png", ...shots.map((s) => s[2])]) toWebp(path.join(OUT, f));
 execFileSync("sh", ["-c", `rm -f ${OUT}/*.png`]);
 console.log("captures :", OUT);
