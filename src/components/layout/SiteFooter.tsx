@@ -66,7 +66,7 @@ export async function SiteFooter() {
       </div>
       {/* Signature : nom de la marque, exploitante et droits (année à l'heure de Dakar). */}
       <div className="border-t border-chocolat/15">
-        <p className="mx-auto max-w-7xl px-4 py-5 text-[0.9rem] text-chocolat/75 sm:px-6" data-testid="signature-site">
+        <p className="mx-auto max-w-7xl px-4 py-5 text-[0.9rem] text-chocolat/75 sm:px-6 sm:pr-24 max-sm:pr-16" data-testid="signature-site">
           © {new Intl.DateTimeFormat("fr-SN", { year: "numeric", timeZone: "Africa/Dakar" }).format(new Date())} {brand.name} · Tous droits réservés · Activité
           individuelle de pâtisserie maison, {brand.city}.
         </p>

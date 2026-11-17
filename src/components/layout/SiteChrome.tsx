@@ -50,7 +50,7 @@ function CountBadge({ count, bumpKey, inline = false }: { count: number; bumpKey
       className={cn(
         "grid place-items-center rounded-full bg-rose font-bold text-cacao animate-[ohm-ajout_360ms_var(--ohm-courbe)]",
         // Dans la barre mobile, la pastille suit le mot sans jamais le recouvrir.
-        inline ? "min-w-5 px-1 text-[0.75rem] leading-5" : "absolute -right-1.5 -top-1.5 min-w-6 px-1.5 text-[0.8rem] leading-6",
+        inline ? "min-w-5 px-1 text-[0.75rem] leading-5" : "absolute -right-3 -top-3 min-w-6 px-1.5 text-[0.8rem] leading-6",
       )}
     >
       {count}

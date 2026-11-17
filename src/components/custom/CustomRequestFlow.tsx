@@ -680,7 +680,7 @@ export function CustomRequestFlow({
                     disabled={index > stepIndex}
                     onClick={() => goTo(index)}
                     className={cn(
-                      "w-full rounded-[8px] px-2 py-1.5 text-left disabled:cursor-default disabled:text-encre-douce/60",
+                      "min-h-11 w-full rounded-[8px] px-2 py-1.5 text-left disabled:cursor-default disabled:text-encre-douce/60",
                       index === stepIndex && "bg-creme font-bold",
                     )}
                   >

@@ -182,10 +182,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <li key={p.id}>
                   <Link href={`/carte/${p.slug}`} className="flex flex-col gap-2">
                     <ProductVisual product={p} sizes="(min-width: 768px) 20vw, 45vw" />
-                    <span className="font-display text-[1.25rem]">{p.name}</span>
+                    <span className="font-display text-[1.25rem] leading-tight max-md:min-h-[2.5em]">{p.name}</span>
                     {startingFormat(p.variants) && (
-                      <span className="tabular-nums text-encre-douce">
-                        {startingFormat(p.variants)!.label} : <strong className="text-caramel-encre">{formatFcfa(startingFormat(p.variants)!.priceFcfa)}</strong>
+                      <span className="flex flex-col tabular-nums text-encre-douce">
+                        <span>{startingFormat(p.variants)!.label}</span>
+                        <strong className="text-caramel-encre">{formatFcfa(startingFormat(p.variants)!.priceFcfa)}</strong>
                       </span>
                     )}
                   </Link>

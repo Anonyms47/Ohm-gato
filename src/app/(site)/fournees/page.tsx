@@ -96,7 +96,7 @@ export default async function FourneesPage() {
               {archives.map((archive) => (
                 <li key={archive.id} className="rounded-[12px] border-2 border-chocolat/20 bg-blanc-casse p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Link href={`/fournees/${archive.number}`} className="font-display text-[1.3rem] underline decoration-caramel decoration-2 underline-offset-4">
+                    <Link href={`/fournees/${archive.number}`} className="inline-flex min-h-11 min-w-11 items-center font-display text-[1.3rem] underline decoration-caramel decoration-2 underline-offset-4">
                       n°{archive.number}
                     </Link>
                     <span className={cn("text-[0.95rem] font-bold", archive.status === "cancelled" ? "text-erreur" : "text-encre-douce")}>

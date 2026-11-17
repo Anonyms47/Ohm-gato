@@ -14,7 +14,7 @@ export function AvailabilityBadge({ state, className }: { state: AvailabilitySta
   return (
     <span
       className={cn(
-        "inline-flex min-h-7 items-center rounded-full border-2 bg-blanc-casse/80 px-2.5 text-[0.85rem] font-bold uppercase tracking-wide",
+        "inline-flex min-h-7 items-center rounded-full border-2 bg-blanc-casse/80 px-2.5 text-[0.875rem] font-bold uppercase tracking-wide",
         styles[state],
         className,
       )}
