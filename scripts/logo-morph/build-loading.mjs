@@ -18,5 +18,5 @@ const PLAN = [
 ];
 const data = buildWritingData(220, PLAN, 2.0);
 const out = path.join(ROOT, "src/components/brand/logo-morph/loading-data.json");
-fs.writeFileSync(out, JSON.stringify(data));
+fs.writeFileSync(out, JSON.stringify(data) + "\n");
 console.log("écrit", path.relative(ROOT, out), (fs.statSync(out).size / 1024).toFixed(0) + " Ko");

@@ -67,7 +67,7 @@ const sh = loadShapes(700);
       return [p.id, { L: r.L.map(Z), R: r.R.map(Z) }];
     }),
   );
-  
+
   const clamp = (x) => Math.min(1, Math.max(0, x));
   function progress(p, t) {
     const x = clamp((t - p.t0) / (p.t1 - p.t0));
@@ -75,7 +75,7 @@ const sh = loadShapes(700);
     if (p.in === "linear") return 1 - (1 - x) * (1 - x); // reprend la vitesse, sortie douce
     return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; // départ posé, trait vif, arrivée douce
   }
-  
+
   const f1 = (v) => (Math.round(v * 10) / 10).toString();
   function partial(r, p) {
     if (p <= 0) return "";
@@ -93,9 +93,9 @@ const sh = loadShapes(700);
     const pts = [...L, ...R.reverse()];
     return "M" + pts.map((q) => f1(q[0]) + " " + f1(q[1])).join("L") + "Z";
   }
-  
+
   const logoTransform = `matrix(${s} 0 0 ${s} ${tx} ${ty})`;
-  
+
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ecriture-"));
   const browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {});
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });

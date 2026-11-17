@@ -267,6 +267,6 @@ export function build() {
 
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {
   const data = build();
-  fs.writeFileSync(OUT, JSON.stringify(data));
+  fs.writeFileSync(OUT, JSON.stringify(data) + "\n");
   console.log("écrit", path.relative(ROOT, OUT), (fs.statSync(OUT).size / 1024).toFixed(0) + " Ko");
 }
