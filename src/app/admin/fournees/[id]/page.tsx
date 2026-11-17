@@ -84,7 +84,7 @@ function Step({ step, current, title, intro, children, visibleToClients }: { ste
         state === "en-cours" ? "border-chocolat bg-blanc-casse shadow-[0_4px_0_var(--ohm-chocolat)]" : "border-chocolat/15 bg-blanc-casse/60",
       )}
     >
-      <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1">
+      <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className={cn("grid size-9 shrink-0 place-items-center rounded-full font-display text-[1.1rem]", state === "passee" ? "bg-chocolat text-creme" : state === "en-cours" ? "bg-caramel text-cacao" : "border-2 border-chocolat/25 text-encre-douce")} aria-hidden>
           {state === "passee" ? "✓" : index + 1}
         </span>
@@ -96,7 +96,7 @@ function Step({ step, current, title, intro, children, visibleToClients }: { ste
       </summary>
       <div className="flex flex-col gap-4">
         <details className="text-[0.95rem] text-encre-douce">
-          <summary className="cursor-pointer font-bold">À quoi sert cette étape ?</summary>
+          <summary className="min-h-11 cursor-pointer font-bold leading-[2.75rem]">À quoi sert cette étape ?</summary>
           <p className="mt-1">{intro}</p>
           {visibleToClients && <p className="mt-1">Visible des clientes : {visibleToClients}</p>}
         </details>
@@ -141,7 +141,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
   const surplusSold = demand.reduce((s, d) => s + (d.surplusSold ?? 0), 0);
   const remaining = demand.reduce((s, d) => s + (d.remaining ?? 0), 0);
   const isDraftLike = cycle.status === "draft" || cycle.status === "scheduled";
-  const link = "font-bold underline decoration-caramel decoration-2 underline-offset-4";
+  const link = "inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4";
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8">
@@ -185,10 +185,11 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
                 href={`#etape-${s.key}`}
                 aria-current={i === stepIndex ? "step" : undefined}
                 className={cn(
-                  "flex h-2 rounded-full sm:h-auto sm:min-h-11 sm:items-center sm:justify-center sm:rounded-[8px] sm:border-2 sm:px-2 sm:text-center sm:text-[0.85rem] sm:font-bold",
-                  i < stepIndex && "bg-chocolat sm:border-chocolat sm:text-creme",
-                  i === stepIndex && "bg-caramel sm:border-caramel sm:bg-rose/60 sm:text-chocolat",
-                  i > stepIndex && "bg-chocolat/15 sm:border-dashed sm:border-chocolat/25 sm:bg-transparent sm:text-encre-douce",
+                  // Téléphone : une barre fine dans une zone tactile de 44 px ; à partir de sm : un bouton avec son libellé.
+                  "flex h-11 items-center before:h-2 before:w-full before:rounded-full before:content-[''] sm:h-auto sm:min-h-11 sm:justify-center sm:rounded-[8px] sm:border-2 sm:px-2 sm:text-center sm:text-[0.875rem] sm:font-bold sm:before:hidden",
+                  i < stepIndex && "before:bg-chocolat sm:border-chocolat sm:bg-chocolat sm:text-creme",
+                  i === stepIndex && "before:bg-caramel sm:border-caramel sm:bg-rose/60 sm:text-chocolat",
+                  i > stepIndex && "before:bg-chocolat/15 sm:border-dashed sm:border-chocolat/25 sm:text-encre-douce",
                 )}
               >
                 <span className="sr-only sm:not-sr-only">{s.label}</span>

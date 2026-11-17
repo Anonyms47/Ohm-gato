@@ -30,7 +30,7 @@ export default async function NouvelleFournee({ searchParams }: { searchParams: 
   // Les fournées déjà ouvertes d'abord (elles ont fait leurs preuves), puis les brouillons.
   const previous = cycles.filter((c) => c.status !== "cancelled").sort((a, b) => Number(a.status === "draft") - Number(b.status === "draft") || b.number - a.number);
   const source = depuis ? previous.find((c) => c.id === depuis) : null;
-  const link = "font-bold underline decoration-caramel decoration-2 underline-offset-4";
+  const link = "inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4";
 
   if (source) {
     const setup = await getCycleSetup(source.id);

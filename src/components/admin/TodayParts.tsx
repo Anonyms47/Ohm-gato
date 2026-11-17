@@ -66,7 +66,7 @@ export function TaskTicket({ task }: { task: AdminTask }) {
   return (
     <li className={cn("atelier-ticket atelier-deploie flex flex-col gap-3 border-l-[6px] p-4 sm:flex-row sm:items-center", style.border)}>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">
+        <p className="flex items-center gap-2 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">
           <span aria-hidden className={cn("size-2.5 rounded-full", style.dot)} />
           {style.label}
         </p>

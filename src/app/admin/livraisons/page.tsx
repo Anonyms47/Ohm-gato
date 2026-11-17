@@ -10,7 +10,7 @@ import { formatShortDay, formatTime } from "@/lib/dates";
 
 export const metadata = { title: "Livraisons et retraits" };
 
-const link = "font-bold underline decoration-caramel decoration-2 underline-offset-4";
+const link = "inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4";
 
 /**
  * Liste du jour de remise : livraisons regroupées par quartier (carte et tournée), retraits à part.

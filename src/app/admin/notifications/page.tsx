@@ -81,7 +81,7 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
           {rows.map((n) => (
             <li key={n.id} className={cn("atelier-ticket flex flex-col gap-3 p-4 sm:flex-row sm:items-center", !n.read_at && !n.done_at && "border-l-[6px] border-l-caramel")}>
               <div className="min-w-0 flex-1">
-                <p className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">
+                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">
                   {priorityLabel[n.priority] ?? n.priority} · {formatShortDay(n.created_at)} {formatTime(n.created_at)}
                   {n.done_at ? " · terminée" : n.read_at ? " · lue" : ""}
                 </p>
@@ -112,23 +112,23 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
         ) : (
           <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2" data-testid="etat-emails">
             <div>
-              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">API Brevo configurée</dt>
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">API Brevo configurée</dt>
               <dd>{health.channel === "brevo" ? "Oui" : health.channel === "resend" ? "Non (service de secours utilisé)" : "Non"}</dd>
             </div>
             <div>
-              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Expéditeur</dt>
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Expéditeur</dt>
               <dd className="break-words">{health.sender}</dd>
             </div>
             <div>
-              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier test réussi</dt>
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier test réussi</dt>
               <dd>{when(health.lastTestOkAt)}</dd>
             </div>
             <div>
-              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier envoi réussi</dt>
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier envoi réussi</dt>
               <dd>{when(health.lastSentAt)}</dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier échec</dt>
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier échec</dt>
               <dd>{health.lastFailure ? `${when(health.lastFailure.at)} : ${health.lastFailure.label}` : "aucun"}</dd>
             </div>
           </dl>
@@ -136,21 +136,21 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
         <h3 className="font-bold">Codes de connexion par e-mail (Supabase, SMTP Brevo)</h3>
         <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2" data-testid="etat-codes-connexion">
           <div>
-            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">SMTP de connexion</dt>
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">SMTP de connexion</dt>
             <dd className={cn(health.login.operational === false && "font-bold text-erreur")}>
               {health.login.operational === null ? "Aucun code demandé pour l'instant" : health.login.operational ? "Opérationnel" : "En échec"}
             </dd>
           </div>
           <div>
-            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code envoyé</dt>
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code envoyé</dt>
             <dd>{when(health.login.lastSentAt)}</dd>
           </div>
           <div>
-            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code validé</dt>
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier code validé</dt>
             <dd>{when(health.login.lastValidatedAt)}</dd>
           </div>
           <div>
-            <dt className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier refus</dt>
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Dernier refus</dt>
             <dd>{health.login.lastFailure ? `${when(health.login.lastFailure.at)} : ${health.login.lastFailure.label}` : "aucun"}</dd>
           </div>
         </dl>
@@ -182,7 +182,7 @@ export default async function Notifications({ searchParams }: { searchParams: Pr
           l&apos;atelier et après chaque action. Les e-mails ne sont envoyés qu&apos;aux clientes qui ont donné leur adresse ; les autres gardent leur lien
           personnel de suivi.
         </p>
-        <Link href="/admin/reglages#automatisations" className="self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
+        <Link href="/admin/reglages#automatisations" className="inline-flex min-h-11 items-center self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
           Régler les délais et les e-mails
         </Link>
       </section>

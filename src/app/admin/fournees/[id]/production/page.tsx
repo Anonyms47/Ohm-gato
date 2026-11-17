@@ -35,6 +35,7 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
         </div>
         <ProductionPrintButton cycleId={cycle.id} />
       </header>
+      <div className="overflow-x-auto print:overflow-visible">
       <table className="w-full border-collapse text-left tabular-nums" data-testid="fiche-production">
         <caption className="sr-only">Quantités à produire par produit</caption>
         <thead>
@@ -60,6 +61,7 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
           ))}
         </tbody>
       </table>
+      </div>
       <p className="text-encre-douce">
         Les commandes dont le paiement est à vérifier sont comptées pour la production, mais ne sont garanties qu&apos;après la vérification du
         paiement Wave par Alima.

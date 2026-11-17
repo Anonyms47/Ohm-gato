@@ -61,9 +61,10 @@
     color: var(--ohm-cacao);
   }
 
+  /* Jamais de mot coupé par une césure automatique : on ne passe à la ligne qu'entre les mots (sauf mot plus long que la ligne). */
   h1, h2, h3, h4 {
-    overflow-wrap: anywhere;
-    hyphens: auto;
+    overflow-wrap: break-word;
+    hyphens: manual;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -218,4 +219,11 @@
 @keyframes ohm-affiche {
   from { opacity: 0; transform: scale(0.92) rotate(-3deg); }
   to { opacity: 1; transform: none; }
+}
+
+/* Cartes (Leaflet) : boutons de zoom assez grands pour le doigt. */
+.leaflet-container .leaflet-bar a {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
 }

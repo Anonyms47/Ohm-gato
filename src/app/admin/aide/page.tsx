@@ -83,7 +83,7 @@ export default async function AdminHelp() {
                 </li>
               ))}
             </ol>
-            <Link href={g.href} className="mt-auto self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
+            <Link href={g.href} className="mt-auto inline-flex min-h-11 items-center self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
               {g.link}
             </Link>
           </li>

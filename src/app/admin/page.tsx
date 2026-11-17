@@ -61,7 +61,7 @@ export default async function AdminToday() {
               </li>
             ))}
           </ul>
-          <Link href="/admin/paiements" className="self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
+          <Link href="/admin/paiements" className="inline-flex min-h-11 items-center self-start font-bold underline decoration-caramel decoration-2 underline-offset-4">
             Ouvrir la file des paiements
           </Link>
         </section>
@@ -73,7 +73,7 @@ export default async function AdminToday() {
         </h2>
         {d.cycle && phase ? (
           <>
-            <Link href={`/admin/fournees/${d.cycle.id}`} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+            <Link href={`/admin/fournees/${d.cycle.id}`} className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
               n°{d.cycle.number} — {d.cycle.title}
             </Link>
             <span className="rounded-full bg-rose/60 px-3 py-0.5 font-bold">{cyclePhaseLabel[phase]}</span>
