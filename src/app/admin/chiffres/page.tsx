@@ -9,7 +9,7 @@ import { formatFcfa } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Chiffres" };
 
-const link = "font-bold underline decoration-caramel decoration-2 underline-offset-4";
+const link = "inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4";
 
 function Breakdown({ title, rows }: { title: string; rows: { label: string; orders: number; fcfa: number; href?: string }[] }) {
   if (rows.length === 0) return null;
@@ -83,7 +83,7 @@ export default async function Chiffres({ searchParams }: { searchParams: Promise
 
       <section aria-label={`Résumé : ${periodLabel}`} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="atelier-ticket flex flex-col gap-1 p-4 sm:col-span-2">
-          <p className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Net encaissé · {periodLabel}</p>
+          <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Net encaissé · {periodLabel}</p>
           <p className="font-display text-[clamp(2rem,6vw,2.8rem)] tabular-nums" data-testid="chiffres-net">
             {formatFcfa(s.netFcfa)}
           </p>
@@ -93,11 +93,11 @@ export default async function Chiffres({ searchParams }: { searchParams: Promise
           </p>
         </div>
         <div className="atelier-ticket flex flex-col gap-1 p-4">
-          <p className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Commandes payées</p>
+          <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Commandes payées</p>
           <p className="font-display text-[2rem] tabular-nums">{s.paidOrders}</p>
         </div>
         <div className="atelier-ticket flex flex-col gap-1 p-4">
-          <p className="text-[0.82rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Panier moyen</p>
+          <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-encre-douce">Panier moyen</p>
           <p className="font-display text-[2rem] tabular-nums">{s.paidOrders ? formatFcfa(s.averageFcfa) : "—"}</p>
         </div>
       </section>
@@ -140,7 +140,7 @@ export default async function Chiffres({ searchParams }: { searchParams: Promise
             <h2 className="font-display text-[1.3rem]">Par produit</h2>
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[0.82rem] uppercase tracking-[0.1em] text-encre-douce">
+                <tr className="text-[0.875rem] uppercase tracking-[0.1em] text-encre-douce">
                   <th scope="col" className="pb-2 font-bold">
                     Produit
                   </th>

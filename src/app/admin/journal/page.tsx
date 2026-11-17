@@ -69,7 +69,16 @@ const LABELS: Record<string, string> = {
   "alert.retry": "Envois d'alerte repris",
   "alert.unsubscribe": "Inscrit désinscrit par l'équipe",
   "alert.export": "Liste des inscrits exportée",
+  "email.retry": "E-mail remis en file d'envoi",
+  "email.skip": "E-mail abandonné",
+  "product.allergens.founder_confirmation": "Informations produit confirmées par la fondatrice",
 };
+
+/** Action sans libellé : jamais la clé technique brute, une phrase lisible. */
+function readableAction(action: string): string {
+  const words = action.replace(/[._]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
 
 const CYCLE_STATUS: Record<string, string> = {
   draft: "brouillon",
@@ -152,7 +161,7 @@ export default async function Journal() {
                 <li key={e.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-4 py-3">
                   <span className="w-12 shrink-0 tabular-nums text-encre-douce">{formatTime(e.created_at)}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="font-bold">{LABELS[e.action] ?? e.action}</span>
+                    <span className="min-w-0 break-words font-bold">{LABELS[e.action] ?? readableAction(e.action)}</span>
                     {detail && <span className="block text-[0.95rem] text-encre-douce">{detail}</span>}
                   </span>
                   <span className="text-[0.9rem] text-encre-douce">{e.actor === "Système" ? "Automatique" : e.actor}</span>
