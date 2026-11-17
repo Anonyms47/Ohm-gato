@@ -1,12 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { LoadingScreen } from "@/components/brand/LoadingScreen";
 import { useEffect, useRef, useState } from "react";
 import { TextInput } from "@/components/ui/Field";
 
 const AddressMap = dynamic(() => import("@/components/checkout/AddressMap"), {
   ssr: false,
-  loading: () => <p className="text-encre-douce">Chargement de la carte…</p>,
+  loading: () => <LoadingScreen size="section" label="Chargement de la carte…" />,
 });
 
 type Place = { label: string; lat: number; lng: number };

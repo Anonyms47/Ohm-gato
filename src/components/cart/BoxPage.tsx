@@ -10,6 +10,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { cycleStatusLine } from "@/lib/cycle-status";
 import { formatFcfa } from "@/lib/money";
 import { useOffscreen } from "@/lib/use-offscreen";
+import { LoadingScreen } from "@/components/brand/LoadingScreen";
 
 export function BoxPage() {
   const { resolved, hydrated, catalog, clear } = useCart();
@@ -18,7 +19,7 @@ export function BoxPage() {
   // Téléphone : « Continuer ma commande » reste accessible sans atteindre le bas d'une longue boîte.
   useStickyCta({ key: "bon-de-fournee", label: "Continuer ma commande", href: "/commande" }, canOrder && orderOffscreen);
   if (!hydrated) {
-    return <p className="mt-6 text-encre-douce" aria-busy="true">Ouverture de votre boîte…</p>;
+    return <LoadingScreen size="section" label="Ouverture de votre boîte…" />;
   }
   if (resolved.lines.length === 0) {
     return (

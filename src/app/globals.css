@@ -227,3 +227,31 @@
   height: 44px !important;
   line-height: 44px !important;
 }
+
+/* Écran de chargement : le logotype se dessine de gauche à droite, reste affiché, puis s'efface (boucle d'environ 3,9 s). */
+.ohm-chargement {
+  display: block;
+  animation: ohm-chargement 3.9s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+
+@keyframes ohm-chargement {
+  0%,
+  10% {
+    clip-path: inset(0 100% 0 0);
+  }
+  49%,
+  74% {
+    clip-path: inset(0 0 0 0);
+  }
+  90%,
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ohm-chargement {
+    animation: none;
+    clip-path: none;
+  }
+}
