@@ -263,6 +263,8 @@ test.describe("Mise en page et accessibilité", () => {
   test("liste déroulante : ouverture, flèches, sélection et Échap au clavier", async ({ page }) => {
     test.skip(isMobile(page), "Sur téléphone, la liste s'ouvre en feuille depuis le bas.");
     await page.goto("/carte/choux-creme");
+    // Le clavier n'agit qu'une fois la page active : sans cette attente, Entrée peut arriver avant l'hydratation.
+    await waitForHydration(page);
     const trigger = page.getByLabel("Parfum");
     await trigger.focus();
     await page.keyboard.press("Enter");
