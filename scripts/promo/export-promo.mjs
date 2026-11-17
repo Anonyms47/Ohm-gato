@@ -1,5 +1,6 @@
-// Vidéo de présentation du site OHMEGATO : conversation façon messagerie → ouverture du lien → le logotype
-// s'écrit → il se transforme en symbole → le losange devient la fiche produit → grille → bouton « Commander ».
+// Vidéo de présentation du site OHMEGATO : conversation façon messagerie → la bulle du lien devient la fenêtre
+// du vrai site (accueil) → la fenêtre devient un téléphone (carte mobile) → plein écran → le logotype s'écrit →
+// il se transforme en symbole → bouton « Commander ». Captures du site : scripts/promo/capture-site.mjs.
 // 1920 × 1080, 60 i/s, sans son. Usage : node scripts/promo/export-promo.mjs [sortie.mp4] [--from s] [--to s] [--step n]
 import fs from "node:fs";
 import os from "node:os";
@@ -25,7 +26,7 @@ const args = process.argv.slice(2);
 const opt = (k, d) => (args.includes(k) ? Number(args[args.indexOf(k) + 1]) : d);
 const out = path.resolve(args.find((a) => a.endsWith(".mp4")) ?? path.join(ROOT, "docs/animations/ohmegato-presentation-1920x1080-60fps.mp4"));
 const FPS = 60;
-const DURATION = 44.5;
+const DURATION = 53.5;
 
 // Conversation : bulles bleues (envoyées) à droite, grises (reçues) à gauche, sans noms. Rythme de lecture naturel.
 const msgs = [
@@ -41,21 +42,22 @@ const msgs = [
   { side: "l", t: 16.6, typing: 0.9, text: "Envoie le lien !" },
   { side: "r", t: 17.6, text: "ohmegato.com", link: true, meta: "Distribué" },
 ];
-const times = { toBrand: 19.0, write: 19.9, morph: 23.6, card: 29.0, heroStep: 1.75, grid: 0, final: 0 };
-times.grid = times.card + 1.4 + 4 * times.heroStep;
-times.final = times.grid + 3.0;
+const times = { browser: 19.0, tour: 20.3, phone: 31.2, phoneTour: 32.5, brand: 37.4, write: 38.5, morph: 42.6, final: 48.2 };
 
-const P = (slug) => "file://" + path.join(ROOT, "public/products", slug + ".webp");
-const products = [
-  { slug: "cookies", name: "Cookies", desc: "Bords croustillants, cœur moelleux." },
-  { slug: "brownies", name: "Brownies", desc: "Petits carrés très chocolatés." },
-  { slug: "muffins-pepites", name: "Muffins aux pépites", desc: "Moelleux, pépites, légère note de cannelle." },
-  { slug: "choux-creme", name: "Choux à la crème", desc: "Fourrés de crème pâtissière." },
-  { slug: "moelleux-chocolat", name: "Moelleux au chocolat" },
-  { slug: "moelleux-pommes", name: "Moelleux aux pommes" },
-  { slug: "cake-orange", name: "Cake à l’orange" },
-  { slug: "verrines-fruitees", name: "Verrines fruitées" },
-].map((p) => ({ ...p, img: P(p.slug) }));
+// Parcours de la page d'accueil (secondes depuis « tour » → position en px de page) et titres associés.
+const homeScroll = [[0, 0], [2.3, 0], [3.3, 1090], [5.6, 1090], [6.6, 2090], [8.4, 2090], [9.4, 2880], [10.9, 2880]];
+const carteScroll = [[0, 0], [1.2, 0], [2.2, 640], [3.3, 640], [4.3, 1480], [5.2, 1480]];
+const CAP_X = 1360;
+const captions = [
+  { lines: ["Par", "fournées."], accent: ["fournées."], x: CAP_X, y: 380, t0: times.tour + 0.2, t1: times.tour + 2.4 },
+  { lines: ["Fait", "maison."], accent: ["maison."], x: CAP_X, y: 380, t0: times.tour + 3.2, t1: times.tour + 5.7 },
+  { lines: ["Livré", "dans Dakar."], accent: ["Dakar."], x: CAP_X, y: 380, t0: times.tour + 6.5, t1: times.tour + 8.5 },
+  { lines: ["Ou retiré à", "Sud Foire."], accent: ["Foire."], x: CAP_X, y: 380, t0: times.tour + 9.3, t1: times.tour + 10.7 },
+  { lines: ["Commande", "depuis ton", "téléphone."], accent: ["téléphone."], x: 220, y: 330, t0: times.phone + 1.2, t1: times.brand - 0.6 },
+];
+
+const C = (f) => "file://" + path.join(ROOT, "scripts/promo/captures", f);
+const captures = { home: C("accueil.webp"), carte: C("carte.webp"), bar: C("carte-barre.webp") };
 
 // losange officiel dans la scène : centre et côté
 const dpts = [...morph.diamond.d.matchAll(/(-?\d+\.?\d*),(-?\d+\.?\d*)/g)].map((m) => [Number(m[1]), Number(m[2])]);
@@ -71,8 +73,10 @@ const diamond = {
 const scene = {
   msgs,
   times,
-  heroes: products.slice(0, 4),
-  grid: products,
+  captions,
+  homeScroll,
+  carteScroll,
+  captures,
   diamond,
   diamondD: morph.diamond.d,
   diamondTransform: eng.svgTransform(morph.diamond.transform),
@@ -87,32 +91,27 @@ const ease = (x) => {
 };
 const lerp = (a, b, k) => a + (b - a) * k;
 
-/** Tracés de marque au temps t (null avant l'ouverture du lien). */
+/** Tracés de marque au temps t (null avant le plein écran crème). */
 function brandAt(t) {
   if (t < times.write) return null;
   if (t < times.morph) {
     const d = wr.writingAt(writing, t - times.write);
     return d === null ? { d: writing.logo.d, transform: wr.writingTransform(writing.logo.transform), diamond: 0 } : { d, diamond: 0 };
   }
-  if (t < times.card) {
+  if (t < times.final) {
     const f = eng.frameAt(morph, Math.min(6, 1 + (t - times.morph)));
     if (f.mode === "ribbons") return { d: f.body, diamond: f.diamond };
     const src = f.mode === "logo" ? morph.logo : morph.symbol;
     return { d: src.d, transform: eng.svgTransform(src.transform), diamond: f.diamond };
   }
-  // le symbole se range en haut à gauche pendant que le losange devient la carte, puis revient au centre
-  const s1 = 0.142;
-  const corner = [s1, 90 - 755 * s1, 60 - 152 * s1];
-  const s2 = 0.46;
-  const center = [s2, 960 - 960 * s2, 110 - 152 * s2];
-  const k1 = ease((t - times.card) / 1.4);
-  const k2 = ease((t - times.final) / 1.3);
-  const g = [0, 1, 2].map((i) => lerp(lerp([1, 0, 0][i], corner[i], k1), center[i], k2));
-  const diamondBack = clamp((t - times.card - 1.0) / 0.5);
+  // le symbole remonte et se réduit pour laisser place à la phrase et au bouton
+  const s2 = 0.5;
+  const k = ease((t - times.final) / 1.3);
+  const g = [lerp(1, s2, k), lerp(0, 960 - 960 * s2, k), lerp(0, 120 - 152 * s2, k)];
   return {
     d: morph.symbol.d,
     transform: eng.svgTransform(morph.symbol.transform),
-    diamond: diamondBack,
+    diamond: 1,
     group: `translate(${g[1]} ${g[2]}) scale(${g[0]})`,
   };
 }

@@ -98,48 +98,24 @@
     }
   }
 
-  // ---------- cartes produits ----------
-  const cards = $("cards");
-  const hero = document.createElement("div");
-  hero.className = "card";
-  cards.appendChild(hero);
-  const heroLayers = S.heroes.map((p) => {
-    const img = document.createElement("img");
-    img.src = p.img;
-    const name = document.createElement("div");
-    name.className = "t name";
-    name.textContent = p.name;
-    const desc = document.createElement("div");
-    desc.className = "t desc";
-    desc.textContent = p.desc;
-    hero.append(img, name, desc);
-    return { img, name, desc };
-  });
-  const cells = S.grid.map((p) => {
-    const c = document.createElement("div");
-    c.className = "card cell";
-    const img = document.createElement("img");
-    img.src = p.img;
-    const name = document.createElement("div");
-    name.className = "t name";
-    name.textContent = p.name;
-    c.append(img, name);
-    cards.appendChild(c);
-    return { c, img, name };
-  });
+  // ---------- site : navigateur, téléphone, titres ----------
+  const browser = $("browser");
+  const phone = $("phone");
+  const homeImg = $("homeImg");
+  const carteImg = $("carteImg");
+  const barImg = $("barImg");
+  homeImg.src = S.captures.home;
+  carteImg.src = S.captures.carte;
+  barImg.src = S.captures.bar;
   const pill = $("pill");
   pill.textContent = S.pillText;
   const tagline = $("tagline");
   tagline.textContent = S.tagline;
 
-  const CARD = { x: 300, y: 230, w: 1320, h: 660, r: 44 };
-  const DIA = S.diamond; // centre et côté du losange officiel dans la scène
-  const PILL = { x: 560, y: 690, w: 800, h: 108, r: 54 };
-  const gridRect = (i) => {
-    const col = i % 4;
-    const row = Math.floor(i / 4);
-    return { x: 120 + col * (397.5 + 30), y: 200 + row * (350 + 34), w: 397.5, h: 350, r: 30 };
-  };
+  const BROWSER = { x: 110, y: 110, w: 1180, h: 860, r: 24 };
+  const PHONE = { x: 1200, y: 95, w: 424, h: 890, r: 64 };
+  const PILL = { x: 560, y: 700, w: 800, h: 108, r: 54 };
+  const FULL = { x: 0, y: 0, w: 1920, h: 1080, r: 0 };
   const place = (el, r) => {
     el.style.left = r.x + "px";
     el.style.top = r.y + "px";
@@ -148,112 +124,143 @@
     el.style.borderRadius = r.r + "px";
   };
   const lerpRect = (a, b, k) => ({ x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), w: lerp(a.w, b.w, k), h: lerp(a.h, b.h, k), r: lerp(a.r, b.r, k) });
+  // défilement par étapes (temps local → position), transitions adoucies
+  const keyed = (keys, u) => {
+    if (u <= keys[0][0]) return keys[0][1];
+    for (let i = 1; i < keys.length; i++) {
+      const [t1, v1] = keys[i];
+      const [t0, v0] = keys[i - 1];
+      if (u <= t1) return lerp(v0, v1, ease((u - t0) / (t1 - t0)));
+    }
+    return keys[keys.length - 1][1];
+  };
 
-  function layoutHero(t) {
-    const T = S.times;
-    hero.style.display = t >= T.card && t < T.grid + 0.02 ? "block" : "none";
-    if (hero.style.display === "none") return;
-    // losange rose → carte (rotation 45° → 0°, coins vifs → arrondis, rose → crème)
-    const k = ease((t - T.card) / 1.4);
-    const side = DIA.side;
-    const w = lerp(side, CARD.w, k);
-    const h = lerp(side, CARD.h, k);
-    const cx = lerp(DIA.cx, CARD.x + CARD.w / 2, k);
-    const cy = lerp(DIA.cy, CARD.y + CARD.h / 2, k);
-    hero.style.left = cx - w / 2 + "px";
-    hero.style.top = cy - h / 2 + "px";
-    hero.style.width = w + "px";
-    hero.style.height = h + "px";
-    hero.style.borderRadius = lerp(0, CARD.r, k) + "px";
-    hero.style.transform = `rotate(${lerp(45, 0, k)}deg)`;
-    hero.style.background = mixColor("dca7ae", "fbf4ea", k);
-    // produits successifs : chaque photo se révèle par un disque qui grandit, le texte glisse
-    const start = T.card + 1.4;
-    heroLayers.forEach((L, i) => {
-      const ti = start + i * T.heroStep;
-      const inK = i === 0 ? ease((t - T.card - 0.9) / 0.6) : ease((t - ti) / 0.7);
-      const outK = i === heroLayers.length - 1 ? 0 : ease((t - (ti + T.heroStep)) / 0.7);
-      const vis = inK > 0 && outK < 1;
-      for (const el of [L.img, L.name, L.desc]) el.style.display = vis ? "block" : "none";
-      if (!vis) return;
-      const cw = parseFloat(hero.style.width);
-      const ch = parseFloat(hero.style.height);
-      L.img.style.left = "0px";
-      L.img.style.top = "0px";
-      L.img.style.width = cw * 0.5 + "px";
-      L.img.style.height = ch + "px";
-      L.img.style.zIndex = String(i + 1);
-      L.img.style.clipPath = `circle(${inK * 75}% at 50% 50%)`;
-      const slideIn = (1 - inK) * 60;
-      const slideOut = -outK * 60;
-      for (const [el, y] of [[L.name, ch * 0.3], [L.desc, ch * 0.3 + 170]]) {
-        el.style.left = cw * 0.5 + 70 + slideIn + slideOut + "px";
-        el.style.top = y + "px";
-        el.style.width = cw * 0.5 - 120 + "px";
-        el.style.opacity = String(Math.min(clamp((inK - 0.45) / 0.55), 1 - clamp(outK / 0.45)));
-        el.style.zIndex = "20";
-      }
+  // titres : chaque lettre monte en place, puis repart vers le haut
+  const caps = $("caps");
+  const capEls = S.captions.map((c) => {
+    const el = document.createElement("div");
+    el.className = "cap";
+    el.style.left = c.x + "px";
+    el.style.top = c.y + "px";
+    const letters = [];
+    c.lines.forEach((line, li) => {
+      if (li) el.appendChild(document.createElement("br"));
+      line.split(/(\s+)/).forEach((word) => {
+        const w = document.createElement("span");
+        w.className = "w" + (c.accent && c.accent.includes(word) ? " accent" : "");
+        for (const ch of word) {
+          const i = document.createElement("i");
+          i.textContent = ch;
+          w.appendChild(i);
+          letters.push(i);
+        }
+        el.appendChild(w);
+      });
     });
+    caps.appendChild(el);
+    return { c, el, letters };
+  });
+  function renderCaptions(t) {
+    for (const { c, el, letters } of capEls) {
+      const vis = t >= c.t0 - 0.05 && t <= c.t1 + 0.8;
+      el.style.display = vis ? "block" : "none";
+      if (!vis) continue;
+      letters.forEach((L, i) => {
+        const kin = easeOut((t - c.t0 - i * 0.028) / 0.55);
+        const kout = ease((t - c.t1 - i * 0.012) / 0.45);
+        L.style.transform = `translateY(${(1 - kin) * 70 - kout * 60}px) scale(${0.92 + 0.08 * kin})`;
+        L.style.opacity = String(Math.min(kin, 1 - kout));
+      });
+    }
   }
 
-  function layoutGrid(t) {
+  function renderSite(t) {
     const T = S.times;
-    const fromHero = { ...CARD };
-    cells.forEach((C, i) => {
-      const k = ease((t - T.grid - i * 0.05) / 1.2);
-      const fin = ease((t - T.final - (cells.length - 1 - i) * 0.04) / 1.3);
-      const show = t >= T.grid && fin < 1;
-      C.c.style.display = show ? "block" : "none";
-      if (!show) return;
-      const g = gridRect(i);
-      let r = lerpRect(fromHero, g, k);
-      r = lerpRect(r, PILL, fin);
-      place(C.c, r);
-      C.c.style.background = mixColor("fbf4ea", "3a2418", fin);
-      C.img.style.left = "0px";
-      C.img.style.top = "0px";
-      C.img.style.width = r.w + "px";
-      C.img.style.height = r.h * 0.78 + "px";
-      C.img.style.opacity = String(1 - clamp(fin * 1.6));
-      C.name.style.left = "22px";
-      C.name.style.top = r.h * 0.78 + 14 + "px";
-      C.name.style.width = r.w - 30 + "px";
-      C.name.style.opacity = String(clamp((k - 0.6) / 0.4) * (1 - clamp(fin * 2)));
-      C.c.style.zIndex = String(i === S.heroes.length - 1 ? 40 : 10 + i);
-    });
-    const pk = clamp((t - T.final - 1.25) / 0.35);
-    pill.style.display = pk > 0 ? "flex" : "none";
-    place(pill, PILL);
-    pill.style.background = "#3a2418";
-    pill.style.color = `rgba(245,233,214,${ease((t - T.final - 1.3) / 0.5)})`;
+    // navigateur : apparaît à la fin de l'ouverture de la bulle, se transforme en téléphone
+    const showB = t >= T.browser + 1.25 && t < T.phone + 0.02;
+    browser.style.display = showB ? "block" : "none";
+    if (showB) {
+      place(browser, BROWSER);
+      const u = t - T.tour;
+      const scale = (BROWSER.w - 4) / 1440;
+      homeImg.style.width = BROWSER.w - 4 + "px";
+      homeImg.style.transform = `translateY(${-keyed(S.homeScroll, u) * scale}px)`;
+      homeImg.style.opacity = String(ease((t - T.browser - 1.2) / 0.45));
+    }
+    // fenêtre → téléphone → plein écran crème
+    const showP = t >= T.phone && t < T.brand + 1.25;
+    phone.style.display = showP ? "block" : "none";
+    if (showP) {
+      const k = ease((t - T.phone) / 1.3);
+      const kf = ease((t - T.brand) / 1.2);
+      let r = lerpRect(BROWSER, PHONE, k);
+      r = lerpRect(r, FULL, kf);
+      place(phone, r);
+      phone.style.background = mixColor(k < 1 ? "e4d2b8" : "3a2418", "3a2418", k);
+      if (kf > 0) phone.style.background = mixColor("3a2418", "f5e9d6", kf);
+      const border = lerp(2, 12, k) * (1 - kf);
+      const view = phone.querySelector(".view");
+      view.style.left = border + "px";
+      view.style.top = border + "px";
+      view.style.right = border + "px";
+      view.style.bottom = border + "px";
+      view.style.borderRadius = Math.max(0, r.r - border) + "px";
+      view.style.background = mixColor("fbf4ea", "f5e9d6", k);
+      const innerW = r.w - 2 * border;
+      const sc = innerW / 390;
+      const content = clamp((t - T.phone - 1.0) / 0.4) * (1 - clamp(kf / 0.35));
+      carteImg.style.width = innerW + "px";
+      carteImg.style.transform = `translateY(${-keyed(S.carteScroll, t - T.phoneTour) * sc}px)`;
+      carteImg.style.opacity = String(content);
+      barImg.style.width = innerW + "px";
+      barImg.style.opacity = String(content);
+    }
+  }
+
+  function renderFinal(t) {
+    const T = S.times;
+    const k = ease((t - T.final - 0.6) / 0.8);
+    tagline.style.display = k > 0 ? "block" : "none";
     tagline.style.top = "585px";
-    tagline.style.opacity = String(ease((t - T.final - 0.7) / 0.7));
-    tagline.style.transform = `translateY(${(1 - ease((t - T.final - 0.7) / 0.7)) * 20}px)`;
+    tagline.style.opacity = String(k);
+    tagline.style.transform = `translateY(${(1 - k) * 24}px)`;
+    // le bouton naît du losange rose et s'étire
+    const kp = ease((t - T.final - 1.0) / 0.9);
+    pill.style.display = kp > 0 ? "flex" : "none";
+    if (kp > 0) {
+      const w = lerp(108, PILL.w, kp);
+      place(pill, { x: 960 - w / 2, y: PILL.y, w, h: PILL.h, r: PILL.r });
+      pill.style.color = `rgba(245,233,214,${clamp((kp - 0.6) / 0.4)})`;
+    }
   }
 
   window.render = (t, brand) => {
     const T = S.times;
-    // fond : blanc (conversation) → crème (marque)
     const stage = $("stage");
-    stage.style.background = t < T.toBrand + 1.4 ? "#ffffff" : "#F5E9D6";
+    const white = t < T.browser + 0.6;
+    stage.style.background = white ? "#ffffff" : "#F5E9D6";
+    if (t >= T.browser && t < T.browser + 1.3) stage.style.background = mixColor("ffffff", "f5e9d6", ease((t - T.browser) / 1.3));
     // conversation
-    chat.style.display = t < T.toBrand + 1.4 ? "flex" : "none";
+    chat.style.display = t < T.browser + 1.3 ? "flex" : "none";
     if (chat.style.display === "flex") {
-      renderChat(Math.min(t, T.toBrand));
-      chat.style.opacity = String(1 - clamp((t - T.toBrand) / 0.5));
+      renderChat(Math.min(t, T.browser));
+      chat.style.opacity = String(1 - clamp((t - T.browser) / 0.45));
     }
-    // la bulle du lien s'ouvre en plein écran
+    // la bulle du lien devient la fenêtre du site
     const mo = $("morph");
-    const mk = ease((t - T.toBrand) / 1.4);
-    if (t >= T.toBrand && t < T.toBrand + 1.4) {
-      const last = rows[rows.length - 1].b.getBoundingClientRect();
-      const from = { x: last.left, y: last.top, w: last.width, h: last.height, r: 30 };
-      if (!window.__from) window.__from = from;
-      const f = window.__from;
+    if (t >= T.browser && t < T.browser + 1.3) {
+      const mk = ease((t - T.browser) / 1.3);
+      if (!window.__from) {
+        const last = rows[rows.length - 1].b.getBoundingClientRect();
+        window.__from = { x: last.left, y: last.top, w: last.width, h: last.height, r: 30 };
+      }
       mo.style.display = "block";
-      place(mo, lerpRect(f, { x: 0, y: 0, w: 1920, h: 1080, r: 0 }, mk));
-      mo.style.background = mixColor("1f8bff", "f5e9d6", mk);
+      place(mo, lerpRect(window.__from, BROWSER, mk));
+      mo.style.background = mixColor("1f8bff", "fbf4ea", mk);
+      mo.style.border = mk > 0.5 ? "2px solid #e4d2b8" : "none";
     } else mo.style.display = "none";
+    renderSite(t);
+    renderCaptions(t);
     // logotype / symbole
     const body = $("body");
     const dia = $("dia");
@@ -267,7 +274,6 @@
       dia.setAttribute("opacity", String(brand.diamond ?? 0));
       $("symG").setAttribute("transform", brand.group ?? "");
     } else $("brand").style.display = "none";
-    layoutHero(t);
-    layoutGrid(t);
+    renderFinal(t);
   };
 })();
