@@ -8,7 +8,7 @@ export type AvailabilityState =
   | "low"          // presque épuisé
   | "sold_out"
   | "out_of_cycle" // le produit ne fait pas partie de la fournée
-  | "closed";      // fournée fermée ou non programmée
+  | "closed";      // surplus terminé
 
 export interface StockSnapshot {
   totalUnits: number;
@@ -56,7 +56,7 @@ export function productAvailability(input: {
   unlimited?: boolean;
 }): AvailabilityState {
   if (!input.inCycle) return "out_of_cycle";
-  if (!input.cycleIsOpen) return "closed";
+  if (!input.cycleIsOpen && !input.unlimited) return "closed";
   if (input.unlimited) return input.variants.length === 0 ? "sold_out" : "available";
   if (!input.stock || input.variants.length === 0) return "sold_out";
   const left = availableUnits(input.stock);
@@ -71,5 +71,5 @@ export const availabilityLabel: Record<AvailabilityState, string> = {
   low: "Presque épuisé",
   sold_out: "Épuisé",
   out_of_cycle: "Hors fournée",
-  closed: "Commandes fermées",
+  closed: "Surplus terminé",
 };

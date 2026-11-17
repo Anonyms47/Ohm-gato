@@ -15,7 +15,6 @@ function cycle(status: string, opensIn: number, closesIn: number): CycleSummary 
     title: "t",
     message: null,
     opensAt: new Date(now + opensIn * hour).toISOString(),
-    closesAt: new Date(now + closesIn * hour).toISOString(),
     productionDate: "2030-01-01",
     productionDays: 3,
     productionDates: [],
@@ -24,6 +23,7 @@ function cycle(status: string, opensIn: number, closesIn: number): CycleSummary 
     surplusEndsAt: null,
     surplusDeliveryAllowed: false,
     isOpen: false,
+    composable: false,
     orderKind: null,
     featuredProductSlug: null,
     palette: "caramel",
@@ -31,10 +31,10 @@ function cycle(status: string, opensIn: number, closesIn: number): CycleSummary 
 }
 
 describe("journal du four", () => {
-  it("une fournée ouverte dont la clôture est passée s'affiche clôturée", () => {
-    expect(cyclePhase(cycle("open", -48, -1))).toBe("closed");
+  it("une fournée ouverte reste ouverte : aucune date limite ne la clôture", () => {
+    expect(cyclePhase(cycle("open", -48, -1))).toBe("open");
     expect(cyclePhase(cycle("open", -1, 24))).toBe("open");
-    expect(cyclePhase(cycle("open", 2, 24))).toBe("scheduled");
+    expect(cyclePhase(cycle("scheduled", 2, 24))).toBe("scheduled");
   });
 
   it("frise en quatre moments : passés, en cours et à venir", () => {

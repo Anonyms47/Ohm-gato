@@ -124,7 +124,12 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
             <span>Total produits</span>
             <span>{formatFcfa(order.totalFcfa)}</span>
           </p>
-          {order.fulfillment === "delivery" && <p className="mt-2 text-[0.95rem]">{DELIVERY_FEE_NOTICE}</p>}
+          {order.fulfillment === "delivery" && (
+            <p className="mt-2 text-[0.95rem]" data-testid="livraison-commande">
+              {order.deliveryZoneName ? `Zone : ${order.deliveryZoneName}${order.district ? ` (${order.district})` : ""}. ` : ""}
+              {typeof order.deliveryFeeFcfa === "number" ? `Livraison ${formatFcfa(order.deliveryFeeFcfa)} : à régler directement au livreur, hors paiement en ligne.` : DELIVERY_FEE_NOTICE}
+            </p>
+          )}
           {order.notes && <p className="mt-3 rounded-[8px] bg-creme p-3">Note de la cliente : {order.notes}</p>}
         </section>
 

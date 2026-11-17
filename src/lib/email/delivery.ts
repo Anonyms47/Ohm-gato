@@ -127,6 +127,8 @@ export interface BrevoMessage {
   text: string;
   /** Repère de l'événement (clé d'idempotence de la file), transmis en en-tête. */
   reference: string;
+  /** En-têtes complémentaires (ex. désinscription en un clic des alertes). */
+  headers?: Record<string, string>;
 }
 
 /** Envoi transactionnel Brevo. Ne renvoie jamais la clé ni les en-têtes. */
@@ -142,7 +144,7 @@ export async function brevoSend(fetchImpl: FetchLike, apiKey: string | undefined
         subject: message.subject,
         htmlContent: message.html,
         textContent: message.text,
-        headers: { "X-Ohmegato-Reference": message.reference },
+        headers: { ...message.headers, "X-Ohmegato-Reference": message.reference },
       }),
     });
     if (!response.ok) return failure(response, [apiKey]);

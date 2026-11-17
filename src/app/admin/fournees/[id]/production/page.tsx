@@ -23,8 +23,7 @@ export default async function FicheProduction({ params }: { params: Promise<{ id
         <div>
           <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)]">Fiche de production · fournée n°{cycle.number}</h1>
           <p className="text-encre-douce">
-            {productionLabel(cycle)} Livraison et retrait le {formatDay(cycle.fulfillmentDate)}. Précommandes arrêtées le {formatDay(cycle.closesAt)} à{" "}
-            {formatTime(cycle.closesAt)}.
+            {productionLabel(cycle)} Livraison et retrait le {formatDay(cycle.fulfillmentDate)}.
           </p>
           <p className="text-encre-douce">Éditée le {formatDay(new Date())} à {formatTime(new Date())}.</p>
           {lastPrint && (

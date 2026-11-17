@@ -56,7 +56,7 @@ export async function chooseFirstSlot(page: Page, label: string) {
 /** Coche la case obligatoire (conditions générales et politique d'annulation) puis passe au paiement. */
 export async function acceptTermsAndContinue(page: Page) {
   await page.getByRole("checkbox", { name: /J'ai lu et j'accepte les Conditions générales/ }).check();
-  await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+  await page.getByRole("button", { name: "Valider ma commande" }).click();
 }
 
 /** Étape de vérification puis paiement de test. */

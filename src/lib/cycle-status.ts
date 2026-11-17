@@ -1,6 +1,6 @@
 /** Fournées : statut affiché et frise, calculés depuis la base (aucune urgence inventée). */
 import type { CycleSummary } from "@/lib/catalog-types";
-import { formatDay, formatTime, parseDate } from "@/lib/dates";
+import { formatDay, parseDate } from "@/lib/dates";
 
 /**
  * Phases de la fournée (noms de la base) :
@@ -10,17 +10,15 @@ import { formatDay, formatTime, parseDate } from "@/lib/dates";
  */
 export type CyclePhase = "scheduled" | "open" | "closed" | "preparing" | "delivering" | "surplus" | "done" | "cancelled";
 
-type PhaseInput = Pick<CycleSummary, "status" | "opensAt" | "closesAt"> & { surplusEndsAt?: string | null };
+type PhaseInput = Pick<CycleSummary, "status"> & { surplusEndsAt?: string | null; fulfillmentDate?: string };
 
 /**
- * Clôture automatique : une fournée « open » dont la date limite est passée est clôturée, un surplus
- * dont la date de fin est passée (ou épuisé) est terminé. Le serveur refuse les commandes de même.
+ * Commandes permanentes : une fournée « open » (désignée par Alima) reste ouverte à toute heure, aucune date limite
+ * ne la ferme. Un surplus dont la date de fin est passée (ou épuisé) est terminé. Le serveur applique la même règle.
  */
 export function cyclePhase(cycle: PhaseInput, now = Date.now(), surplusExhausted = false): CyclePhase {
   switch (cycle.status) {
     case "open":
-      if (now >= Date.parse(cycle.closesAt)) return "closed";
-      if (now < Date.parse(cycle.opensAt)) return "scheduled";
       return "open";
     case "scheduled":
     case "draft":
@@ -39,6 +37,16 @@ export function cyclePhase(cycle: PhaseInput, now = Date.now(), surplusExhausted
   }
 }
 
+/** Jour courant à Dakar (AAAA-MM-JJ) : Dakar est en UTC, sans heure d'été. */
+export function dakarToday(now = Date.now()): string {
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+/** La fournée a une date de remise à venir (aujourd'hui compris) : condition pour finaliser et payer une commande. */
+export function hasUpcomingFulfillment(cycle: { fulfillmentDate?: string }, now = Date.now()): boolean {
+  return Boolean(cycle.fulfillmentDate) && cycle.fulfillmentDate! >= dakarToday(now);
+}
+
 /** Phase de la fournée maintenant (surplus épuisé compris). */
 export function phaseNow(cycle: PhaseInput & { surplusExhausted?: boolean }): CyclePhase {
   return cyclePhase(cycle, Date.now(), cycle.surplusExhausted ?? false);
@@ -51,8 +59,8 @@ export function isUpcoming(iso: string): boolean {
 
 export const cyclePhaseLabel: Record<CyclePhase, string> = {
   scheduled: "Annoncée",
-  open: "Précommandes ouvertes",
-  closed: "Précommandes clôturées",
+  open: "Commandes ouvertes",
+  closed: "Commandes passées à la fournée suivante",
   preparing: "Production en cours",
   delivering: "Livraison et retrait",
   surplus: "Surplus disponible",
@@ -60,10 +68,15 @@ export const cyclePhaseLabel: Record<CyclePhase, string> = {
   cancelled: "Annulée",
 };
 
+/** Libellé court de la phase : une fournée ouverte sans date de remise à venir affiche « Dates à annoncer ». */
+export function phaseBadgeLabel(cycle: { fulfillmentDate?: string }, phase: CyclePhase, now = Date.now()): string {
+  return phase === "open" && !hasUpcomingFulfillment(cycle, now) ? "Dates à annoncer" : cyclePhaseLabel[phase];
+}
+
 /** Type de commande accepté par une fournée à un instant donné (même règle que le serveur). */
 export function orderKindFor(cycle: PhaseInput, now = Date.now()): "preorder" | "surplus" | null {
   const phase = cyclePhase(cycle, now);
-  if (phase === "open") return "preorder";
+  if (phase === "open") return hasUpcomingFulfillment(cycle, now) ? "preorder" : null;
   if (phase === "surplus") return "surplus";
   return null;
 }
@@ -86,17 +99,21 @@ export function productionLabel(cycle: Pick<CycleSummary, "productionDate" | "pr
   return `Production pendant la semaine du ${week}.`;
 }
 
-type PreorderInput = Pick<CycleSummary, "closesAt" | "fulfillmentDate"> & Partial<Pick<CycleSummary, "productionDates">>;
+type PreorderInput = Pick<CycleSummary, "fulfillmentDate"> & Partial<Pick<CycleSummary, "productionDates">>;
 
 /** Message officiel de la phase de précommande (jour de préparation seulement s'il est saisi). */
 export function preorderMessage(cycle: PreorderInput): string {
   const dates = [...(cycle.productionDates ?? [])].sort().map((d) => formatDay(d));
   const prepared = dates.length === 0 ? "pendant la semaine" : `le ${dates.length === 1 ? dates[0] : `${dates.slice(0, -1).join(", ")} et ${dates.at(-1)}`}`;
-  return `Commandez avant le ${formatDay(cycle.closesAt)} à ${formatTime(cycle.closesAt)}. Votre commande sera préparée ${prepared} et livrée ou retirée le ${formatDay(cycle.fulfillmentDate)}.`;
+  return `Vous pouvez commander à tout moment. Votre commande sera préparée ${prepared} et livrée ou retirée le ${formatDay(cycle.fulfillmentDate)}.`;
 }
 
-export const PREORDER_CLOSED_MESSAGE =
-  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
+/** Fournée plus désignée pour les nouvelles commandes : l'atelier la prépare, les nouvelles commandes iront à la suivante. */
+export const BATCH_IN_PROGRESS_MESSAGE =
+  "L’atelier prépare cette fournée. Vos nouvelles commandes seront rattachées à la prochaine fournée, dès que l’atelier aura annoncé ses dates. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
+/** Aucune date de remise à venir : catalogue et boîte restent accessibles, seules la validation et le paiement attendent. */
+export const NO_CALENDAR_MESSAGE =
+  "Aucune date de livraison ou de retrait n’est encore annoncée pour la prochaine fournée. Vous pouvez composer votre boîte : elle est conservée. La commande et le paiement ouvriront dès que l’atelier aura annoncé les dates.";
 export const SURPLUS_MESSAGE =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 export const DONE_MESSAGE = "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
@@ -107,11 +124,11 @@ export const COME_BACK_MESSAGE = "Revenez après la fournée pour vérifier les 
 export function phaseMessage(phase: CyclePhase, cycle: PreorderInput): string | null {
   switch (phase) {
     case "open":
-      return preorderMessage(cycle);
+      return hasUpcomingFulfillment(cycle) ? preorderMessage(cycle) : NO_CALENDAR_MESSAGE;
     case "closed":
     case "preparing":
     case "delivering":
-      return PREORDER_CLOSED_MESSAGE;
+      return BATCH_IN_PROGRESS_MESSAGE;
     case "surplus":
       return SURPLUS_MESSAGE;
     case "done":
@@ -126,15 +143,17 @@ export function cycleStatusLine(cycle: CycleSummary, now = Date.now()): string {
   const phase = cyclePhase(cycle, now, cycle.surplusExhausted);
   switch (phase) {
     case "open":
-      return `Précommandes de la fournée n°${cycle.number} jusqu’au ${formatDay(cycle.closesAt)} à ${formatTime(cycle.closesAt)}.`;
+      return hasUpcomingFulfillment(cycle, now)
+        ? `Fournée n°${cycle.number} : commande possible à tout moment, livraison ou retrait le ${formatDay(cycle.fulfillmentDate)}.`
+        : `${NO_CALENDAR_MESSAGE}`;
     case "surplus":
       return `Surplus de la fournée n°${cycle.number} : commande possible dans la limite du stock réellement restant.`;
     case "scheduled":
-      return `Fournée n°${cycle.number} annoncée : les précommandes ne sont pas encore ouvertes. Votre boîte est conservée.`;
+      return `Fournée n°${cycle.number} annoncée : les commandes ne sont pas encore ouvertes. Votre boîte est conservée.`;
     case "closed":
     case "preparing":
     case "delivering":
-      return `${PREORDER_CLOSED_MESSAGE} Votre boîte est conservée.`;
+      return `${BATCH_IN_PROGRESS_MESSAGE} Votre boîte est conservée.`;
     case "cancelled":
       return "Cette fournée a été annulée. Votre boîte est conservée pour la prochaine.";
     default:
@@ -191,11 +210,11 @@ export function friseSteps(cycle: CycleSummary, phase: CyclePhase): FriseStep[] 
   return [
     {
       key: "preorder",
-      title: `Commandez avant ${formatDay(cycle.closesAt).split(" ")[0]}`,
-      detail: `Jusqu’au ${formatDay(cycle.closesAt)}, ${formatTime(cycle.closesAt)}.`,
+      title: "Vous commandez à tout moment",
+      detail: "Vos commandes sont rattachées à la fournée désignée par l’atelier, avec ses dates réelles.",
       state: state(0),
     },
-    { key: "production", title: "Alima prépare votre fournée", detail: productionLabel(cycle), state: state(1) },
+    { key: "production", title: "L’atelier prépare votre fournée", detail: productionLabel(cycle), state: state(1) },
     {
       key: "fulfillment",
       title: `Livraison ou retrait ${formatDay(cycle.fulfillmentDate).split(" ")[0]}`,
@@ -208,7 +227,7 @@ export function friseSteps(cycle: CycleSummary, phase: CyclePhase): FriseStep[] 
       detail:
         phase === "surplus"
           ? "Le surplus est en vente, dans la limite du stock réellement restant."
-          : "Seulement s’il en reste après les commandes confirmées, publié par Alima.",
+          : "Seulement s’il en reste après les commandes confirmées, publié par l’atelier.",
       state: state(3),
     },
   ];

@@ -62,7 +62,7 @@ export function CartDrawer() {
               </p>
               <div className="mt-4 flex flex-col gap-2" onClick={() => setDrawerOpen(false)}>
                 <ButtonLink href="/commande" className="w-full">
-                  Remplir le bon de fournée
+                  Continuer ma commande
                 </ButtonLink>
                 <ButtonLink href="/ma-boite" variant="text" className="self-center">
                   Ouvrir Ma boîte en grand

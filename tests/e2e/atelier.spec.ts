@@ -51,6 +51,8 @@ test.describe("Atelier — navigation et accueil", () => {
     await grantAdmin(e164(admin));
     await page.goto("/admin");
     await waitForHydration(page);
+    // Le badge « Insight » des outils de développement de Next recouvre la barre du bas : absent en production.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     const bar = page.getByRole("navigation", { name: "Accès rapides" });
     await expect(bar.getByRole("link", { name: "Aujourd'hui" })).toHaveAttribute("aria-current", "page");
     await bar.getByRole("link", { name: "Commandes" }).click();
@@ -213,7 +215,8 @@ test.describe("Atelier — cockpit de fournée", () => {
     await expect(steps.locator('[aria-current="step"]')).toHaveCount(1);
     await expect(page.getByText("Étape 3 · Suivre les commandes")).toBeVisible();
     await expect(page.getByText("← vous êtes ici")).toBeVisible();
-    await expect(page.getByText(/se fermeront automatiquement/)).toBeVisible();
+    await expect(page.getByText(/Les clientes commandent à toute heure/)).toBeVisible();
+    await expect(page.getByText(/se fermeront automatiquement/)).toHaveCount(0);
     await expect(page.getByText("Étape 7 · Terminer")).toBeVisible();
 
     // Fiche de production : l'impression est tracée.

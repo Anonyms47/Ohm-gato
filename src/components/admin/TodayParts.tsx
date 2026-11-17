@@ -26,11 +26,11 @@ export function cycleSentence(cycle: AdminCycle | null, now: number): { text: st
     case "scheduled":
       return cycle.status === "draft"
         ? { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est en brouillon : elle n'est pas encore visible des clientes.`, target: null, targetLabel: null }
-        : { text: `Les précommandes de ${n} ouvriront le ${formatDay(cycle.opensAt)} à ${formatTime(cycle.opensAt)}.`, target: cycle.opensAt, targetLabel: "Ouverture" };
+        : { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est annoncée : ouvrez-la quand ses dates sont prêtes.`, target: null, targetLabel: null };
     case "open":
-      return { text: `Les précommandes de ${n} sont ouvertes jusqu'au ${formatDay(cycle.closesAt)} à ${formatTime(cycle.closesAt)}.`, target: cycle.closesAt, targetLabel: "Clôture" };
+      return { text: `Les commandes de ${n} sont ouvertes à toute heure. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "closed":
-      return { text: `Les précommandes de ${n} sont terminées. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
+      return { text: `Les nouvelles commandes ne vont plus à ${n}. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "preparing":
       return { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est en production. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "delivering":

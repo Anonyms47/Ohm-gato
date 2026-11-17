@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { HandArrow } from "@/components/brand/HandArrow";
 import { AvailabilityBadge } from "@/components/catalog/AvailabilityBadge";
@@ -8,18 +9,16 @@ import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
 import { getCatalog, getPublicSettings } from "@/lib/catalog";
-import type { CatalogProduct, CycleSummary } from "@/lib/catalog-types";
-import { cyclePhaseLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
-import { formatDay, formatTime } from "@/lib/dates";
+import type { CycleSummary } from "@/lib/catalog-types";
+import { phaseBadgeLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
+import { formatDay } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
+import { startingFormat } from "@/lib/starting-format";
+import { socialLinks } from "@/lib/social";
 
-function fromPrice(product: CatalogProduct) {
-  const prices = product.variants.filter((v) => v.enabledInCycle).map((v) => v.priceFcfa);
-  return prices.length ? Math.min(...prices) : null;
-}
 
 function cycleLine(cycle: CycleSummary | null): string {
-  if (!cycle) return "Prochaine fournée annoncée sur Instagram.";
+  if (!cycle) return "Aucune fournée n'est ouverte pour le moment.";
   const phase = phaseNow(cycle);
   if (phase === "scheduled") return `Fournée annoncée : ${productionLabel(cycle)}`;
   return phaseMessage(phase, cycle) ?? "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
@@ -34,6 +33,7 @@ export default async function FourneePage() {
   const manifestoCandidate = products.find((p) => p.slug === "moelleux-chocolat") ?? null;
   const manifesto = manifestoCandidate && manifestoCandidate.id !== featured?.id ? manifestoCandidate : null;
   const alimaNote = typeof settings["home.alima_note"] === "string" ? (settings["home.alima_note"] as string) : null;
+  const social = socialLinks(settings);
   const phase = cycle ? phaseNow(cycle) : null;
   const action = cycle && phase ? phaseAction(phase, cycle.number) : null;
 
@@ -44,15 +44,14 @@ export default async function FourneePage() {
     "@type": "Bakery",
     name: brand.name,
     url: siteUrl,
-    logo: `${siteUrl}/brand/logo-ohmegato.png`,
+    logo: `${siteUrl}/brand/symbole-ohmegato.png`,
     image: `${siteUrl}/opengraph-image`,
     description: "Pâtisseries faites maison à Dakar, commandées par fournées : livraison dans Dakar ou retrait à Sud Foire.",
     telephone: brand.phoneE164,
     email: brand.email,
     address: { "@type": "PostalAddress", addressLocality: brand.city, addressCountry: "SN" },
     areaServed: { "@type": "City", name: brand.city },
-    founder: { "@type": "Person", name: brand.operator },
-    sameAs: [brand.instagramUrl],
+    sameAs: [social.instagram.url, ...(social.snapchat ? [social.snapchat.url] : [])],
   };
 
   return (
@@ -64,7 +63,7 @@ export default async function FourneePage() {
           <div className="relative z-10 flex flex-col gap-5 motion-safe:animate-[ohm-entree_520ms_var(--ohm-courbe)_both]">
             <p className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-chocolat bg-blanc-casse px-3 py-1 font-bold">
               <span aria-hidden className={cycle?.isOpen ? "size-2.5 rounded-full bg-succes" : "size-2.5 rounded-full bg-encre-douce"} />
-              {phase ? cyclePhaseLabel[phase] : "Fournée fermée"}
+              {cycle && phase ? phaseBadgeLabel(cycle, phase) : "Aucune fournée annoncée"}
             </p>
             {/* Ordinateur et tablette : « La fournée n°1 » sur une seule ligne ; téléphone : deux lignes. */}
             <BrandHeading as="h1" size="affiche" id="couverture" className={cycle ? "md:whitespace-nowrap md:text-[clamp(2.75rem,6vw,5rem)]" : undefined}>
@@ -102,8 +101,8 @@ export default async function FourneePage() {
                   Voir la fournée
                 </ButtonLink>
               ) : (
-                <ButtonLink href={brand.instagramUrl} variant="secondary">
-                  Suivre les annonces sur Instagram
+                <ButtonLink href="#prevenez-accueil" variant="secondary">
+                  Être prévenu(e) de la prochaine fournée
                 </ButtonLink>
               )}
             </div>
@@ -126,6 +125,15 @@ export default async function FourneePage() {
         </div>
       </section>
 
+      {/* Aucune fournée ouverte : prévenir la cliente plutôt que la renvoyer vers un réseau social */}
+      {!cycle?.isOpen && (
+        <section className="ohm-grille">
+          <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+            <NextBatchAlert source="accueil" />
+          </div>
+        </section>
+      )}
+
       {/* Acte 2 — table des produits de la fournée */}
       <section aria-labelledby="table" className="bg-blanc-casse">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -142,7 +150,7 @@ export default async function FourneePage() {
           ) : (
             <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
               {inCycle.map((product, index) => {
-                const price = fromPrice(product);
+                const smallest = startingFormat(product.variants.filter((v) => v.enabledInCycle));
                 return (
                   <li key={product.id} className={cn(index % 2 === 1 && "sm:translate-y-6")}>
                     <Link
@@ -150,12 +158,12 @@ export default async function FourneePage() {
                       className="group flex flex-col gap-2 rounded-[12px] focus-visible:outline-offset-4 motion-safe:animate-[ohm-entree_420ms_var(--ohm-courbe)_both]"
                       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
                     >
-                      <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)] group-hover:-rotate-2" />
+                      <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)]" />
                       <span className="font-display text-[1.3rem] leading-tight">{product.name}</span>
                       <span className="flex flex-wrap items-center gap-2">
-                        {price !== null && (
+                        {smallest && (
                           <span className="tabular-nums text-encre-douce">
-                            dès <strong className="text-caramel-encre">{formatFcfa(price)}</strong>
+                            {smallest.label} : <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
                           </span>
                         )}
                         {product.availability !== "available" && <AvailabilityBadge state={product.availability} />}
@@ -190,16 +198,42 @@ export default async function FourneePage() {
         </section>
       )}
 
-      {/* Acte 3 — pause humaine (affichée seulement avec une vraie note d'Alima) */}
+      {/* Acte 2 ter — des premiers muffins à OHMEGATO */}
+      <section aria-labelledby="histoire-accueil" className="bg-blanc-casse" data-testid="histoire-accueil">
+        <div className="mx-auto grid max-w-5xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-[1fr_1.4fr] md:items-center">
+          <div>
+            <Annotation>notre histoire</Annotation>
+            <BrandHeading id="histoire-accueil" size="titre">
+              Des premiers muffins à OHMEGATO
+            </BrandHeading>
+          </div>
+          <div className="flex flex-col gap-4 text-[1.1rem]">
+            <p>
+              Les premiers muffins ont été préparés à l&apos;ESP, pour un événement. Ils ont plu à l&apos;entourage, puis la carte s&apos;est développée petit à petit.
+            </p>
+            <p>
+              Le nom raconte aussi cette histoire : OHMEGATO associe <strong>OMEGA (Ω)</strong> et <strong>TO (Τ)</strong>.
+            </p>
+            <p>Aujourd&apos;hui, nous voulons simplement partager des douceurs maison et une expérience chaleureuse, une fournée après l&apos;autre.</p>
+            <p>
+              <Link href="/notre-histoire" className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                Découvrir notre histoire
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Acte 3 — pause humaine (affichée seulement avec une vraie note de l'atelier) */}
       {alimaNote && (
         <section aria-labelledby="note" className="ohm-grille">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
             <h2 id="note" className="sr-only">
-              Le mot d&apos;Alima
+              Le mot de l&apos;atelier
             </h2>
-            <blockquote className="-rotate-1 rounded-[4px] bg-blanc-casse p-6 shadow-[0_2px_0_var(--ohm-grille)] sm:p-10">
+            <blockquote className="rounded-[4px] bg-blanc-casse p-6 shadow-[0_2px_0_var(--ohm-grille)] sm:p-10">
               <p className="font-script text-[clamp(1.5rem,4vw,2.1rem)] leading-snug text-chocolat">{alimaNote}</p>
-              <footer className="mt-4 font-bold">— Alima</footer>
+              <footer className="mt-4 font-bold">— OHMEGATO</footer>
             </blockquote>
           </div>
         </section>
@@ -231,17 +265,15 @@ export default async function FourneePage() {
       {/* Acte 5 — ticket de sortie */}
       <section aria-labelledby="ticket" className="ohm-grille">
         <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
-          <div className="rotate-[0.6deg] bg-blanc-casse px-6 pb-8 pt-6 shadow-[0_2px_0_var(--ohm-grille)]">
+          <div className="bg-blanc-casse px-6 pb-8 pt-6 shadow-[0_2px_0_var(--ohm-grille)]">
             <h2 id="ticket" className="text-center font-display text-[1.6rem]">
               Bon à savoir
             </h2>
             <dl className="mt-4 divide-y-2 divide-dashed divide-chocolat/25">
               {cycle && (
                 <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
-                  <dt className="font-bold">Date limite de commande</dt>
-                  <dd>
-                    {formatDay(cycle.closesAt)}, {formatTime(cycle.closesAt)}
-                  </dd>
+                  <dt className="font-bold">Commande</dt>
+                  <dd>À tout moment, rattachée à la fournée n°{cycle.number}</dd>
                 </div>
               )}
               <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">

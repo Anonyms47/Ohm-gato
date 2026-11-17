@@ -10,7 +10,7 @@ import { lineTotal } from "@/lib/money";
 
 export type LineIssue =
   | "unknown"            // format retiré de la carte
-  | "closed"             // fournée fermée
+  | "closed"             // aucune fournée à laquelle rattacher la boîte
   | "not_in_cycle"       // produit ou format absent de la fournée
   | "flavor_required"
   | "flavor_unavailable"
@@ -55,7 +55,7 @@ export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: Cycle
     const flavor = line.flavorId ? (product.flavors.find((f) => f.id === line.flavorId) ?? null) : null;
     let issue: LineIssue | null = null;
 
-    if (!cycle?.isOpen) issue = "closed";
+    if (!cycle?.composable) issue = "closed";
     else if (!product.inCycle || !variant.enabledInCycle) issue = "not_in_cycle";
     else if (product.flavors.length > 0 && !line.flavorId) issue = "flavor_required";
     else if (line.flavorId && (!flavor || !flavor.availableInCycle)) issue = "flavor_unavailable";
@@ -90,7 +90,7 @@ export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: Cycle
 
 export const lineIssueMessage: Record<LineIssue, string> = {
   unknown: "Ce format n'est plus proposé.",
-  closed: "Les commandes sont fermées pour le moment.",
+  closed: "Aucune fournée n'est annoncée pour le moment : votre boîte est conservée.",
   not_in_cycle: "Pas dans la fournée actuelle.",
   flavor_required: "Choisissez un parfum.",
   flavor_unavailable: "Ce parfum n'est pas proposé dans cette fournée.",

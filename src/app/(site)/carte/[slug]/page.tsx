@@ -16,6 +16,7 @@ import { flavorsWithOwnInfo, summarizeAllergens } from "@/lib/allergens";
 import { getCatalog } from "@/lib/catalog";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { formatFcfa } from "@/lib/money";
+import { startingFormat } from "@/lib/starting-format";
 import { storageAdvice } from "@/lib/storage";
 
 async function findProduct(slug: string) {
@@ -44,11 +45,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const user = await getCurrentUser();
   const favorites = user ? await getMyFavorites(user.id) : [];
   // Quand la commande est possible, les formats et leurs prix sont déjà dans le choix du format.
-  const orderable = product.inCycle && (catalog.cycle?.isOpen ?? false);
-  const fromPrice = (p: CatalogProduct) => {
-    const prices = p.variants.map((v) => v.priceFcfa);
-    return prices.length ? Math.min(...prices) : null;
-  };
+  const orderable = product.inCycle && (catalog.cycle?.composable ?? false);
   const perFlavor = product.flavors.length > 0 && flavorsWithOwnInfo(product.allergenInfo).size > 0;
   const pairings = product.pairingSlugs
     .map((s) => catalog.products.find((p) => p.slug === s))
@@ -92,7 +89,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <AvailabilityBadge state={product.availability} />
             </div>
             <p className="max-w-prose text-[1.15rem]">{product.description}</p>
-            <AddToBox product={product} />
+            <AddToBox product={product} stickyCta />
             <FavoriteButton productId={product.id} productName={product.name} slug={product.slug} signedIn={user !== null} initial={favorites.includes(product.id)} />
           </div>
           <ProductVisual product={product} priority sizes="(min-width: 768px) 45vw, 90vw" className="order-1 mx-auto w-full max-w-[32rem] md:order-2" />
@@ -186,9 +183,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <Link href={`/carte/${p.slug}`} className="flex flex-col gap-2">
                     <ProductVisual product={p} sizes="(min-width: 768px) 20vw, 45vw" />
                     <span className="font-display text-[1.25rem]">{p.name}</span>
-                    {fromPrice(p) !== null && (
+                    {startingFormat(p.variants) && (
                       <span className="tabular-nums text-encre-douce">
-                        dès <strong className="text-caramel-encre">{formatFcfa(fromPrice(p)!)}</strong>
+                        {startingFormat(p.variants)!.label} : <strong className="text-caramel-encre">{formatFcfa(startingFormat(p.variants)!.priceFcfa)}</strong>
                       </span>
                     )}
                   </Link>

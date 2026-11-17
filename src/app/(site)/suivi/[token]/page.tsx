@@ -7,7 +7,7 @@ import { phoneLoginAvailable } from "@/lib/messaging";
 import { getOrderByToken } from "@/lib/orders/get-order";
 import { ownedReferences } from "@/lib/orders/owner-cookie";
 import { paymentMethods } from "@/lib/payments";
-import { waveLinkFor } from "@/lib/payments/wave-link";
+import { getPaymentSettings, merchantLinkFor } from "@/lib/payments/settings";
 
 export const metadata: Metadata = {
   title: "Suivi de commande",
@@ -29,16 +29,22 @@ export default async function SuiviPage({
   const [owned, user] = await Promise.all([ownedReferences("commandes"), getCurrentUser()]);
   // Informations personnelles : navigateur d'origine, propriétaire connecté ou équipe.
   const showPrivate = owned.includes(order.reference) || (user !== null && (user.id === order.userId || user.isAdmin));
+  // Lien marchand du moyen choisi (Wave ou Orange Money) : jamais inventé, jamais sans réglage valide.
+  const linkProvider: "wave" | "orange_money" | null = order.lastPaymentProvider === "orange_money" ? "orange_money" : order.lastPaymentProvider === "wave_link" ? "wave" : null;
+  const settings = await getPaymentSettings();
+  const paymentLink = linkProvider
+    ? { provider: linkProvider, label: settings[linkProvider].displayName, url: await merchantLinkFor(linkProvider, order.totalFcfa), instructions: settings[linkProvider].instructions }
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6">
       <OrderTracker
         token={token}
         returningFromPayment={retour === "paiement"}
-        paymentMethods={paymentMethods()}
+        paymentMethods={await paymentMethods()}
         pickupAddress={brand.pickupAddress}
         phoneLogin={phoneLoginAvailable()}
-        waveLink={order.lastPaymentProvider === "wave_link" ? waveLinkFor(order.totalFcfa) : null}
+        paymentLink={paymentLink && paymentLink.url ? { ...paymentLink, url: paymentLink.url } : null}
         order={{
           reference: order.reference,
           status: order.status,
@@ -54,6 +60,7 @@ export default async function SuiviPage({
           showPrivate,
           subtotalFcfa: order.subtotalFcfa,
           deliveryFeeFcfa: order.deliveryFeeFcfa,
+          deliveryZoneName: order.deliveryZoneName,
           totalFcfa: order.totalFcfa,
           reservationExpiresAt: order.reservationExpiresAt,
           cycleNumber: order.cycleNumber,

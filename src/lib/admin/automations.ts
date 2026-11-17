@@ -2,6 +2,7 @@ import "server-only";
 import type { AdminTask } from "@/lib/admin/tasks";
 import { dakarDayBounds, getAutomationSettings, loadToday } from "@/lib/admin/today";
 import { brand } from "@/config/brand";
+import { processBatchAlerts, type BatchAlertResult } from "@/lib/alerts/outbox";
 import { processOutbox, emailChannel, type OutboxResult } from "@/lib/email/outbox";
 import { serverEnv } from "@/lib/env";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -75,6 +76,7 @@ export interface AutomationResult {
   skipped?: "recent";
   notifications?: NotificationSync;
   emails?: OutboxResult;
+  alerts?: BatchAlertResult;
   digest?: boolean;
   cycles?: Record<string, number>;
 }
@@ -105,6 +107,12 @@ export async function runAutomations(trigger: "cron" | "visite" | "action"): Pro
     result.notifications = await syncNotifications(today.tasks);
     if (trigger === "cron") result.digest = await queueDailyDigest(today.tasks);
     result.emails = await processOutbox(50);
+    // Alertes « prochaine fournée » déclenchées par l'administratrice : envoyées par petits lots, jamais lancées d'elles-mêmes.
+    try {
+      result.alerts = await processBatchAlerts(50);
+    } catch (alertError) {
+      console.error("Alertes de fournée non traitées", { reason: alertError instanceof Error ? alertError.message : "inconnue" });
+    }
   } finally {
     await db().from("automation_runs").update({ finished_at: new Date().toISOString(), result }).eq("id", run.id);
   }

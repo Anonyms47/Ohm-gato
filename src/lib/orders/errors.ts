@@ -2,9 +2,10 @@
 export const ORDER_ERROR_MESSAGES: Record<string, string> = {
   EMPTY_CART: "Votre boîte est vide.",
   TOO_MANY_LINES: "Votre boîte contient trop de lignes. Regroupez certains articles.",
-  CYCLE_NOT_OPEN: "Les commandes de cette fournée sont fermées. Votre boîte est conservée pour la prochaine.",
+  CYCLE_NOT_OPEN: "Aucune date de livraison ou de retrait n'est annoncée pour cette fournée : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée.",
+  CYCLE_DATES_PAST: "Aucune date de livraison ou de retrait à venir n'est annoncée : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée ; la commande ouvrira dès que l'atelier aura annoncé les dates.",
   PREORDER_CLOSED:
-    "Les précommandes sont terminées : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.",
+    "La prochaine fournée vient de changer : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Actualisez la page, vérifiez les dates annoncées, puis validez de nouveau. Votre boîte est conservée.",
   SURPLUS_CLOSED: "La vente du surplus de cette fournée est terminée : cette commande n'a pas été enregistrée. Votre boîte est conservée.",
   DELIVERY_UNAVAILABLE: "Pour les commandes tardives de cette fournée, seul le retrait est proposé.",
   SLOT_INVALID: "Ce créneau n'est plus proposé. Choisissez-en un autre.",

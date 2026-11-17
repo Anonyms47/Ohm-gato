@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { PrintLogo } from "@/components/brand/PrintLogo";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { BackToTop } from "@/components/layout/BackToTop";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { StickyCtaProvider } from "@/components/layout/StickyCta";
 import { CartAnnouncer, MobileNav, ResumeBanner, SiteHeader } from "@/components/layout/SiteChrome";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCatalog } from "@/lib/catalog";
@@ -19,6 +21,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
         Aller au contenu
       </a>
       <CartProvider catalog={catalog}>
+        <StickyCtaProvider>
         <SiteHeader account={account} />
         <ResumeBanner />
         <main id="contenu" className="flex-1">
@@ -27,8 +30,10 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
         </main>
         <SiteFooter />
         <MobileNav account={account} />
+        <BackToTop />
         <CartDrawer />
         <CartAnnouncer />
+        </StickyCtaProvider>
       </CartProvider>
     </>
   );

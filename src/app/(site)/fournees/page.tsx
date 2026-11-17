@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
 import { FourneePoster } from "@/components/cycles/FourneePoster";
 import { brand } from "@/config/brand";
 import { getArchivedCycles, getCatalog, getSlots, getUpcomingCycles } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { phaseNow } from "@/lib/cycle-status";
-import { formatDay, formatTime } from "@/lib/dates";
+import { formatDay } from "@/lib/dates";
 
 export const metadata: Metadata = {
   title: "Nos fournées",
-  description: "Fournées OHMEGATO : commandez avant la date limite, production selon les commandes, livraison ou retrait le jour prévu, surplus éventuel.",
+  description: "Fournées OHMEGATO : commandez à tout moment, production selon les commandes, livraison ou retrait le jour prévu, surplus éventuel.",
   alternates: { canonical: "/fournees" },
 };
 
@@ -33,7 +34,7 @@ export default async function FourneesPage() {
           Nos fournées
         </BrandHeading>
         <p className="mt-3 max-w-prose text-[1.1rem]">
-          OHMEGATO cuisine par fournées. Vous commandez avant la date limite, Alima prépare selon les commandes reçues, puis livre ou remet votre
+          OHMEGATO cuisine par fournées. Vous commandez à tout moment, l&apos;atelier prépare selon les commandes reçues, puis livre ou remet votre
           boîte le jour prévu. S&apos;il reste des douceurs après les commandes confirmées, elles peuvent être proposées ensuite.
         </p>
 
@@ -64,7 +65,7 @@ export default async function FourneesPage() {
                 Fournée n°{next.number} — {next.title}
               </p>
               <p className="mt-1">
-                Commandes jusqu&apos;au {formatDay(next.closesAt)} à {formatTime(next.closesAt)}. Livraison et retrait le {formatDay(next.fulfillmentDate)}.
+                Commande possible à tout moment. Livraison et retrait le {formatDay(next.fulfillmentDate)}.
               </p>
               {next.message && <p className="mt-2 text-encre-douce">{next.message}</p>}
             </div>
@@ -76,8 +77,9 @@ export default async function FourneesPage() {
                 <a href={brand.instagramUrl} className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
                   Instagram @{brand.instagramHandle}
                 </a>
-                . Avec un carnet OHMEGATO, vous pouvez aussi demander à être prévenu.
+                .
               </p>
+              <NextBatchAlert source="fournees" className="mt-4" />
             </div>
           )}
         </section>

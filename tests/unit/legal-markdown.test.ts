@@ -59,15 +59,21 @@ describe("documents de lancement (content/legal)", () => {
   });
 
   it("présente OHMEGATO comme une activité en cours de formalisation, jamais comme une société", () => {
-    expect(all).toContain("OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.");
+    expect(all).toContain("OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.");
     expect(all).not.toMatch(/\b(SARL|SUARL|SAS|SASU|SA au capital)\b/);
     expect(all).not.toMatch(/à compléter|\[à |XXX|TODO/i);
   });
 
-  it("ne présente jamais Orange Money comme disponible ni de traceur publicitaire", () => {
+  it("ne présente jamais Orange Money comme toujours disponible, ni de traceur publicitaire", () => {
     expect(all).not.toMatch(/Google Analytics|Meta Pixel|Facebook Pixel/);
-    for (const line of all.split("\n").filter((l) => /Orange Money/.test(l))) {
-      expect(line).toMatch(/pas|n'est|indisponible|aucun/i);
+    // Orange Money n'est proposé que lorsqu'il est affiché sur le bon de commande, avec vérification manuelle.
+    expect(all).toContain("Un moyen de paiement n'est proposé que lorsqu'il est affiché sur le bon de commande.");
+    expect(all).toContain("ouvrir le lien ne vaut pas paiement");
+  });
+
+  it("le nom personnel de l'exploitante n'apparaît que dans les mentions légales, jamais dans les autres documents", () => {
+    for (const file of readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "mentions-legales.md")) {
+      expect(readFileSync(join(dir, file), "utf8"), file).not.toMatch(/Alima|Alimatou|Thiam/);
     }
   });
 

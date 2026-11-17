@@ -16,7 +16,7 @@ export interface MapStop {
   tone: "todo" | "out" | "done";
 }
 
-const colors = { todo: "#4a2a1c", out: "#c27a2e", done: "#2f6b3a" };
+const colors = { todo: "#3a2418", out: "#c27a2e", done: "#2f6b3a" };
 
 function icon(tone: MapStop["tone"], selected: boolean, label: string) {
   const size = selected ? 40 : 30;

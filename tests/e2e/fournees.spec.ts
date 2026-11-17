@@ -2,15 +2,15 @@ import { expect, test } from "@playwright/test";
 import { acceptTermsAndContinue, addToBox, db, e164, fillPickupCheckout, grantAdmin, login, testPhone, waitForHydration } from "./helpers";
 
 const CYCLE = "00000000-0000-4000-8000-000000000012";
-const PREORDER_CLOSED =
-  "Les précommandes sont terminées. Alima prépare maintenant la fournée. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
 const SURPLUS =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
 
 async function cycleRow() {
-  const [row] = (await db(`production_cycles?select=status,closes_at,surplus_ends_at&id=eq.${CYCLE}`)) as {
+  const [row] = (await db(`production_cycles?select=status,closes_at,production_date,fulfillment_date,surplus_ends_at&id=eq.${CYCLE}`)) as {
     status: string;
-    closes_at: string;
+    closes_at: string | null;
+    production_date: string;
+    fulfillment_date: string;
     surplus_ends_at: string | null;
   }[];
   return row!;
@@ -19,13 +19,13 @@ async function patchCycle(values: Record<string, unknown>) {
   await db(`production_cycles?id=eq.${CYCLE}`, { method: "PATCH", body: JSON.stringify(values) });
 }
 
-test.describe("Fournées : précommande, clôture et surplus", () => {
-  test("précommandes ouvertes : message officiel, frise en quatre moments, bouton adapté", async ({ page }) => {
+test.describe("Fournées : commandes permanentes et surplus", () => {
+  test("commandes ouvertes : message officiel, frise en quatre moments, bouton adapté", async ({ page }) => {
     await page.goto("/fournees");
-    await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Commandez avant le .+ à \d{2} h \d{2}\. Votre commande sera préparée (pendant la semaine|le )/);
+    await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText(/^Vous pouvez commander à tout moment\. Votre commande sera préparée (pendant la semaine|le )/);
     const frise = page.getByRole("list", { name: "Les quatre moments de la fournée" });
     await expect(frise.getByRole("listitem")).toHaveCount(4);
-    await expect(frise.getByText("Alima prépare votre fournée")).toBeVisible();
+    await expect(frise.getByText("L’atelier prépare votre fournée")).toBeVisible();
     await expect(frise.getByText("Les douceurs restantes peuvent revenir en stock")).toBeVisible();
     await expect(frise.locator('[aria-current="step"]')).toHaveCount(1);
     // Frise verticale sur téléphone et petite tablette, horizontale à partir de 768 px.
@@ -38,42 +38,61 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Fournée n°12");
   });
 
-  test("date limite passée : précommande refusée, boîte conservée, aucun faux surplus", async ({ page }) => {
+  test("ancienne date limite dépassée : la commande reste possible, aucune fermeture", async ({ page }) => {
+    const before = await cycleRow();
+    try {
+      await patchCycle({ closes_at: new Date(Date.now() - 3 * 86400_000).toISOString() });
+      await page.goto("/fournees");
+      await expect(page.getByText("Commandes ouvertes").first()).toBeVisible();
+      await expect(page.getByText(/Commandes fermées|Précommandes clôturées|terminées/)).toHaveCount(0);
+      await addToBox(page, "cookies", "Unité");
+      await fillPickupCheckout(page);
+      await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
+      await acceptTermsAndContinue(page);
+      await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
+      await expect(page).toHaveURL(/\/paiement-test\//);
+    } finally {
+      await patchCycle({ closes_at: before.closes_at });
+    }
+  });
+
+  test("sans date de remise à venir : catalogue et boîte accessibles, validation refusée, rien d'enregistré", async ({ page }) => {
     const before = await cycleRow();
     const counts = async () => [
       ((await db(`orders?select=id&cycle_id=eq.${CYCLE}`)) as unknown[]).length,
       ((await db("payments?select=id")) as unknown[]).length,
     ];
-    // Boîte remplie et bon de fournée complété AVANT la date limite.
+    // Boîte remplie et bon complété tant que la date de remise est valide.
     await addToBox(page, "cookies", "Unité");
     await fillPickupCheckout(page);
     await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
     await acceptTermsAndContinue(page);
     const start = await counts();
     try {
-      // La date limite passe pendant que le client est sur la page ; la fournée reste « open » côté administration.
-      await patchCycle({ closes_at: new Date(Date.now() - 60_000).toISOString() });
+      // Le calendrier passe pendant que la cliente est sur la page : la fournée reste « open », aucune fermeture inventée.
+      await patchCycle({ production_date: "2020-01-01", fulfillment_date: "2020-01-02" });
       await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
-      await expect(page.getByText(/Les précommandes sont terminées : cette commande n'a pas été enregistrée/)).toBeVisible();
+      await expect(page.getByText(/Aucune date de livraison ou de retrait à venir n'est annoncée : cette commande n'a pas été enregistrée/)).toBeVisible();
       await expect(page).toHaveURL(/\/commande$/);
-      // Côté serveur : aucune commande, aucun numéro, aucun paiement.
       expect(await counts()).toEqual(start);
       expect((await cycleRow()).status).toBe("open");
 
       await page.goto("/fournees");
-      await expect(page.getByText("Précommandes clôturées").first()).toBeVisible();
-      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(PREORDER_CLOSED);
-      await expect(page.getByText("Revenez après la fournée pour vérifier les disponibilités.").filter({ visible: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Prévenez-moi/ })).toHaveCount(0);
-      await expect(page.getByRole("link", { name: "Composer ma boîte" })).toHaveCount(0);
-      await expect(page.getByText("Choisir le format")).toHaveCount(0);
+      await expect(page.getByText("Dates à annoncer").first()).toBeVisible();
+      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText("Aucune date de livraison ou de retrait n’est encore annoncée");
+      await expect(page.getByText(/Commandes fermées|Précommandes clôturées/)).toHaveCount(0);
+      // Catalogue et boîte restent accessibles.
+      await page.goto("/ma-boite");
+      await waitForHydration(page);
+      await expect(page.getByText("Cookies").first()).toBeVisible();
+      await expect(page.getByText(/La validation ouvrira dès que les dates/)).toBeVisible();
       await page.goto("/commande");
       await waitForHydration(page);
-      await expect(page.getByTestId("commande-fermee")).toContainText("Les précommandes sont terminées");
-      await expect(page.getByTestId("commande-fermee")).toContainText("Votre boîte est conservée");
+      await expect(page.getByTestId("commande-en-attente")).toContainText("Aucune date de livraison ou de retrait");
+      await expect(page.getByTestId("commande-en-attente")).toContainText("conservée");
       await expect(page.getByRole("button", { name: /^Payer avec/ })).toHaveCount(0);
     } finally {
-      await patchCycle({ closes_at: before.closes_at });
+      await patchCycle({ production_date: before.production_date, fulfillment_date: before.fulfillment_date });
     }
   });
 
@@ -111,7 +130,7 @@ test.describe("Fournées : précommande, clôture et surplus", () => {
     await expect(table.getByRole("columnheader", { name: "Paiement à vérifier" })).toBeVisible();
     await expect(table.getByRole("columnheader", { name: "Publié en surplus" })).toBeVisible();
     await expect(table.getByRole("rowheader", { name: "Cookies" })).toBeVisible();
-    // Fournée ouverte : la production réelle se saisit après la clôture, aucun surplus publiable.
+    // Fournée ouverte : la production réelle se saisit une fois la fournée passée en production, aucun surplus publiable.
     await expect(page.getByRole("heading", { name: "Production" })).toBeVisible();
     await expect(page.getByTestId("publication-surplus")).toHaveCount(0);
     await page.goto(`/admin/fournees/${CYCLE}/production`);

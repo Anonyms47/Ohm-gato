@@ -1,11 +1,11 @@
 /** Messages des refus métier renvoyés par les fonctions SQL d'administration. */
 const messages: Record<string, string> = {
   TRANSITION_INVALID: "Ce changement de statut n'est pas possible depuis le statut actuel.",
-  ANOTHER_CYCLE_OPEN: "Une autre fournée est déjà ouverte. Clôturez-la avant d'en ouvrir une nouvelle.",
+  ANOTHER_CYCLE_OPEN: "Un surplus est en cours : terminez-le avant d'ouvrir une nouvelle fournée.",
   CYCLE_EMPTY: "Ajoutez au moins un produit à la fournée avant de l'ouvrir.",
-  CYCLE_DATES_PAST: "L'heure de clôture est déjà passée : modifiez les dates avant d'ouvrir.",
+  CYCLE_DATES_PAST: "La date de livraison est déjà passée : modifiez les dates avant d'ouvrir.",
   CYCLE_NOT_FOUND: "Fournée introuvable.",
-  CYCLE_DATES_INVALID: "Dates invalides : la date limite doit suivre l'ouverture et la livraison suivre la production.",
+  CYCLE_DATES_INVALID: "Dates invalides : la livraison doit suivre la production.",
   STOCK_INVALID: "Le stock doit être un nombre entier positif.",
   STOCK_BELOW_COMMITTED: "Impossible : des unités sont déjà réservées ou vendues au-delà de ce total.",
   NOT_IN_CYCLE: "Ce produit ne fait pas partie de la fournée.",
@@ -18,7 +18,7 @@ const messages: Record<string, string> = {
   CYCLE_STOCK_MISSING: "Indiquez la capacité de précommande de chaque produit proposé avant d'ouvrir les commandes.",
   CYCLE_SLOTS_MISSING: "Ajoutez au moins un créneau de retrait ou de livraison (précommande) avant d'ouvrir les commandes.",
   SURPLUS_SLOTS_MISSING: "Ajoutez au moins un créneau à venir pour les commandes tardives (surplus) avant de publier.",
-  PRODUCTION_NOT_ALLOWED: "La production se saisit après la clôture des précommandes.",
+  PRODUCTION_NOT_ALLOWED: "La production se saisit une fois la fournée passée en production.",
   PRODUCTION_INVALID: "Quantités invalides : les pertes ne peuvent pas dépasser la production.",
   PRODUCTION_BELOW_COMMITTED: "La production commercialisable ne peut pas être inférieure à ce qui est déjà vendu, réservé ou publié.",
   PRODUCTION_MISSING: "Saisissez la production réelle de ce produit avant de publier son surplus.",
@@ -26,9 +26,17 @@ const messages: Record<string, string> = {
   SURPLUS_EMPTY: "Indiquez au moins une quantité de surplus à publier.",
   SURPLUS_END_INVALID: "La dernière date de vente du surplus doit être dans le futur.",
   SURPLUS_INVALID: "Quantités de surplus invalides.",
+  ZONES_INVALID: "Fichier de zones invalide : aucune zone exploitable.",
+  ALERT_CYCLE_NOT_OPEN: "L'alerte ne peut être envoyée que pour une fournée ouverte.",
+  ALERT_ALREADY_SENT: "L'alerte de cette fournée a déjà été déclenchée : aucun second envoi.",
+  ALERT_NO_SUBSCRIBERS: "Aucun inscrit actif : rien à envoyer.",
 };
 
 export function adminErrorMessage(error: { message: string; details?: string | null }): string {
+  if (error.message === "ZONE_DISTRICT_CLASH") {
+    const zone = error.details?.trim();
+    return zone && zone.length < 90 ? `Un de ces quartiers appartient déjà à la zone active « ${zone} ». Un quartier ne peut être que dans une zone.` : "Un de ces quartiers appartient déjà à une autre zone active.";
+  }
   if (error.message === "STOCK_BELOW_COMMITTED" && error.details) {
     try {
       const detail = JSON.parse(error.details) as { committed?: number };

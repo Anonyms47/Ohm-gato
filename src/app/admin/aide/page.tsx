@@ -30,8 +30,8 @@ const GUIDES: { title: string; steps: string[]; href: string; link: string }[] =
   {
     title: "Imprimer la production",
     steps: [
-      "Après la date limite, les nouvelles précommandes sont refusées automatiquement.",
-      "Dans la fournée, « Clôturer les précommandes » fige les quantités.",
+      "Les clientes commandent à toute heure : ouvrir une nouvelle fournée envoie les nouvelles commandes vers elle, sans toucher aux anciennes.",
+      "Dans la fournée, « Passer à l'étape de production » fige les quantités.",
       "« Fiche de production » : imprimez-la. Les paiements à vérifier y sont séparés.",
     ],
     href: "/admin/production",

@@ -5,6 +5,8 @@ import { ACCEPTED_AT_CHECKOUT } from "@/lib/legal/documents";
 import { orderErrorMessage } from "@/lib/orders/errors";
 import { generateTrackingToken } from "@/lib/orders/tracking";
 import { getProvider } from "@/lib/payments";
+import { isLinkMethod, isMethodAvailable } from "@/lib/payments/availability";
+import { getPaymentSettings } from "@/lib/payments/settings";
 import { PaymentUnavailableError, type ProviderId } from "@/lib/payments/types";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { deliveryAddressLine, placeOrderSchema } from "@/lib/validation/checkout";
@@ -64,7 +66,7 @@ export async function placeOrder(
   }
 
   const provider = getProvider(data.paymentProvider);
-  if (!provider.isConfigured()) {
+  if (!(await isMethodAvailable(data.paymentProvider))) {
     return {
       ok: false,
       code: "PAYMENT_UNAVAILABLE",
@@ -178,17 +180,18 @@ async function currentAcceptedVersions(termsId: string, cancellationId: string) 
  */
 export async function startPayment(orderId: string, providerId: ProviderId, trackingToken: string): Promise<string> {
   const provider = getProvider(providerId);
-  if (!provider.isConfigured()) throw new PaymentUnavailableError(providerId);
+  if (!(await isMethodAvailable(providerId))) throw new PaymentUnavailableError(providerId);
 
   const db = supabaseAdmin();
   const { data: payment, error } = await db.rpc("create_payment", { p_order_id: orderId, p_provider: providerId });
   if (error) throw error;
   const row = payment as { id: string; amount_fcfa: number; checkout_url: string | null };
 
-  // Lien marchand Wave : la commande est confirmée dès ce choix (décision d'OHMEGATO),
+  // Lien marchand (Wave ou Orange Money) : la commande est confirmée dès ce choix (décision d'OHMEGATO),
   // le paiement reste à vérifier par l'équipe. Le client voit le montant et le lien sur son suivi.
-  if (providerId === "wave_link") {
-    const { error: confirmError } = await db.rpc("confirm_order_awaiting_wave", { p_order_id: orderId, p_payment_id: row.id });
+  if (isLinkMethod(providerId)) {
+    const label = (await getPaymentSettings())[providerId === "orange_money" ? "orange_money" : "wave"].displayName;
+    const { error: confirmError } = await db.rpc("confirm_order_awaiting_payment_link", { p_order_id: orderId, p_payment_id: row.id, p_label: label });
     if (confirmError) throw confirmError;
     return `/suivi/${trackingToken}?retour=wave`;
   }

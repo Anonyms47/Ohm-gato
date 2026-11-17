@@ -2,7 +2,7 @@
  * « Aujourd'hui chez OHMEGATO » : tâches et prochaine étape, calculées à partir des données réelles.
  * Module pur (aucun accès base) : testable et partagé entre la page et les automatisations.
  */
-import { cyclePhase, type CyclePhase } from "@/lib/cycle-status";
+import { cyclePhase, hasUpcomingFulfillment } from "@/lib/cycle-status";
 
 export type TaskPriority = "urgent" | "today" | "soon" | "info";
 
@@ -24,8 +24,6 @@ export interface TaskInput {
     id: string;
     number: number;
     status: string;
-    opensAt: string;
-    closesAt: string;
     fulfillmentDate: string;
     surplusEndsAt: string | null;
     productionRecorded: boolean;
@@ -49,6 +47,12 @@ export interface TaskInput {
   identityMissing: boolean;
   /** E-mails aux clientes : envois suspendus (message lisible) et messages en pause ou en échec. */
   emails?: { blockedLabel: string | null; toReview: number };
+  /** Éléments à compléter dans l'atelier (zones, moyens de paiement, alertes de fournée). Absent : aucune tâche. */
+  setup?: {
+    zonesActive: number;
+    paymentsWithoutLink: string[];
+    alerts: { activeSubscribers: number; sendsToReview: number; openCycleNumber: number | null; openCycleAnnounced: boolean };
+  };
 }
 
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
@@ -63,7 +67,6 @@ export function hoursSince(iso: string | null, now: number): number {
 export function buildTasks(input: TaskInput): AdminTask[] {
   const tasks: AdminTask[] = [];
   const { cycle } = input;
-  const phase: CyclePhase | null = cycle ? cyclePhase(cycle, input.now) : null;
 
   if (input.needsAttention > 0) {
     const n = input.needsAttention;
@@ -93,15 +96,20 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     });
   }
 
-  if (cycle && cycle.status === "open" && phase === "closed") {
+  // Commandes permanentes : sans fournée ouverte à date de remise à venir, les clientes ne peuvent ni finaliser ni payer.
+  const acceptingOrders = Boolean(cycle) && (cycle!.status === "surplus" || (cycle!.status === "open" && hasUpcomingFulfillment(cycle!, input.now)));
+  if (input.setup && !acceptingOrders) {
+    const passed = cycle && cycle.status === "open";
     tasks.push({
-      key: `cycle-${cycle.id}-close`,
-      priority: "today",
-      title: `Les précommandes de la fournée n°${cycle.number} sont terminées`,
-      detail: "Les nouvelles commandes sont déjà refusées. Clôturez puis imprimez la fiche de production.",
+      key: "no-open-cycle",
+      priority: "urgent",
+      title: passed ? `La date de livraison de la fournée n°${cycle!.number} est passée` : "Aucune fournée n'est ouverte aux commandes",
+      detail: passed
+        ? "Les clientes voient leur boîte mais ne peuvent plus valider ni payer. Aucune commande existante n'est déplacée : annoncez les dates de la prochaine fournée."
+        : "Les clientes voient la carte et leur boîte mais ne peuvent ni valider ni payer. Annoncez les dates de la prochaine fournée et ouvrez-la.",
       count: 1,
-      href: `/admin/fournees/${cycle.id}`,
-      action: "Clôturer et imprimer",
+      href: passed ? `/admin/fournees/nouvelle?depuis=${cycle!.id}` : "/admin/fournees/nouvelle",
+      action: "Annoncer la prochaine fournée",
     });
   }
 
@@ -231,6 +239,57 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     });
   }
 
+  const setup = input.setup;
+  if (setup) {
+    if (setup.alerts.sendsToReview > 0) {
+      const n = setup.alerts.sendsToReview;
+      tasks.push({
+        key: "alerts-to-review",
+        priority: "urgent",
+        title: `${n} ${plural(n, "alerte de fournée n'est pas partie", "alertes de fournée ne sont pas parties")}`,
+        detail: "En pause ou en échec (service d'e-mail) : elles restent en attente, rien n'est perdu.",
+        count: n,
+        href: "/admin/alertes",
+        action: "Voir les envois",
+      });
+    }
+    if (setup.paymentsWithoutLink.length > 0) {
+      const names = setup.paymentsWithoutLink.join(" et ");
+      tasks.push({
+        key: "payments-without-link",
+        priority: "today",
+        title: `${names} ${setup.paymentsWithoutLink.length > 1 ? "sont activés" : "est activé"} sans lien marchand`,
+        detail: "Tant qu'aucun lien n'est enregistré, le moyen de paiement reste masqué pour les clientes.",
+        count: setup.paymentsWithoutLink.length,
+        href: "/admin/moyens-de-paiement",
+        action: "Enregistrer le lien",
+      });
+    }
+    if (setup.alerts.openCycleNumber !== null && !setup.alerts.openCycleAnnounced && setup.alerts.activeSubscribers > 0) {
+      const n = setup.alerts.activeSubscribers;
+      tasks.push({
+        key: `alert-announce-${setup.alerts.openCycleNumber}`,
+        priority: "today",
+        title: `La fournée n°${setup.alerts.openCycleNumber} est ouverte : ${n} ${plural(n, "personne attend", "personnes attendent")} d'être prévenue${n > 1 ? "s" : ""}`,
+        detail: "Rien n'est envoyé sans votre action.",
+        count: n,
+        href: "/admin/alertes",
+        action: "Prévenir",
+      });
+    }
+    if (setup.zonesActive === 0) {
+      tasks.push({
+        key: "zones-missing",
+        priority: "soon",
+        title: "Aucune zone de livraison n'est configurée",
+        detail: "Les clientes voient « Tarif confirmé selon votre position ». Aucune commande n'est bloquée.",
+        count: 1,
+        href: "/admin/zones",
+        action: "Configurer les zones",
+      });
+    }
+  }
+
   if (input.allergensToVerify > 0) {
     const n = input.allergensToVerify;
     tasks.push({
@@ -275,12 +334,11 @@ export function nextCycleStep(cycle: TaskInput["cycle"], waveToVerify: number, n
   switch (cycle.status) {
     case "draft":
     case "scheduled":
-      return { title: "Ouvrir les précommandes", why: "Vérifiez les produits, les créneaux et les dates, puis ouvrez.", href: base, action: "Préparer l'ouverture" };
+      return { title: "Ouvrir les commandes de la fournée", why: "Vérifiez les produits, les créneaux et les dates, puis ouvrez.", href: base, action: "Préparer l'ouverture" };
     case "open":
-      if (phase === "scheduled") return { title: "Ouverture programmée", why: "Les clientes pourront commander à l'heure d'ouverture.", href: base, action: "Voir la fournée" };
-      if (phase === "closed") return { title: "Clôturer administrativement", why: "La date limite est passée : figez les quantités et imprimez la production.", href: base, action: "Clôturer" };
+      if (!hasUpcomingFulfillment(cycle, now)) return { title: "Annoncer la prochaine fournée", why: "La date de livraison est passée : les clientes ne peuvent plus commander.", href: `/admin/fournees/nouvelle?depuis=${cycle.id}`, action: "Créer la prochaine fournée" };
       if (waveToVerify > 0) return { title: "Vérifier les paiements", why: "Une commande compte dans la production seulement une fois payée.", href: "/admin/paiements", action: "Vérifier les paiements" };
-      return { title: "Suivre les précommandes", why: "Les commandes arrivent : rien à faire tant qu'aucun paiement n'attend.", href: base, action: "Voir la fournée" };
+      return { title: "Suivre les commandes", why: "Les commandes arrivent : rien à faire tant qu'aucun paiement n'attend.", href: base, action: "Voir la fournée" };
     case "closed":
       return { title: "Imprimer la fiche de production", why: "Les quantités payées sont figées : lancez la préparation.", href: `${base}/production`, action: "Imprimer la fiche" };
     case "preparing":

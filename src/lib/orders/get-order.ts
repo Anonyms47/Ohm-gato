@@ -21,6 +21,8 @@ export interface OrderView {
   pickupCode: string | null;
   subtotalFcfa: number;
   deliveryFeeFcfa: number | null;
+  /** Zone de livraison au moment de la commande (instantané). */
+  deliveryZoneName: string | null;
   totalFcfa: number;
   reservationExpiresAt: string | null;
   paidAt: string | null;
@@ -61,12 +63,15 @@ interface OrderRow {
   pickup_code: string | null;
   subtotal_fcfa: number;
   delivery_fee_fcfa: number | null;
+  delivery_zone_name: string | null;
   total_fcfa: number;
   reservation_expires_at: string | null;
   paid_at: string | null;
   created_at: string;
   production_cycles: { number: number } | null;
   delivery_slots: { starts_at: string; ends_at: string } | null;
+  slot_starts_at_snapshot: string | null;
+  slot_ends_at_snapshot: string | null;
   custom_request_id: string | null;
   user_id: string | null;
   order_items: {
@@ -97,8 +102,8 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     .select(
       `id, reference, status, payment_status, fulfillment, order_kind, customer_name, customer_phone,
        address_line, district, landmark, latitude, longitude, pickup_code,
-       subtotal_fcfa, delivery_fee_fcfa, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
-       production_cycles(number), delivery_slots(starts_at, ends_at),
+       subtotal_fcfa, delivery_fee_fcfa, delivery_zone_name, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
+       production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot,
        order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
          products(name, storage_rule, storage_note, storage_confirmed)),
        order_status_history(status, created_at),
@@ -127,13 +132,19 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     pickupCode: data.payment_status === "paid" ? data.pickup_code : null,
     subtotalFcfa: data.subtotal_fcfa,
     deliveryFeeFcfa: data.delivery_fee_fcfa,
+    deliveryZoneName: data.delivery_zone_name,
     totalFcfa: data.total_fcfa,
     reservationExpiresAt: data.reservation_expires_at,
     paidAt: data.paid_at,
     createdAt: data.created_at,
     cycleNumber: data.production_cycles?.number ?? null,
     orderKind: data.order_kind,
-    slot: data.delivery_slots ? { startsAt: data.delivery_slots.starts_at, endsAt: data.delivery_slots.ends_at } : null,
+    // Créneau figé à la commande : une modification ultérieure du calendrier ne change pas ce qui a été promis.
+    slot: data.slot_starts_at_snapshot && data.slot_ends_at_snapshot
+      ? { startsAt: data.slot_starts_at_snapshot, endsAt: data.slot_ends_at_snapshot }
+      : data.delivery_slots
+        ? { startsAt: data.delivery_slots.starts_at, endsAt: data.delivery_slots.ends_at }
+        : null,
     isCustom: data.custom_request_id !== null,
     userId: data.user_id,
     items: data.order_items.map((i) => ({

@@ -61,7 +61,7 @@ test.describe("Allergènes", () => {
       await expect(main).not.toContainText(/sans lactose|sans produits laitiers|Déduit de la recette|Confirmé par Alima|soja|arachide|sésame|fruits à coque/i);
     }
     await page.goto("/allergenes-conservation");
-    await expect(page.getByTestId("version-document")).toContainText("Version 1.1");
+    await expect(page.getByTestId("version-document")).toContainText("Version 1.2");
     await expect(page.locator("main")).not.toContainText(/sans lactose|sans produits laitiers/i);
     await expect(
       page.getByText("Respectez la chaîne du froid pour les produits contenant de la crème, une sauce ou des fruits. Ne consommez pas un produit présentant une odeur, une texture ou un aspect anormal."),

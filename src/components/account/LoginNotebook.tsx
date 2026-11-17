@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
@@ -352,7 +353,17 @@ export function LoginNotebook({ next, testMode, phoneEnabled }: { next: string; 
         </div>
       </div>
       <p className={cn("mt-4 text-center text-[0.95rem] text-encre-douce", step === "found" && "hidden")}>
-        Vous avez commandé sans compte ? Connectez-vous avec le même numéro : vos commandes seront retrouvées.
+        {phoneEnabled && channel === "phone" ? (
+          "Vous avez commandé sans compte ? Connectez-vous avec le numéro de téléphone saisi à la commande : vos commandes seront retrouvées."
+        ) : (
+          <>
+            Connexion par e-mail : les commandes passées sans compte ne sont pas rattachées automatiquement. Retrouvez-les avec le lien de suivi reçu, ou sur la page{" "}
+            <Link href="/suivi" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
+              Suivre ma commande
+            </Link>
+            .
+          </>
+        )}
       </p>
     </section>
   );

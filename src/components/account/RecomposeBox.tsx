@@ -22,7 +22,7 @@ export function RecomposeBox({ items }: { items: { variantId: string | null; fla
       const variant = product?.variants.find((v) => v.id === item.variantId);
       const flavorOk =
         !product || product.flavors.length === 0 ? item.flavorId === null : product.flavors.some((f) => f.id === item.flavorId && f.availableInCycle);
-      if (!catalog.cycle?.isOpen || !product || !variant || !variant.enabledInCycle || !flavorOk || orderableUnits(product) === null) {
+      if (!catalog.cycle?.composable || !product || !variant || !variant.enabledInCycle || !flavorOk || orderableUnits(product) === null) {
         missing.push(label);
         continue;
       }

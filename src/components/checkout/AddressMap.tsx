@@ -13,7 +13,7 @@ const TILE_ATTRIBUTION =
 
 const markerIcon = L.divIcon({
   className: "",
-  html: '<span style="display:block;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#4a2a1c;border:3px solid #fbf6ee;box-shadow:0 3px 0 #24140d"></span>',
+  html: '<span style="display:block;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#3a2418;border:3px solid #fbf6ee;box-shadow:0 3px 0 #24140d"></span>',
   iconSize: [34, 34],
   iconAnchor: [17, 34],
 });

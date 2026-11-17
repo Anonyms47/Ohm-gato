@@ -26,7 +26,7 @@ test.describe("Pages légales", () => {
 
   test("informations publiques : statut d'activité, coordonnées, livraison payée au livreur", async ({ page }) => {
     await page.goto("/mentions-legales");
-    await expect(page.getByText("OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.")).toBeVisible();
+    await expect(page.getByText("OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.")).toBeVisible();
     await expect(page.getByText("contact@ohmegato.com").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/SARL|SUARL|NINEA|RCCM/);
     await page.goto("/livraison-retrait");
@@ -71,7 +71,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(acceptance).toContainText("Les informations saisies sont utilisées pour traiter votre commande");
 
     // Sans la case : le paiement reste bloqué.
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Valider ma commande" }).click();
     await expect(page.getByText(/Cochez la case pour accepter/)).toBeVisible();
     await expect(box).toBeFocused();
     await expect(page.getByRole("button", { name: /Payer avec/ })).toHaveCount(0);
@@ -83,7 +83,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(page.getByText("Ceci n'est pas encore une confirmation.")).toBeVisible();
 
     await box.check();
-    await page.getByRole("button", { name: "Tout est bon, payer" }).click();
+    await page.getByRole("button", { name: "Valider ma commande" }).click();
     await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
     await expect(page).toHaveURL(/\/paiement-test\//);
     const [published] = (await db("legal_document_versions?select=id,content_hash&document_slug=eq.conditions-generales&status=eq.published")) as {
@@ -120,7 +120,7 @@ test.describe("Acceptation au paiement", () => {
     await expect(page.getByTestId("rappel-livraison")).toHaveText(
       "Les frais de livraison ne sont pas inclus dans ce paiement. Ils seront réglés séparément au livreur.",
     );
-    await expect(page.getByRole("button", { name: /Tout est bon, payer/ })).toContainText("Livraison à régler séparément au livreur");
+    await expect(page.getByRole("button", { name: /Valider ma commande/ })).toContainText("Livraison à régler séparément au livreur");
   });
 });
 
@@ -142,7 +142,11 @@ test.describe("Administration des documents", () => {
     await page.getByRole("button", { name: "Aperçu public" }).click();
     await expect(page.getByTestId("apercu-document")).toContainText(marker);
     await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
-    await expect(page.getByText(/Brouillon enregistré/)).toBeVisible();
+    // Le message de confirmation est passager : on vérifie le brouillon enregistré, durable.
+    await expect(async () => {
+      const drafts = (await db("legal_document_versions?select=content&document_slug=eq.cookies&status=eq.draft")) as { content: string }[];
+      expect(drafts.some((d) => d.content.includes(marker))).toBe(true);
+    }).toPass();
 
     // Le brouillon n'est pas encore en ligne.
     const pub = await page.context().newPage();

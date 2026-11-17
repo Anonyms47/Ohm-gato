@@ -10,6 +10,7 @@ import type {
   CycleSummary,
   SlotSummary,
 } from "@/lib/catalog-types";
+import type { DeliveryZone } from "@/lib/delivery/zones";
 import { serverEnv } from "@/lib/env";
 import type { StorageRule } from "@/lib/storage";
 import { supabasePublic } from "@/lib/supabase/public";
@@ -20,7 +21,6 @@ interface CycleRow {
   title: string;
   message: string | null;
   opens_at: string;
-  closes_at: string;
   production_date: string;
   production_days: number | null;
   production_dates: string[];
@@ -59,8 +59,8 @@ export function toCycleSummary(row: CycleRow, now: number): CycleSummary {
   const base = {
     status: row.status,
     opensAt: row.opens_at,
-    closesAt: row.closes_at,
     surplusEndsAt: row.surplus_ends_at,
+    fulfillmentDate: row.fulfillment_date,
   };
   const orderKind = orderKindFor(base, now);
   return {
@@ -69,7 +69,6 @@ export function toCycleSummary(row: CycleRow, now: number): CycleSummary {
     title: row.title,
     message: row.message,
     opensAt: row.opens_at,
-    closesAt: row.closes_at,
     productionDate: row.production_date,
     productionDays: row.production_days,
     productionDates: row.production_dates ?? [],
@@ -78,6 +77,7 @@ export function toCycleSummary(row: CycleRow, now: number): CycleSummary {
     surplusEndsAt: row.surplus_ends_at,
     surplusDeliveryAllowed: row.surplus_delivery_allowed,
     isOpen: orderKind !== null,
+    composable: row.status === "surplus" ? orderKind !== null : ["scheduled", "open", "closed", "preparing", "delivering"].includes(row.status),
     orderKind,
     featuredProductSlug: row.featured?.slug ?? null,
     palette: row.palette,
@@ -86,7 +86,7 @@ export function toCycleSummary(row: CycleRow, now: number): CycleSummary {
 const toCycle = toCycleSummary;
 
 export const CYCLE_SELECT =
-  "id, number, title, message, opens_at, closes_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, palette, featured:products!production_cycles_featured_product_id_fkey(slug)";
+  "id, number, title, message, opens_at, production_date, production_days, production_dates, fulfillment_date, status, surplus_ends_at, surplus_delivery_allowed, palette, featured:products!production_cycles_featured_product_id_fkey(slug)";
 
 /** Fournée à mettre en avant : ouverte, sinon la prochaine programmée, sinon la plus récente. */
 export const getCurrentCycle = cache(async (): Promise<CycleSummary | null> => {
@@ -226,7 +226,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
       }));
     const productStock = stock.get(p.id) ?? null;
     // Précommande : quantité libre. Le stock ne compte que pour le surplus publié par Alima.
-    const unlimited = Boolean(cp) && cycle?.orderKind === "preorder";
+    const unlimited = Boolean(cp) && cycle !== null && cycle.status !== "surplus";
     return {
       id: p.id,
       slug: p.slug,
@@ -268,6 +268,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
   // Surplus épuisé : la fournée se ferme d'elle-même (aucune commande possible).
   if (cycle?.orderKind === "surplus" && !products.some((p) => p.inCycle && p.availability === "available")) {
     cycle.isOpen = false;
+    cycle.composable = false;
     cycle.orderKind = null;
     cycle.surplusExhausted = true;
   }
@@ -349,3 +350,39 @@ export const getPublicSettings = cache(async (): Promise<Record<string, unknown>
   if (error) throw error;
   return Object.fromEntries((data as { key: string; value: unknown }[]).map((s) => [s.key, s.value]));
 });
+
+/** Zones de livraison actives (tarifs publics) : quartiers proposés au bon de fournée. */
+export const getDeliveryZones = cache(async (): Promise<DeliveryZone[]> => {
+  const { data, error } = await supabasePublic()
+    .from("delivery_zones")
+    .select("id, name, districts, fee_fcfa, is_active, sort_order, note")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+  if (error) throw error;
+  return (data as ZoneRow[]).map(toZone);
+});
+
+export interface ZoneRow {
+  id: string;
+  name: string;
+  districts: string[] | null;
+  fee_fcfa: number | null;
+  is_active: boolean;
+  sort_order: number;
+  note: string | null;
+  updated_at?: string | null;
+}
+
+export function toZone(row: ZoneRow): DeliveryZone {
+  return {
+    id: row.id,
+    name: row.name,
+    districts: row.districts ?? [],
+    feeFcfa: row.fee_fcfa,
+    isActive: row.is_active,
+    sortOrder: row.sort_order,
+    note: row.note,
+    updatedAt: row.updated_at ?? null,
+  };
+}

@@ -1,6 +1,6 @@
 ## Présentation
 
-OHMEGATO est une activité individuelle de pâtisserie maison exploitée par Madame Alimatou Sadiya Thiam à Dakar, actuellement en cours de formalisation.
+OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
 OHMEGATO prépare des pâtisseries maison (cookies, brownies, moelleux, muffins, cake, choux, verrines…) par cycles de production appelés « fournées ». Le site ohmegato.com permet de découvrir les produits, de passer commande, de payer les produits, de suivre ses commandes et d'envoyer des demandes sur mesure pour un événement.
 
@@ -20,9 +20,13 @@ Les photographies sont présentées à titre d'illustration. Nos pâtisseries so
 
 ## Fournées et disponibilité
 
-La production se fait par fournées, généralement environ trois fois par semaine. Chaque ouverture de fournée est annoncée sur le site et sur nos réseaux sociaux.
+La production se fait par fournées. Vous pouvez commander à toute heure : chaque commande est rattachée à la prochaine fournée désignée par l'atelier, avec les dates de production, de livraison et de retrait affichées au moment de la commande. Vous ne proposez pas de date : celles de la fournée s'appliquent.
 
-Une commande standard doit normalement être passée au moins 24 heures à l'avance. Une commande n'est possible que pour les produits, quantités, stocks et créneaux réellement ouverts au moment de la commande. Le stock affiché est le stock réel restant ; nous n'affichons ni faux stock ni compte à rebours artificiel.
+Les dates et le créneau affichés lors de la validation sont conservés pour votre commande. Une modification ultérieure du calendrier de l'atelier ne change pas une commande déjà enregistrée, et aucune commande n'est reportée d'une fournée à l'autre sans votre accord. Une nouvelle fournée ne reçoit que les nouvelles commandes.
+
+Tant que l'atelier n'a pas annoncé de date de livraison ou de retrait à venir, vous pouvez composer votre boîte, mais vous ne pouvez ni valider la commande ni payer. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
+
+La production suit les commandes : les commandes d'une fournée ne sont pas limitées par un stock affiché. Pour le surplus (douceurs restantes que l'atelier choisit de proposer après la production), seule la quantité réellement restante est commandable. Nous n'affichons ni faux stock ni compte à rebours artificiel.
 
 ## Prix
 
@@ -34,7 +38,7 @@ Le montant payé en ligne couvre uniquement les produits. Les frais de livraison
 
 Une commande se passe en quelques étapes :
 
-1. choisir une fournée ouverte ;
+1. consulter la prochaine fournée annoncée et ses dates ;
 2. choisir les produits, leur format et, le cas échéant, leur parfum ;
 3. les ajouter dans « Ma boîte » ;
 4. choisir le retrait gratuit ou la livraison dans Dakar ;
@@ -45,21 +49,21 @@ Une commande se passe en quelques étapes :
 
 Une commande enregistrée ou en attente de vérification du paiement n'est pas encore une commande payée. Elle n'est considérée comme payée qu'après vérification du paiement par OHMEGATO.
 
-## Paiement par Wave
+## Paiement par Wave ou Orange Money
 
-Le paiement se fait aujourd'hui par le lien marchand Wave d'OHMEGATO :
+Le paiement se fait par lien marchand : Wave, et Orange Money lorsqu'il est proposé sur le bon de commande :
 
-- vous utilisez le lien Wave affiché sur votre suivi de commande, pour le montant indiqué ;
-- votre commande est enregistrée dès que vous choisissez Wave ;
-- Alima vérifie ensuite manuellement la réception du paiement ;
+- vous utilisez le lien du moyen choisi, affiché sur votre suivi de commande, pour le montant indiqué ;
+- votre commande est enregistrée dès que vous choisissez le moyen de paiement ;
+- OHMEGATO vérifie ensuite manuellement la réception du paiement : ouvrir le lien ne vaut pas paiement ;
 - si le paiement est retrouvé, la commande est marquée « Payée » ;
 - si le paiement n'est pas reçu ou ne peut pas être identifié, la commande peut être annulée, et les produits réservés sont remis à disposition.
 
 Si vous avez payé mais que votre commande a été annulée faute de paiement identifié, contactez-nous avec la preuve de votre transaction : après vérification, nous rétablissons la commande ou nous vous remboursons.
 
-Wave est un prestataire de paiement indépendant. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par Wave. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave.
+Wave et Orange Money sont des prestataires de paiement indépendants. OHMEGATO n'est ni opéré, ni garanti, ni approuvé par eux. Nous ne vous demanderons jamais votre code secret ni vos identifiants Wave ou Orange Money.
 
-Le paiement Orange Money n'est pas encore disponible.
+Un moyen de paiement n'est proposé que lorsqu'il est affiché sur le bon de commande.
 
 ## Retrait
 
@@ -71,7 +75,7 @@ Merci de respecter le créneau confirmé pour votre commande. La commande est re
 
 La livraison est possible dans Dakar, selon la disponibilité des livreurs. Pour une livraison, vous indiquez votre quartier, votre adresse, un point de repère et l'emplacement exact sur la carte.
 
-Le tarif de livraison dépend de la destination. Il n'est ni calculé ni payé sur le site : il vous est communiqué après la commande ou au moment de l'organisation de la livraison, et vous le réglez directement au livreur. Le montant payé à OHMEGATO concerne uniquement les produits.
+Le tarif de livraison dépend de la zone de votre quartier. Lorsque la zone est connue, le bon de commande l'affiche avec son tarif ; sinon, le tarif est confirmé selon votre position. Il n'est jamais ajouté au paiement en ligne : vous le réglez directement au livreur. Le tarif affiché au moment de la commande est celui enregistré avec elle. Le montant payé à OHMEGATO concerne uniquement les produits.
 
 Le détail du fonctionnement figure sur la page « Livraison et retrait ».
 

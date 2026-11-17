@@ -6,8 +6,9 @@ test.describe("Nos fournées — le journal du four", () => {
     await page.goto("/fournees");
     await waitForHydration(page);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nos fournées");
-    await expect(page.getByText("Précommandes ouvertes").first()).toBeVisible();
-    await expect(page.getByText("Date limite de commande")).toBeVisible();
+    await expect(page.getByText("Commandes ouvertes").first()).toBeVisible();
+    await expect(page.getByText("À tout moment, rattachée").first()).toBeVisible();
+    await expect(page.getByText("Date limite")).toHaveCount(0);
     await expect(page.getByText("Livraison et retrait").first()).toBeVisible();
     // Précommande sans limite de quantité : aucun « reste » affiché.
     await expect(page.getByText(/^Reste \d+ cookies$/)).toHaveCount(0);
@@ -15,16 +16,18 @@ test.describe("Nos fournées — le journal du four", () => {
     await expect(page.getByRole("heading", { name: "Les fournées passées" })).toBeVisible();
     const cookies = page.locator("li").filter({ has: page.getByRole("heading", { name: "Cookies" }) });
     // Le choix du format s'ouvre à la demande, puis l'ajout reste direct.
-    await cookies.getByText("Choisir le format").click();
+    await cookies.getByText("Choisir mon format").click();
     await cookies.getByRole("button", { name: /^Ajouter ·/ }).click();
     await expect(cookies.getByRole("button", { name: "Ajouté à Ma boîte" })).toBeVisible();
   });
 });
 
 test.describe("Notre histoire", () => {
-  test("Oumy Gâteau → OHMEGATO → Ω, le café présenté comme un projet", async ({ page }) => {
+  test("OHMEGATO = OMEGA (Ω) + TO (Τ), l'histoire des premiers muffins, le café présenté comme un projet", async ({ page }) => {
     await page.goto("/notre-histoire");
-    await expect(page.getByText("Oumy Gâteau, devenu OHMEGATO, puis Ω.")).toBeAttached();
+    await expect(page.getByText("OHMEGATO associe OMEGA (Ω) et TO (Τ).").first()).toBeAttached();
+    await expect(page.getByText(/Oumou Gâteau/).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/Oumy|prononcé d.une traite/);
     await expect(page.getByText(/troisième année à l'ESP/)).toBeVisible();
     await expect(page.getByText(/n'existe pas encore/)).toBeVisible();
     // Aucun emplacement vide : citation, photos et audio absents tant qu'ils ne sont pas fournis.
@@ -80,7 +83,7 @@ test.describe("Retrouvons votre carnet — connexion par code", () => {
     await expect(page.getByText(/Trop de codes incorrects|Ce code ne correspond pas/)).toBeVisible();
   });
 
-  test("commande invitée retrouvée après connexion avec le même numéro", async ({ page }) => {
+  test("commande invitée retrouvée après connexion avec le numéro saisi à la commande", async ({ page }) => {
     await addToBox(page, "cookies", "Unité");
     await page.goto("/commande");
     await waitForHydration(page);
@@ -325,8 +328,8 @@ test.describe("Administration d'Alima", () => {
     await waitForHydration(page);
     const number = String(100 + Math.floor(Math.random() * 800));
     await page.getByLabel("Numéro").fill(number);
-    await page.getByLabel("Ouverture des commandes").fill("2030-01-10T09:00");
-    await page.getByLabel("Date limite de précommande").fill("2030-01-12T18:00");
+    // Commandes permanentes : ni ouverture programmée ni date limite à saisir.
+    await expect(page.getByLabel("Date limite de précommande")).toHaveCount(0);
     await page.getByLabel("Début de la période de production").fill("2030-01-13");
     await page.getByLabel("Jour principal de livraison et de retrait").fill("2030-01-14");
     await page.getByRole("button", { name: "Créer la fournée (brouillon)" }).click();

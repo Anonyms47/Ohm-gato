@@ -34,8 +34,7 @@ export default async function Recu({ params }: { params: Promise<{ id: string }>
       </div>
       <article className="ohm-ticket px-6 py-6 text-[0.95rem] print:shadow-none">
         {/* eslint-disable-next-line @next/next/no-img-element -- logo imprimé tel quel, sans optimisation d'image */}
-        <img src="/brand/logo-ohmegato.png" alt="" width={96} height={96} className="mx-auto mb-2 size-24" />
-        <p className="text-center font-display text-[1.8rem]">{brand.name}</p>
+        <img src={brand.logotype.png} alt={brand.name} width={200} height={66} className="mx-auto mb-3 h-auto w-48" />
         <p className="text-center">{brand.pickupAddress}</p>
         <p className="text-center">{brand.phoneDisplay}</p>
         <hr className="my-3 border-dashed border-chocolat/40" />
@@ -60,9 +59,15 @@ export default async function Recu({ params }: { params: Promise<{ id: string }>
         </ul>
         <hr className="my-3 border-dashed border-chocolat/40" />
         <p className="flex justify-between font-bold tabular-nums">
-          <span>Total produits</span>
+          <span>Total produits payé en ligne</span>
           <span>{formatFcfa(order.totalFcfa)}</span>
         </p>
+        {order.fulfillment === "delivery" && (
+          <p className="flex justify-between font-bold tabular-nums" data-testid="recu-livraison">
+            <span>Livraison à régler au livreur{order.deliveryZoneName ? ` (${order.deliveryZoneName})` : ""}</span>
+            <span>{typeof order.deliveryFeeFcfa === "number" ? formatFcfa(order.deliveryFeeFcfa) : "selon la position"}</span>
+          </p>
+        )}
         <p>
           Paiement : {paymentStatusLabel[order.paymentStatus]}
           {paid ? ` · ${providerLabel(paid.provider)}${paid.providerReference ? ` · réf. ${paid.providerReference}` : ""}` : ""}

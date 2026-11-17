@@ -62,7 +62,7 @@ export default async function CommandeDetail({ params }: { params: Promise<{ ref
             <span>{order.paymentStatus === "paid" ? "Total payé" : "Total"}</span>
             <span>{formatFcfa(order.totalFcfa)}</span>
           </p>
-          {order.fulfillment === "delivery" && <DeliveryFeeNotice className="mt-3" />}
+          {order.fulfillment === "delivery" && <DeliveryFeeNotice className="mt-3" feeFcfa={order.deliveryFeeFcfa} />}
         </section>
 
         {!order.isCustom && (

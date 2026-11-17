@@ -2,7 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf
 import { brand } from "@/config/brand";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
-import { LOGO_PNG_BASE64 } from "@/lib/receipt/logo";
+import { LOGOTYPE_PNG_BASE64, LOGOTYPE_SIZE } from "@/lib/receipt/logo";
 
 /** Données d'un reçu : uniquement ce qui a été réellement payé (les produits). */
 export interface ReceiptData {
@@ -17,13 +17,16 @@ export interface ReceiptData {
   totalFcfa: number;
   paymentLabel: string | null;
   paymentReference: string | null;
+  /** Livraison : frais de la zone au moment de la commande (null = tarif confirmé selon la position). */
+  deliveryFeeFcfa?: number | null;
+  deliveryZoneName?: string | null;
 }
 
 export function receiptFilename(reference: string): string {
   return `recu-${reference.replace(/[^A-Za-z0-9-]/g, "")}.pdf`;
 }
 
-const CHOCOLAT = rgb(0.29, 0.17, 0.11);
+const CHOCOLAT = rgb(0.227, 0.141, 0.094);
 const DOUX = rgb(0.45, 0.36, 0.31);
 const CARAMEL = rgb(0.6, 0.36, 0.13);
 
@@ -66,7 +69,7 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const clean = sanitizer(regular);
-  const logo = await pdf.embedPng(Uint8Array.from(Buffer.from(LOGO_PNG_BASE64, "base64")));
+  const logo = await pdf.embedPng(Uint8Array.from(Buffer.from(LOGOTYPE_PNG_BASE64, "base64")));
 
   const width = 420;
   const height = 595;
@@ -96,16 +99,15 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   };
 
   // En-tête : logo et coordonnées
-  const logoSize = 78;
-  page.drawImage(logo, { x: (width - logoSize) / 2, y: y - logoSize, width: logoSize, height: logoSize });
-  y -= logoSize + 18;
-  text(brand.name, { size: 18, font: bold, align: "center" });
-  y -= 14;
+  const logoWidth = 150;
+  const logoHeight = (logoWidth * LOGOTYPE_SIZE.height) / LOGOTYPE_SIZE.width;
+  page.drawImage(logo, { x: (width - logoWidth) / 2, y: y - logoHeight, width: logoWidth, height: logoHeight });
+  y -= logoHeight + 18;
   text(`Pâtisseries faites maison à ${brand.city}`, { size: 9, color: DOUX, align: "center" });
   y -= 12;
   text(`${brand.pickupAddress}, ${brand.city} · ${brand.phoneDisplay}`, { size: 9, color: DOUX, align: "center" });
   y -= 12;
-  text(`Activité individuelle de Madame ${brand.operator}, en cours de formalisation`, { size: 8.5, color: DOUX, align: "center" });
+  text("Activité individuelle de pâtisserie maison, en cours de formalisation", { size: 8.5, color: DOUX, align: "center" });
   y -= 6;
   rule();
 
@@ -149,9 +151,16 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Uint8Array> {
   rule();
 
   ensure(40);
-  text("Total produits payé", { size: 11, font: bold });
+  text("Total produits payé en ligne", { size: 11, font: bold });
   text(formatFcfa(data.totalFcfa), { size: 13, font: bold, align: "right" });
   y -= 16;
+  if (data.fulfillment === "delivery") {
+    // La livraison se règle au livreur : jamais incluse dans le paiement en ligne.
+    const zone = data.deliveryZoneName ? ` (${data.deliveryZoneName})` : "";
+    text(clean(`Livraison à régler au livreur${zone}`), { size: 10.5, font: bold });
+    text(typeof data.deliveryFeeFcfa === "number" ? formatFcfa(data.deliveryFeeFcfa) : "selon votre position", { size: 10.5, font: bold, align: "right" });
+    y -= 15;
+  }
   if (data.paymentLabel) {
     text(`Paiement : ${data.paymentLabel}${data.paymentReference ? ` · réf. ${data.paymentReference}` : ""}`, { size: 9.5, color: DOUX });
     y -= 13;

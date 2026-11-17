@@ -1,6 +1,6 @@
 ## Livraison dans Dakar
 
-Nous livrons dans Dakar, selon la disponibilité des livreurs. Pour être sûr d'être servi, commandez idéalement au moins 24 heures à l'avance.
+Nous livrons dans Dakar, selon la disponibilité des livreurs. La date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande.
 
 La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande.
 
@@ -18,9 +18,9 @@ Vous pouvez taper votre adresse et chercher votre quartier, puis toucher la cart
 
 ## Le tarif de livraison
 
-Le tarif de livraison dépend de la destination. Il n'est ni calculé ni payé sur le site.
+Le tarif de livraison dépend de votre quartier : chaque quartier appartient à une zone de livraison. Lorsque la zone est connue, le bon de commande affiche la zone et son tarif dès que vous choisissez votre quartier. Si votre quartier ne figure pas dans la liste, le tarif est confirmé selon votre position.
 
-Il vous est communiqué après la commande ou au moment de l'organisation de la livraison, et vous le réglez directement au livreur.
+Le tarif affiché au moment de votre commande est celui qui est enregistré avec elle. Il n'est pas payé sur le site : vous le réglez directement au livreur.
 
 > Votre paiement en ligne couvre uniquement les produits. Les frais de livraison sont réglés séparément au livreur.
 

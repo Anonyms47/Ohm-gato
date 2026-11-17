@@ -12,11 +12,10 @@ export const brand = {
   instagramHandle: "ohmegato",
   instagramUrl: "https://www.instagram.com/ohmegato/",
   pickupAddress: "Rue GY-69, Cité Sonatel 2, Sud Foire",
-  /** Exploitante (activité individuelle en cours de formalisation : ni NINEA, ni RCCM, ni siège à ce jour). */
-  operator: "Alimatou Sadiya Thiam",
   /**
-   * Logo officiel en vecteur, vectorisé depuis le médaillon fourni par la marque
-   * (palette d'origine conservée, aucun texte retapé).
+   * Logos officiels de l'agence, en vecteur (SVG vectorisés depuis les fichiers fournis : symbole muffin/Ω avec losange rose,
+   * logotype manuscrit). Ne jamais redessiner, déformer ni retaper ; fonds clairs uniquement (aucune version inversée fournie).
    */
-  logo: { src: "/brand/logo-ohmegato.svg", width: 640, height: 640 } as null | { src: string; width: number; height: number },
+  symbol: { src: "/brand/symbole-ohmegato.svg", png: "/brand/symbole-ohmegato.png", width: 1000, height: 1761 },
+  logotype: { src: "/brand/logotype-ohmegato.svg", png: "/brand/logotype-ohmegato.png", width: 1800, height: 597 },
 } as const;

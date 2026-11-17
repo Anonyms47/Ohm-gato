@@ -13,7 +13,7 @@ export const CYCLE_STEPS = [
 
 export type CycleStepKey = (typeof CYCLE_STEPS)[number]["key"];
 
-export function currentCycleStep(cycle: { status: string; opensAt: string; closesAt: string; surplusEndsAt?: string | null }, now: number): CycleStepKey {
+export function currentCycleStep(cycle: { status: string; surplusEndsAt?: string | null; fulfillmentDate?: string }, now: number): CycleStepKey {
   const phase = cyclePhase(cycle, now);
   switch (cycle.status) {
     case "draft":
@@ -21,7 +21,7 @@ export function currentCycleStep(cycle: { status: string; opensAt: string; close
     case "scheduled":
       return "ouvrir";
     case "open":
-      return phase === "scheduled" ? "ouvrir" : phase === "closed" ? "produire" : "suivre";
+      return "suivre";
     case "closed":
     case "preparing":
       return "produire";
@@ -40,13 +40,11 @@ export interface Check {
 }
 
 /** Vérifications obligatoires avant l'ouverture (les mêmes que celles du serveur, en clair). */
-export function openingChecks(input: { products: number; preorderSlots: number; opensAt: string; closesAt: string; fulfillmentDate: string; now: number }): Check[] {
-  const closes = Date.parse(input.closesAt);
+export function openingChecks(input: { products: number; preorderSlots: number; productionDate: string; fulfillmentDate: string; now: number }): Check[] {
   return [
     { label: "Au moins un produit proposé", ok: input.products > 0 },
     { label: "Au moins un créneau de retrait ou de livraison", ok: input.preorderSlots > 0 },
-    { label: "Date limite dans le futur", ok: closes > input.now },
-    { label: "Date limite après l'ouverture", ok: closes > Date.parse(input.opensAt) },
-    { label: "Livraison après la date limite", ok: Date.parse(`${input.fulfillmentDate}T23:59:59Z`) >= closes },
+    { label: "Date de livraison et de retrait à venir", ok: input.fulfillmentDate >= new Date(input.now).toISOString().slice(0, 10) },
+    { label: "Livraison pas avant la production", ok: input.fulfillmentDate >= input.productionDate },
   ];
 }
