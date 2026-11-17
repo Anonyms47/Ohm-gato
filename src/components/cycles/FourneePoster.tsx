@@ -58,7 +58,7 @@ function ProductRow({ product, canOrder, surplus }: { product: CatalogProduct; c
         {orderable ? (
           smallest && (
             <p className="tabular-nums text-encre-douce">
-              {smallest.label} : <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
+              {smallest.label} · <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
             </p>
           )
         ) : (
@@ -133,7 +133,6 @@ export function FourneePoster({
       <span aria-hidden className="ohm-cercle pointer-events-none absolute -right-16 -top-16 size-48 opacity-25 sm:size-64" />
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-script text-[1.35rem] text-caramel-encre">fournée n°{cycle.number}</p>
           <Heading id={`fournee-${cycle.number}`} className="font-display text-[clamp(1.9rem,5.5vw,2.8rem)] leading-[1.02]">
             {cycle.title}
           </Heading>

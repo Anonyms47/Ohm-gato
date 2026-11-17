@@ -7,7 +7,6 @@ import { ProductVisual } from "@/components/catalog/ProductVisual";
 import { FourneeFrise } from "@/components/cycles/FourneeFrise";
 import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
-import { cn } from "@/lib/cn";
 import { getCatalog, getPublicSettings } from "@/lib/catalog";
 import type { CycleSummary } from "@/lib/catalog-types";
 import { phaseBadgeLabel, phaseAction, phaseMessage, phaseNow, productionLabel } from "@/lib/cycle-status";
@@ -116,7 +115,7 @@ export default async function FourneePage() {
               </div>
               <Link
                 href={`/carte/${featured.slug}`}
-                className="absolute bottom-3 right-0 rounded-[8px] bg-blanc-casse/90 px-3 py-2 font-bold underline decoration-caramel decoration-2 underline-offset-4"
+                className="absolute bottom-3 right-0 inline-flex min-h-11 items-center rounded-[8px] bg-blanc-casse/90 px-3 py-2 font-bold underline decoration-caramel decoration-2 underline-offset-4"
               >
                 {featured.name}
               </Link>
@@ -152,18 +151,19 @@ export default async function FourneePage() {
               {inCycle.map((product, index) => {
                 const smallest = startingFormat(product.variants.filter((v) => v.enabledInCycle));
                 return (
-                  <li key={product.id} className={cn(index % 2 === 1 && "sm:translate-y-6")}>
+                  <li key={product.id}>
                     <Link
                       href={`/carte/${product.slug}`}
                       className="group flex flex-col gap-2 rounded-[12px] focus-visible:outline-offset-4 motion-safe:animate-[ohm-entree_420ms_var(--ohm-courbe)_both]"
                       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
                     >
                       <ProductVisual product={product} sizes="(min-width: 1024px) 22vw, 45vw" className="transition-transform duration-[var(--ohm-duree-moyenne)]" />
-                      <span className="font-display text-[1.3rem] leading-tight">{product.name}</span>
+                      <span className="font-display text-[1.3rem] leading-tight max-md:min-h-[2.5em]">{product.name}</span>
                       <span className="flex flex-wrap items-center gap-2">
                         {smallest && (
-                          <span className="tabular-nums text-encre-douce">
-                            {smallest.label} : <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
+                          <span className="flex flex-col tabular-nums text-encre-douce">
+                            <span>{smallest.label}</span>
+                            <strong className="text-caramel-encre">{formatFcfa(smallest.priceFcfa)}</strong>
                           </span>
                         )}
                         {product.availability !== "available" && <AvailabilityBadge state={product.availability} />}
@@ -266,7 +266,7 @@ export default async function FourneePage() {
       <section aria-labelledby="ticket" className="ohm-grille">
         <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
           <div className="bg-blanc-casse px-6 pb-8 pt-6 shadow-[0_2px_0_var(--ohm-grille)]">
-            <h2 id="ticket" className="text-center font-display text-[1.6rem]">
+            <h2 id="ticket" className="font-display text-[1.6rem]">
               Bon à savoir
             </h2>
             <dl className="mt-4 divide-y-2 divide-dashed divide-chocolat/25">
@@ -295,7 +295,7 @@ export default async function FourneePage() {
                 <dd>24 h minimum. Sur-mesure : 2 à 4 jours selon la quantité.</dd>
               </div>
             </dl>
-            <p className="mt-6 text-center font-script text-[1.4rem] text-caramel-encre">à très vite</p>
+            <p className="mt-6 font-script text-[1.4rem] text-caramel-encre">à très vite</p>
           </div>
         </div>
       </section>
