@@ -17,11 +17,11 @@ export default async function CartePage({ searchParams }: { searchParams: Promis
   const showAll = vue === "tout" || !cycle;
   const visible = showAll ? products : products.filter((p) => p.inCycle);
 
-  const tab = "inline-flex min-h-11 items-center rounded-full border-2 px-4 font-bold";
+  const tab = "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border-2 px-4 font-bold";
   return (
     <>
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pb-8 pt-8 sm:px-6 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="min-w-0 md:max-w-2xl">
           <BrandHeading as="h1" size="titre">
             La carte
           </BrandHeading>
@@ -32,7 +32,7 @@ export default async function CartePage({ searchParams }: { searchParams: Promis
           )}
         </div>
         {cycle && (
-          <nav aria-label="Vue de la carte" className="flex gap-2">
+          <nav aria-label="Vue de la carte" className="flex shrink-0 flex-wrap gap-2">
             <Link
               href="/carte"
               aria-current={!showAll ? "page" : undefined}
