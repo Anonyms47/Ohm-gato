@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { OrderTicket } from "@/components/account/OrderTicket";
 import { getMyOrders, isActiveOrder } from "@/lib/account/data";
+import { computeInsights, plural } from "@/lib/account/insights";
+import { formatFcfa } from "@/lib/money";
 import { requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Mes commandes" };
@@ -10,8 +12,26 @@ export default async function MesCommandes() {
   const orders = await getMyOrders(user.id);
   const active = orders.filter(isActiveOrder);
   const past = orders.filter((o) => !isActiveOrder(o));
+  const insights = computeInsights(orders);
+  const paidTotal = orders.filter((o) => o.paymentStatus === "paid" && o.status !== "refunded").reduce((sum, o) => sum + o.totalFcfa, 0);
   return (
     <div className="flex flex-col gap-10">
+      {insights.orderCount > 0 && (
+        <dl className="grid grid-cols-3 gap-3 rounded-[14px] border-2 border-chocolat/15 bg-blanc-casse p-4 text-center">
+          <div>
+            <dt className="text-encre-douce">Commandes</dt>
+            <dd className="font-display text-[1.6rem] tabular-nums">{insights.orderCount}</dd>
+          </div>
+          <div>
+            <dt className="text-encre-douce">{plural(insights.cycleNumbers.length, "fournée", "fournées").replace(/^\d+ /, "")}</dt>
+            <dd className="font-display text-[1.6rem] tabular-nums">{insights.cycleNumbers.length}</dd>
+          </div>
+          <div>
+            <dt className="text-encre-douce">Total payé</dt>
+            <dd className="font-display text-[1.2rem] leading-[2.1rem] tabular-nums sm:text-[1.6rem] sm:leading-normal">{formatFcfa(paidTotal)}</dd>
+          </div>
+        </dl>
+      )}
       <section aria-labelledby="en-cours">
         <h1 id="en-cours" className="font-display text-[1.8rem]">
           En cours
