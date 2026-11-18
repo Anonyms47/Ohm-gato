@@ -29,26 +29,18 @@ const FPS = 60;
 
 
 // Conversation : bulles bleues (envoyées) à droite, grises (reçues) à gauche, sans noms. Rythme de lecture naturel.
-// Messages plus complets ; le rythme suit la longueur de chaque message (temps de lecture naturel).
+// Trois messages en grand pour accrocher ; le rythme suit la longueur de chaque message (temps de lecture naturel).
 const conversation = [
-  ["l", "Tu fais quoi samedi ? On avait dit qu’on se retrouvait chez toi, non ?"],
-  ["r", "Oui carrément ! Rien d’autre de prévu, pourquoi ?"],
-  ["l", "J’ai trop envie de pâtisseries maison pour l’occasion 😋 mais je n’ai pas du tout le temps de cuisiner"],
-  ["r", "Tu connais OHMEGATO ? C’est une pâtisserie maison à Dakar, tu vas adorer"],
-  ["l", "Non, jamais entendu parler. C’est quoi exactement ?"],
-  ["r", "Des pâtisseries faites maison 🍪 Tout est préparé par fournées, donc c’est toujours frais"],
-  ["r", "Il y a des cookies, des brownies, des muffins, des moelleux, des choux à la crème…"],
-  ["l", "Ça donne vraiment envie ! Et on commande comment ?"],
-  ["r", "Directement sur le site : tu choisis, tu ajoutes à ta boîte et c’est rattaché à la prochaine fournée. Livraison dans Dakar ou retrait gratuit à Sud Foire"],
-  ["l", "Parfait, envoie-moi le lien !"],
-  ["r", "ohmegato.com", { link: true, meta: "Distribué" }],
+  ["l", "Arrête tout ce que tu fais. 😳"],
+  ["r", "Quoi ?? Il s’est passé quoi ?"],
+  ["l", "J’ai trouvé des pâtisseries faites maison à Dakar… tu vas devenir accro 🍪 Regarde 👇"],
 ];
 const msgs = [];
 {
   let t = 0.5;
   let prevLen = 0;
   for (const [side, text, extra] of conversation) {
-    const read = prevLen ? 0.5 + prevLen * 0.021 : 0;
+    const read = prevLen ? 0.7 + prevLen * 0.03 : 0;
     const typing = side === "l" ? 0.8 + Math.min(0.7, text.length * 0.008) : 0;
     t += read + typing + (side === "r" ? 0.3 : 0);
     msgs.push({ side, text, t: Math.round(t * 100) / 100, ...(side === "l" ? { typing } : {}), ...(extra ?? {}) });
@@ -56,7 +48,7 @@ const msgs = [];
   }
 }
 // enchaînements calés sur la fin de la conversation (écarts identiques à la version précédente)
-const B = msgs[msgs.length - 1].t + 1.4;
+const B = msgs[msgs.length - 1].t + 2.6;
 const rel = { browser: 0, tour: 1.3, phone: 12.2, phoneTour: 13.4, tap: 16.4, trio: 17.4, merge: 20.6, brand: 21.7, write: 22.8, morph: 26.9, final: 32.5 };
 const times = Object.fromEntries(Object.entries(rel).map(([k, v]) => [k, B + v]));
 

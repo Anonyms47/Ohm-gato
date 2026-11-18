@@ -45,12 +45,12 @@
       row.appendChild(meta);
     }
     chat.appendChild(row);
-    const gap = next && next.side === m.side ? 6 : 22;
+    const gap = next && next.side === m.side ? 12 : 40;
     const box = b.getBoundingClientRect();
     rows.push({ m, row, b, txt, dots: b.querySelector(".dots"), meta, gap, w: Math.ceil(box.width) + 2, h: Math.ceil(box.height), mh: meta ? meta.offsetHeight + 6 : 0 });
   });
-  const TYPE_W = 104;
-  const TYPE_H = 62;
+  const TYPE_W = 190;
+  const TYPE_H = 112;
 
   function renderChat(t) {
     renderRows(t);
@@ -318,7 +318,7 @@
       }
       mo.style.display = "block";
       place(mo, lerpRect(window.__from, BROWSER, mk));
-      mo.style.background = mixColor("1f8bff", "fbf4ea", mk);
+      mo.style.background = mixColor(S.msgs[S.msgs.length - 1].side === "l" ? "e9e9eb" : "1f8bff", "fbf4ea", mk);
       mo.style.border = mk > 0.5 ? "2px solid #e4d2b8" : "none";
     } else mo.style.display = "none";
     renderSite(t);
