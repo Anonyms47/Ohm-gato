@@ -18,6 +18,7 @@ import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { DeliveryFeeNotice, deliveryFeeNotice } from "@/components/checkout/DeliveryFeeNotice";
 import { zoneForDistrict, type DeliveryZone } from "@/lib/delivery/zones";
 import { cn } from "@/lib/cn";
+import { ON_DEMAND_BANNER, ON_DEMAND_DATE, ON_DEMAND_DATE_LONG, ON_DEMAND_SLOT } from "@/lib/on-demand";
 import { NO_CALENDAR_MESSAGE, SURPLUS_MESSAGE, cycleStatusLine, preorderMessage } from "@/lib/cycle-status";
 import { formatDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
@@ -109,7 +110,8 @@ export function CheckoutFlow({
   member?: { contact: { name: string; phone: string; email: string }; addresses: SavedAddress[] } | null;
 }) {
   const { resolved, catalog, hydrated, cart } = useCart();
-  const cycle = catalog.cycle;
+  const cycle = catalog.orderCycle;
+  const onDemand = catalog.onDemand;
   const methods = useForm<CheckoutFormValues, unknown, CheckoutFormOutput>({
     // Les valeurs vides du formulaire (fulfillment "") sont refusées par le schéma à l'exécution.
     resolver: zodResolver(checkoutFormSchema) as unknown as Resolver<CheckoutFormValues, unknown, CheckoutFormOutput>,
@@ -167,6 +169,10 @@ export function CheckoutFlow({
 
   const fulfillment = watch("fulfillment");
   const slotId = watch("slotId");
+  // Sans fournée : aucun créneau à choisir, la date sera communiquée par OHMEGATO.
+  useEffect(() => {
+    if (onDemand && slotId !== ON_DEMAND_SLOT) setValue("slotId", ON_DEMAND_SLOT);
+  }, [onDemand, slotId, setValue]);
   // Seuls les produits sont payés en ligne : la livraison se règle au livreur.
   const total = resolved.subtotal;
   const slot = slots.find((s) => s.id === slotId) ?? null;
@@ -233,9 +239,9 @@ export function CheckoutFlow({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               idempotencyKey,
-              cycleId: cycle?.id,
+              cycleId: onDemand ? null : cycle?.id,
               fulfillment: values.fulfillment,
-              slotId: values.slotId,
+              slotId: onDemand ? null : values.slotId,
               contact: { name: values.contact.name, phone: values.contact.phone, email: values.contact.email ?? "" },
               delivery: values.delivery,
               notes: values.notes || undefined,
@@ -277,16 +283,16 @@ export function CheckoutFlow({
   const stickyLabel = step === "verification" ? "Valider ma commande" : step === "paiement" ? null : "Continuer";
   useStickyCta(
     stickyLabel ? { key: `bon-${step}`, label: stickyLabel, onClick: () => continueFrom(step), disabled: step === "verification" && !acceptance } : null,
-    hydrated && Boolean(cycle?.isOpen) && resolved.lines.length > 0 && !resolved.hasIssues && actionOffscreen && stickyLabel !== null,
+    hydrated && (onDemand || Boolean(cycle?.isOpen)) && resolved.lines.length > 0 && !resolved.hasIssues && actionOffscreen && stickyLabel !== null,
   );
 
   if (!hydrated) {
     return <LoadingScreen size="section" label="Préparation de votre bon de fournée…" />;
   }
-  if (!cycle?.isOpen) {
+  if (!onDemand && !cycle?.isOpen) {
     return (
       <div className="mt-6 flex flex-col gap-3 text-[1.1rem]" data-testid="commande-en-attente">
-        <p>{cycle ? cycleStatusLine(cycle) : NO_CALENDAR_MESSAGE}</p>
+        <p>{catalog.cycle ? cycleStatusLine(catalog.cycle) : NO_CALENDAR_MESSAGE}</p>
         <p>
           <Link href="/fournees" className="font-bold underline decoration-caramel decoration-2 underline-offset-4">
             Voir Nos fournées
@@ -340,7 +346,7 @@ export function CheckoutFlow({
         : values.fulfillment === "delivery"
           ? `Livraison — ${[values.delivery.district, values.delivery.addressLine].filter(Boolean).join(", ") || "position sur la carte"}`
           : undefined,
-    creneau: slot ? formatSlot(slot.startsAt, slot.endsAt) : undefined,
+    creneau: onDemand ? ON_DEMAND_DATE : slot ? formatSlot(slot.startsAt, slot.endsAt) : undefined,
     notes: values.notes ? values.notes : "Aucune note",
   };
 
@@ -348,9 +354,11 @@ export function CheckoutFlow({
     <FormProvider {...methods}>
       <form noValidate onSubmit={(e) => e.preventDefault()} className="mt-6 flex flex-col gap-4">
         <p className="rounded-[12px] border-2 border-chocolat bg-rose/30 p-4 font-bold" data-testid="type-commande">
-          {cycle.orderKind === "surplus"
-            ? `Commande tardive — ${SURPLUS_MESSAGE} Les créneaux proposés sont ceux réellement disponibles pour le surplus.`
-            : `Fournée n°${cycle.number} — ${preorderMessage(cycle)}`}
+          {onDemand || !cycle
+            ? ON_DEMAND_BANNER
+            : cycle.orderKind === "surplus"
+              ? `Commande tardive — ${SURPLUS_MESSAGE} Les créneaux proposés sont ceux réellement disponibles pour le surplus.`
+              : `Fournée n°${cycle.number} — ${preorderMessage(cycle)}`}
         </p>
         <ol className="flex flex-col gap-4">
           {STEPS.map((s, index) => {
@@ -451,7 +459,7 @@ export function CheckoutFlow({
                               ] as const
                             )
                               // Commandes tardives : livraison seulement si Alima l'a ouverte.
-                              .filter((option) => option.value !== "delivery" || cycle.orderKind !== "surplus" || cycle.surplusDeliveryAllowed)
+                              .filter((option) => option.value !== "delivery" || !cycle || cycle.orderKind !== "surplus" || cycle.surplusDeliveryAllowed)
                               .map((option) => (
                               <label
                                 key={option.value}
@@ -479,6 +487,11 @@ export function CheckoutFlow({
                     )}
 
                     {s.id === "creneau" && (
+                      onDemand || !cycle ? (
+                        <p className="rounded-[10px] bg-blanc-casse p-4" data-testid="date-a-communiquer">
+                          {ON_DEMAND_DATE_LONG}
+                        </p>
+                      ) : (
                       <OhmegatoSelect
                         id="slotId"
                         label={fulfillment === "pickup" ? "Créneau de retrait" : "Créneau de livraison"}
@@ -489,6 +502,7 @@ export function CheckoutFlow({
                         error={formState.errors.slotId?.message}
                         hint={`Fournée n°${cycle.number} — ${formatDay(cycle.fulfillmentDate)}.`}
                       />
+                      )
                     )}
 
                     {s.id === "notes" && (
@@ -513,8 +527,8 @@ export function CheckoutFlow({
                             subtotal={resolved.subtotal}
                             fulfillment={fulfillment === "pickup" ? "pickup" : "delivery"}
                             total={total}
-                            slotLabel={slot ? formatSlot(slot.startsAt, slot.endsAt) : ""}
-                            cycleNumber={cycle.number}
+                            slotLabel={onDemand ? ON_DEMAND_DATE : slot ? formatSlot(slot.startsAt, slot.endsAt) : ""}
+                            cycleNumber={cycle?.number ?? null}
                             deliveryFee={deliveryFee}
                           />
                         </TicketPrinter>
@@ -651,13 +665,13 @@ function OrderTicket({
   fulfillment: "delivery" | "pickup";
   total: number;
   slotLabel: string;
-  cycleNumber: number;
+  cycleNumber: number | null;
   deliveryFee: number | null;
 }) {
   return (
     <div className="relative text-[0.98rem]">
       <p className="text-center font-bold tracking-[0.2em]">{brand.name}</p>
-      <p className="text-center text-encre-douce">Bon de fournée n°{cycleNumber}</p>
+      <p className="text-center text-encre-douce">{cycleNumber === null ? "Bon de commande" : `Bon de fournée n°${cycleNumber}`}</p>
       <ul className="mt-4 flex flex-col gap-2 border-y-2 border-dashed border-chocolat/30 py-3">
         {lines.map((l) => (
           <li key={l.key} className="flex justify-between gap-3">

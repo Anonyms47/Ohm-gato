@@ -56,7 +56,7 @@ test.describe("Fournées : commandes permanentes et surplus", () => {
     }
   });
 
-  test("sans date de remise à venir : catalogue et boîte accessibles, validation refusée, rien d'enregistré", async ({ page }) => {
+  test("sans date de remise à venir : on commande quand même, la date est communiquée par OHMEGATO", async ({ page }) => {
     const before = await cycleRow();
     const counts = async () => [
       ((await db(`orders?select=id&cycle_id=eq.${CYCLE}`)) as unknown[]).length,
@@ -69,28 +69,42 @@ test.describe("Fournées : commandes permanentes et surplus", () => {
     await acceptTermsAndContinue(page);
     const start = await counts();
     try {
-      // Le calendrier passe pendant que la cliente est sur la page : la fournée reste « open », aucune fermeture inventée.
+      // Le calendrier passe pendant que la cliente est sur la page : la page chargée avant le changement est refusée
+      // proprement (rien d'enregistré), puis une page rechargée propose la commande sans fournée.
       await patchCycle({ production_date: "2020-01-01", fulfillment_date: "2020-01-02" });
       await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
-      await expect(page.getByText(/Aucune date de livraison ou de retrait à venir n'est annoncée : cette commande n'a pas été enregistrée/)).toBeVisible();
+      await expect(page.getByText(/Les dates de la fournée viennent de changer : cette commande n'a pas été enregistrée/)).toBeVisible();
       await expect(page).toHaveURL(/\/commande$/);
       expect(await counts()).toEqual(start);
       expect((await cycleRow()).status).toBe("open");
 
       await page.goto("/fournees");
       await expect(page.getByText("Dates à annoncer").first()).toBeVisible();
-      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText("Aucune date de livraison ou de retrait n’est encore annoncée");
+      await expect(page.getByTestId("message-fournee").filter({ visible: true })).toContainText("Vous pouvez commander quand même");
       await expect(page.getByText(/Commandes fermées|Précommandes clôturées/)).toHaveCount(0);
-      // Catalogue et boîte restent accessibles.
+      // Boîte et validation restent accessibles, sans créneau.
       await page.goto("/ma-boite");
       await waitForHydration(page);
       await expect(page.getByText("Cookies").first()).toBeVisible();
-      await expect(page.getByText(/La validation ouvrira dès que les dates/)).toBeVisible();
-      await page.goto("/commande");
-      await waitForHydration(page);
-      await expect(page.getByTestId("commande-en-attente")).toContainText("Aucune date de livraison ou de retrait");
-      await expect(page.getByTestId("commande-en-attente")).toContainText("conservée");
-      await expect(page.getByRole("button", { name: /^Payer avec/ })).toHaveCount(0);
+      await expect(page.getByTestId("commande-sans-fournee")).toContainText("OHMEGATO vous communique la date");
+      await expect(page.getByRole("link", { name: "Continuer ma commande" }).first()).toBeVisible();
+      await fillPickupCheckout(page);
+      await expect(page.getByTestId("type-commande")).toContainText("OHMEGATO vous communique la date");
+      await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
+      await acceptTermsAndContinue(page);
+      await page.getByRole("button", { name: "Payer avec Paiement de test" }).click();
+      await expect(page).toHaveURL(/\/paiement-test\//);
+      // Commande enregistrée sans fournée ni créneau : la date reste à communiquer.
+      const [order] = (await db("orders?select=id,cycle_id,slot_id,order_kind,fulfillment_date_snapshot,reference&order=created_at.desc&limit=1")) as {
+        id: string;
+        cycle_id: string | null;
+        slot_id: string | null;
+        order_kind: string;
+        fulfillment_date_snapshot: string | null;
+        reference: string;
+      }[];
+      expect(order).toMatchObject({ cycle_id: null, slot_id: null, order_kind: "on_demand", fulfillment_date_snapshot: null });
+      expect(order!.reference).toMatch(/^OHM-\S{5}$/);
     } finally {
       await patchCycle({ production_date: before.production_date, fulfillment_date: before.fulfillment_date });
     }
@@ -111,7 +125,7 @@ test.describe("Fournées : commandes permanentes et surplus", () => {
       await patchCycle({ surplus_ends_at: new Date(Date.now() - 60_000).toISOString() });
       await page.goto("/fournees");
       await expect(page.getByTestId("message-fournee").filter({ visible: true })).toHaveText(
-        "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.",
+        "Cette fournée est terminée. Vous pouvez commander quand même : OHMEGATO vous communique la date de livraison ou de retrait. Consultez Nos fournées pour découvrir la prochaine ouverture.",
       );
       await expect(page.getByRole("link", { name: "Découvrir les prochaines fournées" })).toBeVisible();
     } finally {

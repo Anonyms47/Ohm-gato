@@ -12,7 +12,7 @@ insert into public.legal_documents (slug, title, description, sort_order) values
 on conflict (slug) do nothing;
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'conditions-generales', '1.3', 'published', 'Conditions générales', $md$## Présentation
+select 'conditions-generales', '1.4', 'published', 'Conditions générales', $md$## Présentation
 
 OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
@@ -34,11 +34,11 @@ Les photographies sont présentées à titre d'illustration. Nos pâtisseries so
 
 ## Fournées et disponibilité
 
-La production se fait par fournées. Vous pouvez commander à toute heure : chaque commande est rattachée à la prochaine fournée désignée par l'atelier, avec les dates de production, de livraison et de retrait affichées au moment de la commande. Vous ne proposez pas de date : celles de la fournée s'appliquent.
+La production se fait par fournées. Vous pouvez commander à toute heure. Quand l'atelier a désigné une fournée avec une date de livraison ou de retrait à venir, votre commande y est rattachée : les dates de production, de livraison et de retrait affichées au moment de la commande s'appliquent.
 
 Les dates et le créneau affichés lors de la validation sont conservés pour votre commande. Une modification ultérieure du calendrier de l'atelier ne change pas une commande déjà enregistrée, et aucune commande n'est reportée d'une fournée à l'autre sans votre accord. Une nouvelle fournée ne reçoit que les nouvelles commandes.
 
-Tant que l'atelier n'a pas annoncé de date de livraison ou de retrait à venir, vous pouvez composer votre boîte, mais vous ne pouvez ni valider la commande ni payer. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
+Quand aucune fournée n'est ouverte, vous pouvez commander quand même : votre commande est enregistrée sans fournée et OHMEGATO vous communique la date de livraison ou de retrait (par WhatsApp ou par téléphone), qui apparaît aussi sur votre suivi de commande. Si cette date ne vous convient pas, contactez-nous avant la remise. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
 
 La production suit les commandes : les commandes d'une fournée ne sont pas limitées par un stock affiché. Pour le surplus (douceurs restantes que l'atelier choisit de proposer après la production), seule la quantité réellement restante est commandable. Nous n'affichons ni faux stock ni compte à rebours artificiel.
 
@@ -147,15 +147,15 @@ Les marques et logos des prestataires cités sur le site restent la propriété 
 
 Ces conditions sont soumises au droit sénégalais, notamment aux règles applicables aux transactions électroniques et à la protection des données personnelles.
 
-En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-11-14', timestamptz '2026-11-14 08:00:00+00'
+En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-11-19', timestamptz '2026-11-19 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'conditions-generales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'livraison-retrait', '1.3', 'published', 'Livraison et retrait', $md$## Livraison dans Dakar
+select 'livraison-retrait', '1.4', 'published', 'Livraison et retrait', $md$## Livraison dans Dakar
 
-Nous livrons dans Dakar, selon la disponibilité des livreurs. La date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande.
+Nous livrons dans Dakar, selon la disponibilité des livreurs. Pour une commande rattachée à une fournée, la date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande. Pour une commande passée sans fournée, OHMEGATO vous communique la date de livraison ou de retrait ensuite.
 
-La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande.
+La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande, ou selon la date communiquée par OHMEGATO pour une commande sans fournée.
 
 ## Ce que nous vous demandons
 
@@ -181,11 +181,11 @@ Le tarif affiché au moment de votre commande est celui qui est enregistré avec
 
 Le retrait est gratuit, au {{adresse_retrait}}.
 
-Vous choisissez votre créneau de retrait dans le bon de commande. Les instructions s'affichent sur votre suivi de commande une fois la commande confirmée. Présentez la référence de votre commande au moment du retrait.
+Pour une commande rattachée à une fournée, vous choisissez votre créneau de retrait dans le bon de commande ; sans fournée, la date de retrait vous est communiquée par OHMEGATO. Les instructions s'affichent sur votre suivi de commande une fois la commande confirmée. Présentez la référence de votre commande au moment du retrait.
 
 ## Une question ?
 
-Écrivez-nous à {{email}} ou sur WhatsApp au {{telephone}}.$md$, date '2026-11-14', timestamptz '2026-11-14 08:00:00+00'
+Écrivez-nous à {{email}} ou sur WhatsApp au {{telephone}}.$md$, date '2026-11-19', timestamptz '2026-11-19 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'livraison-retrait');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)

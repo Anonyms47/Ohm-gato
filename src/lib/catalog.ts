@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { AllergenDef, AllergenStatus, WorkshopTraces } from "@/lib/allergens";
 import { availableUnits, productAvailability } from "@/lib/availability";
-import { orderKindFor } from "@/lib/cycle-status";
+import { hasUpcomingFulfillment, orderKindFor } from "@/lib/cycle-status";
 import type {
   Accent,
   Catalog,
@@ -206,8 +206,10 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
     ),
   );
 
-  const products: CatalogProduct[] = (productsRes.data ?? []).map((p) => {
-    const cp = inCycle.get(p.id);
+  // Commande rattachée à la fournée ouverte (date de remise à venir) ; sinon commande sans fournée.
+  const usesCycle = (c: CycleSummary | null) => Boolean(c?.isOpen && (c.orderKind === "surplus" || hasUpcomingFulfillment(c)));
+  const buildProducts = (onDemand: boolean): CatalogProduct[] => (productsRes.data ?? []).map((p) => {
+    const cp = onDemand ? { disabled_variant_ids: [] as string[], available_flavor_ids: null as string[] | null } : inCycle.get(p.id);
     const variants = [...p.product_variants]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((v) => ({
@@ -224,9 +226,9 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
         ...f,
         availableInCycle: Boolean(cp) && (cp!.available_flavor_ids === null || cp!.available_flavor_ids.includes(f.id)),
       }));
-    const productStock = stock.get(p.id) ?? null;
-    // Précommande : quantité libre. Le stock ne compte que pour le surplus publié par Alima.
-    const unlimited = Boolean(cp) && cycle !== null && cycle.status !== "surplus";
+    const productStock = onDemand ? null : (stock.get(p.id) ?? null);
+    // Précommande ou commande sans fournée : quantité libre. Le stock ne compte que pour le surplus publié par Alima.
+    const unlimited = onDemand || (Boolean(cp) && cycle !== null && cycle.status !== "surplus");
     return {
       id: p.id,
       slug: p.slug,
@@ -254,23 +256,27 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
       unitsLeft: cp && productStock && !unlimited ? availableUnits(productStock) : null,
       unlimited,
       availability: productAvailability({
-        cycleIsOpen: cycle?.isOpen ?? false,
+        cycleIsOpen: onDemand || (cycle?.isOpen ?? false),
         inCycle: Boolean(cp),
         stock: productStock,
         variants: variants.filter((v) => v.enabledInCycle),
         // Surplus : seule la quantité réelle restante est affichée, sans « presque épuisé ».
-        surplus: cycle?.orderKind === "surplus",
+        surplus: !onDemand && cycle?.orderKind === "surplus",
         unlimited,
       }),
     };
   });
 
-  // Surplus épuisé : la fournée se ferme d'elle-même (aucune commande possible).
-  if (cycle?.orderKind === "surplus" && !products.some((p) => p.inCycle && p.availability === "available")) {
+  let onDemand = !usesCycle(cycle);
+  let products = buildProducts(onDemand);
+  // Surplus épuisé : la fournée se ferme d'elle-même ; on commande alors sans fournée.
+  if (!onDemand && cycle?.orderKind === "surplus" && !products.some((p) => p.inCycle && p.availability === "available")) {
     cycle.isOpen = false;
     cycle.composable = false;
     cycle.orderKind = null;
     cycle.surplusExhausted = true;
+    onDemand = true;
+    products = buildProducts(true);
   }
 
   const allergenDefs: AllergenDef[] = (
@@ -283,7 +289,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
     sortOrder: a.sort_order,
   }));
 
-  return { cycle, products, allergenDefs, workshopTraces: parseWorkshopTraces(settings["allergens.workshop_traces"]) };
+  return { cycle, orderCycle: onDemand ? null : cycle, onDemand, products, allergenDefs, workshopTraces: parseWorkshopTraces(settings["allergens.workshop_traces"]) };
 });
 
 function parseWorkshopTraces(value: unknown): WorkshopTraces {

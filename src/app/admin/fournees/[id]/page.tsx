@@ -154,7 +154,7 @@ export default async function FourneeAdmin({ params }: { params: Promise<{ id: s
         </p>
         {datesPassed && (
           <p className="font-bold text-orange-encre">
-            La date de livraison de cette fournée est passée : plus aucune commande ni aucun paiement n&apos;est possible tant que vous n&apos;avez pas annoncé les dates de la prochaine fournée.
+            La date de livraison de cette fournée est passée : les nouvelles commandes sont enregistrées sans fournée (vous fixez leur date) tant que vous n&apos;avez pas annoncé la prochaine fournée.
             Aucune commande existante n&apos;est déplacée.
           </p>
         )}

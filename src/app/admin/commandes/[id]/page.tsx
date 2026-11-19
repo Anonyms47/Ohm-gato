@@ -8,6 +8,7 @@ import { OrderLifeline } from "@/components/admin/OrderLifeline";
 import { OrderNoteForm } from "@/components/admin/OrderNotes";
 import { PositionLinks } from "@/components/admin/PositionLinks";
 import { RecordPayment } from "@/components/admin/RecordPayment";
+import { SetOrderDate } from "@/components/admin/SetOrderDate";
 import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { brand } from "@/config/brand";
 import { getOrderDetail, listOrderNotes } from "@/lib/admin/data";
@@ -15,7 +16,8 @@ import { orderAcceptance, orderRefunds } from "@/lib/admin/legal";
 import { nextActionLabel, stageLabel } from "@/lib/admin/order-stage";
 import { telLink, whatsappLink, whatsappMessage, type WhatsappTemplate } from "@/lib/admin/whatsapp";
 import { requireAdmin } from "@/lib/auth/session";
-import { formatShortDay, formatSlot, formatTime } from "@/lib/dates";
+import { dakarToday } from "@/lib/cycle-status";
+import { formatDay, formatShortDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import { paymentStatusLabel, statusHeadline } from "@/lib/order-status";
 import { generateTrackingToken } from "@/lib/orders/tracking";
@@ -85,7 +87,7 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
 
       <header className="flex flex-col gap-1">
         <p className="text-encre-douce">
-          {order.isCustom ? "Sur mesure" : `Fournée n°${order.cycleNumber}`} · reçue le {formatShortDay(order.createdAt)} à {formatTime(order.createdAt)}
+          {order.isCustom ? "Sur mesure" : order.cycleNumber === null ? "Sans fournée" : `Fournée n°${order.cycleNumber}`} · reçue le {formatShortDay(order.createdAt)} à {formatTime(order.createdAt)}
         </p>
         <h1 className="font-display text-[clamp(1.8rem,4vw,2.4rem)] leading-tight">
           {order.customerName} · {formatFcfa(order.totalFcfa)}
@@ -206,7 +208,18 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
             {order.fulfillment === "pickup" ? "Retrait" : "Livraison"}
           </h2>
           <p className="mt-2 font-bold">{order.fulfillment === "pickup" ? `Retrait gratuit — ${brand.pickupAddress}` : "Livraison dans Dakar"}</p>
-          {order.slot ? <p>{formatSlot(order.slot.startsAt, order.slot.endsAt)}</p> : <p className="font-bold text-erreur">Aucun créneau choisi.</p>}
+          {order.slot ? (
+            <p>{formatSlot(order.slot.startsAt, order.slot.endsAt)}</p>
+          ) : order.onDemand ? (
+            <>
+              <p className={order.fulfillmentDate ? "font-bold" : "font-bold text-erreur"}>
+                {order.fulfillmentDate ? formatDay(order.fulfillmentDate) : "Date à fixer : commande passée sans fournée."}
+              </p>
+              <SetOrderDate orderId={order.id} current={order.fulfillmentDate} today={dakarToday()} />
+            </>
+          ) : (
+            <p className="font-bold text-erreur">Aucun créneau choisi.</p>
+          )}
           {order.pickupCode && (
             <p>
               Code de retrait : <strong className="tracking-[0.2em]">{order.pickupCode}</strong>

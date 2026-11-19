@@ -19,7 +19,7 @@ export function OrderTicket({ order, highlight = false }: { order: MemberOrder; 
         <div>
           <p className="font-bold tabular-nums">{order.reference}</p>
           <p className="text-encre-douce">
-            {formatShortDay(order.createdAt)} · {order.isCustom ? "Sur-mesure" : `Fournée n°${order.cycleNumber}`}
+            {formatShortDay(order.createdAt)} · {order.isCustom ? "Sur-mesure" : order.cycleNumber === null ? "Commande" : `Fournée n°${order.cycleNumber}`}
           </p>
         </div>
         <p className="text-right font-bold tabular-nums">{formatFcfa(order.totalFcfa)}</p>

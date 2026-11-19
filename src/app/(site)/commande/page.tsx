@@ -13,7 +13,7 @@ import { paymentMethods } from "@/lib/payments";
 export const metadata: Metadata = { title: "Le bon de fournée", robots: { index: false } };
 
 export default async function CommandePage() {
-  const { cycle } = await getCatalog();
+  const { orderCycle: cycle } = await getCatalog();
   const [slots, user, legal, zones] = await Promise.all([cycle ? getSlots(cycle.id, cycle.orderKind === "surplus" ? "surplus" : "preorder") : Promise.resolve([]), getCurrentUser(), getCheckoutAcceptance(), getDeliveryZones()]);
   const acceptance = legal
     ? { termsVersionId: legal.termsId, termsVersion: legal.termsVersion, cancellationVersionId: legal.cancellationId, cancellationVersion: legal.cancellationVersion }

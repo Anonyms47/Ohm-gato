@@ -24,6 +24,10 @@ export interface MemberOrder {
   paidAt: string | null;
   cycleNumber: number | null;
   isCustom: boolean;
+  /** Commande passée sans fournée : la date est communiquée par OHMEGATO. */
+  onDemand: boolean;
+  /** Date de remise fixée (fournée ou OHMEGATO) ; null tant qu'elle n'est pas connue. */
+  fulfillmentDate: string | null;
   slot: { startsAt: string; endsAt: string } | null;
   items: {
     productId: string | null;
@@ -68,6 +72,8 @@ interface OrderRow {
   delivery_slots: { starts_at: string; ends_at: string } | null;
   slot_starts_at_snapshot: string | null;
   slot_ends_at_snapshot: string | null;
+  fulfillment_date_snapshot: string | null;
+  order_kind: string;
   order_items: {
     product_id: string | null;
     variant_id: string | null;
@@ -86,7 +92,7 @@ interface OrderRow {
 
 const ORDER_SELECT = `id, reference, idempotency_key, status, payment_status, fulfillment, total_fcfa, delivery_fee_fcfa, delivery_zone_name, created_at, paid_at,
   custom_request_id, address_line, district, landmark, latitude, longitude, pickup_code,
-  production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot,
+  production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot, fulfillment_date_snapshot, order_kind,
   order_items(product_id, variant_id, flavor_id, product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
     products(storage_rule, storage_note, storage_confirmed)),
   payments(provider, status, amount_fcfa, created_at, paid_at),
@@ -106,6 +112,8 @@ function toOrder(row: OrderRow): MemberOrder {
     paidAt: row.paid_at,
     cycleNumber: row.production_cycles?.number ?? null,
     isCustom: row.custom_request_id !== null,
+    onDemand: row.order_kind === "on_demand",
+    fulfillmentDate: row.fulfillment_date_snapshot,
     slot:
       row.slot_starts_at_snapshot && row.slot_ends_at_snapshot
         ? { startsAt: row.slot_starts_at_snapshot, endsAt: row.slot_ends_at_snapshot }

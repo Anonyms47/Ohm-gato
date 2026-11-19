@@ -110,13 +110,13 @@ export function preorderMessage(cycle: PreorderInput): string {
 
 /** Fournée plus désignée pour les nouvelles commandes : l'atelier la prépare, les nouvelles commandes iront à la suivante. */
 export const BATCH_IN_PROGRESS_MESSAGE =
-  "L’atelier prépare cette fournée. Vos nouvelles commandes seront rattachées à la prochaine fournée, dès que l’atelier aura annoncé ses dates. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
-/** Aucune date de remise à venir : catalogue et boîte restent accessibles, seules la validation et le paiement attendent. */
+  "L’atelier prépare cette fournée. Vous pouvez commander quand même : OHMEGATO vous communique la date de livraison ou de retrait de votre commande. Des douceurs supplémentaires pourront être proposées après les livraisons, uniquement s’il en reste.";
+/** Aucune date de remise à venir : on commande quand même, OHMEGATO communique la date ensuite. */
 export const NO_CALENDAR_MESSAGE =
-  "Aucune date de livraison ou de retrait n’est encore annoncée pour la prochaine fournée. Vous pouvez composer votre boîte : elle est conservée. La commande et le paiement ouvriront dès que l’atelier aura annoncé les dates.";
+  "Aucune date de fournée à venir n’est annoncée. Vous pouvez commander quand même : OHMEGATO vous communique la date de livraison ou de retrait de votre commande.";
 export const SURPLUS_MESSAGE =
   "Vous avez raté la précommande ? Quelques douceurs de la fournée sont encore disponibles. Commande possible dans la limite du stock réellement restant.";
-export const DONE_MESSAGE = "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
+export const DONE_MESSAGE = "Cette fournée est terminée. Vous pouvez commander quand même : OHMEGATO vous communique la date de livraison ou de retrait. Consultez Nos fournées pour découvrir la prochaine ouverture.";
 /** Aucune alerte de surplus n'existe : on n'en simule pas. */
 export const COME_BACK_MESSAGE = "Revenez après la fournée pour vérifier les disponibilités.";
 
@@ -149,13 +149,13 @@ export function cycleStatusLine(cycle: CycleSummary, now = Date.now()): string {
     case "surplus":
       return `Surplus de la fournée n°${cycle.number} : commande possible dans la limite du stock réellement restant.`;
     case "scheduled":
-      return `Fournée n°${cycle.number} annoncée : les commandes ne sont pas encore ouvertes. Votre boîte est conservée.`;
+      return `Fournée n°${cycle.number} annoncée : pas encore ouverte. Vous pouvez déjà commander : OHMEGATO vous communique la date de livraison ou de retrait.`;
     case "closed":
     case "preparing":
     case "delivering":
-      return `${BATCH_IN_PROGRESS_MESSAGE} Votre boîte est conservée.`;
+      return BATCH_IN_PROGRESS_MESSAGE;
     case "cancelled":
-      return "Cette fournée a été annulée. Votre boîte est conservée pour la prochaine.";
+      return "Cette fournée a été annulée. Vous pouvez commander quand même : OHMEGATO vous communique la date de livraison ou de retrait.";
     default:
       return DONE_MESSAGE;
   }

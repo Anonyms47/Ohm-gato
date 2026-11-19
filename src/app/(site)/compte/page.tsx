@@ -14,6 +14,7 @@ import { customStatusLabel } from "@/lib/custom/status";
 import { cycleStatusLine, phaseAction, phaseNow } from "@/lib/cycle-status";
 import { formatDay, formatShortDay } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
+import { ON_DEMAND_DATE } from "@/lib/on-demand";
 import { isAwaitingPayment, statusHeadline } from "@/lib/order-status";
 
 const LINK = "font-bold underline decoration-caramel decoration-2 underline-offset-4 hover:decoration-chocolat";
@@ -62,9 +63,11 @@ export default async function CompteAccueil() {
                 <div className="min-w-0">
                   <p className="font-bold tabular-nums">{priority.reference}</p>
                   <p className="font-display text-[1.6rem] leading-tight">{statusHeadline[priority.status]}</p>
-                  {priority.slot && (
+                  {(priority.slot || priority.fulfillmentDate || priority.onDemand) && (
                     <p className="text-encre-douce">
-                      {priority.fulfillment === "pickup" ? "Retrait" : "Livraison"} le {formatDay(priority.slot.startsAt)}
+                      {priority.slot || priority.fulfillmentDate
+                        ? `${priority.fulfillment === "pickup" ? "Retrait" : "Livraison"} le ${formatDay(priority.slot?.startsAt ?? priority.fulfillmentDate!)}`
+                        : ON_DEMAND_DATE}
                     </p>
                   )}
                 </div>

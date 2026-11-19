@@ -28,7 +28,9 @@ export interface OrderView {
   paidAt: string | null;
   createdAt: string;
   cycleNumber: number | null;
-  orderKind: "preorder" | "surplus";
+  orderKind: "preorder" | "surplus" | "on_demand";
+  /** Date de remise (fournée, ou date communiquée par OHMEGATO pour une commande sans fournée) ; null tant qu'elle n'est pas fixée. */
+  fulfillmentDate: string | null;
   slot: { startsAt: string; endsAt: string } | null;
   isCustom: boolean;
   userId: string | null;
@@ -52,7 +54,8 @@ interface OrderRow {
   status: OrderStatus;
   payment_status: PaymentStatus;
   fulfillment: Fulfillment;
-  order_kind: "preorder" | "surplus";
+  order_kind: "preorder" | "surplus" | "on_demand";
+  fulfillment_date_snapshot: string | null;
   customer_name: string;
   customer_phone: string;
   address_line: string | null;
@@ -103,7 +106,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
       `id, reference, status, payment_status, fulfillment, order_kind, customer_name, customer_phone,
        address_line, district, landmark, latitude, longitude, pickup_code,
        subtotal_fcfa, delivery_fee_fcfa, delivery_zone_name, total_fcfa, reservation_expires_at, paid_at, created_at, custom_request_id, user_id,
-       production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot,
+       production_cycles(number), delivery_slots(starts_at, ends_at), slot_starts_at_snapshot, slot_ends_at_snapshot, fulfillment_date_snapshot,
        order_items(product_name, variant_label, flavor_name, quantity, unit_price_fcfa, line_total_fcfa,
          products(name, storage_rule, storage_note, storage_confirmed)),
        order_status_history(status, created_at),
@@ -139,6 +142,7 @@ export async function getOrderByToken(token: string): Promise<OrderView | null> 
     createdAt: data.created_at,
     cycleNumber: data.production_cycles?.number ?? null,
     orderKind: data.order_kind,
+    fulfillmentDate: data.fulfillment_date_snapshot,
     // Créneau figé à la commande : une modification ultérieure du calendrier ne change pas ce qui a été promis.
     slot: data.slot_starts_at_snapshot && data.slot_ends_at_snapshot
       ? { startsAt: data.slot_starts_at_snapshot, endsAt: data.slot_ends_at_snapshot }

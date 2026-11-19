@@ -427,6 +427,10 @@ export interface AdminOrderRow {
   slotStartsAt: string | null;
   district: string | null;
   isCustom: boolean;
+  /** Commande passée sans fournée : OHMEGATO fixe la date de remise. */
+  onDemand: boolean;
+  /** Date de remise fixée (fournée ou OHMEGATO), null tant qu'elle n'est pas connue. */
+  fulfillmentDate: string | null;
 }
 
 export interface OrderFilter {
@@ -459,7 +463,7 @@ export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> 
   let query = db()
     .from("orders")
     .select(
-      "id, reference, status, payment_status, fulfillment, customer_name, customer_phone, total_fcfa, created_at, district, custom_request_id, production_cycles(number), delivery_slots(starts_at)",
+      "id, reference, status, payment_status, fulfillment, customer_name, customer_phone, total_fcfa, created_at, district, custom_request_id, order_kind, fulfillment_date_snapshot, production_cycles(number), delivery_slots(starts_at)",
     )
     .order("created_at", { ascending: false });
   if (filter.page && filter.page > 0) {
@@ -492,6 +496,8 @@ export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> 
     slotStartsAt: (o.delivery_slots as unknown as { starts_at: string } | null)?.starts_at ?? null,
     district: o.district as string | null,
     isCustom: o.custom_request_id !== null,
+    onDemand: o.order_kind === "on_demand",
+    fulfillmentDate: (o.fulfillment_date_snapshot as string | null) ?? null,
   }));
 }
 
@@ -571,6 +577,8 @@ export async function getOrderDetail(id: string): Promise<AdminOrderDetail | nul
     slot: slot ? { startsAt: slot.starts_at, endsAt: slot.ends_at } : null,
     district: o.district,
     isCustom: o.custom_request_id !== null,
+    onDemand: o.order_kind === "on_demand",
+    fulfillmentDate: o.fulfillment_date_snapshot ?? null,
     customRequestId: o.custom_request_id,
     addressLine: o.address_line,
     landmark: o.landmark,

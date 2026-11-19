@@ -94,7 +94,11 @@ export interface SlotSummary {
 }
 
 export interface Catalog {
+  /** Fournée mise en avant (journal du four, calendrier), ouverte ou non. */
   cycle: CycleSummary | null;
+  /** Fournée à laquelle les commandes sont rattachées maintenant ; null = commande sans fournée (date donnée ensuite par OHMEGATO). */
+  orderCycle: CycleSummary | null;
+  onDemand: boolean;
   products: CatalogProduct[];
   allergenDefs: AllergenDef[];
   workshopTraces: WorkshopTraces;

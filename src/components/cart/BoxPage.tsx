@@ -8,6 +8,7 @@ import { DELIVERY_FEE_NOTICE } from "@/components/checkout/DeliveryFeeNotice";
 import { useStickyCta } from "@/components/layout/StickyCta";
 import { ButtonLink } from "@/components/ui/Button";
 import { cycleStatusLine } from "@/lib/cycle-status";
+import { ON_DEMAND_BANNER } from "@/lib/on-demand";
 import { formatFcfa } from "@/lib/money";
 import { useOffscreen } from "@/lib/use-offscreen";
 import { LoadingScreen } from "@/components/brand/LoadingScreen";
@@ -15,7 +16,7 @@ import { LoadingScreen } from "@/components/brand/LoadingScreen";
 export function BoxPage() {
   const { resolved, hydrated, catalog, clear } = useCart();
   const [orderRef, orderOffscreen] = useOffscreen<HTMLDivElement>();
-  const canOrder = hydrated && resolved.lines.length > 0 && !resolved.hasIssues && Boolean(catalog.cycle?.isOpen);
+  const canOrder = hydrated && resolved.lines.length > 0 && !resolved.hasIssues && (catalog.onDemand || Boolean(catalog.cycle?.isOpen));
   // Téléphone : « Continuer ma commande » reste accessible sans atteindre le bas d'une longue boîte.
   useStickyCta({ key: "bon-de-fournee", label: "Continuer ma commande", href: "/commande" }, canOrder && orderOffscreen);
   if (!hydrated) {
@@ -34,10 +35,12 @@ export function BoxPage() {
   const cycle = catalog.cycle;
   return (
     <div className="mt-6 flex flex-col gap-6">
-      {cycle && (
-        <p className="text-encre-douce">
-          {cycleStatusLine(cycle)}
+      {catalog.onDemand ? (
+        <p className="text-encre-douce" data-testid="commande-sans-fournee">
+          {ON_DEMAND_BANNER}
         </p>
+      ) : (
+        cycle && <p className="text-encre-douce">{cycleStatusLine(cycle)}</p>
       )}
       {resolved.fromOtherCycle && (
         <p role="status" className="rounded-[10px] border-2 border-orange-encre bg-blanc-casse p-3 font-bold text-orange-encre">
@@ -63,8 +66,8 @@ export function BoxPage() {
         <button type="button" onClick={clear} className="min-h-11 self-start font-bold text-erreur underline decoration-2 underline-offset-4">
           Vider ma boîte
         </button>
-        {resolved.hasIssues || !cycle?.isOpen ? (
-          <span className="text-encre-douce">{resolved.hasIssues ? "Corrigez les articles signalés pour continuer." : "La validation ouvrira dès que les dates de la prochaine fournée seront annoncées."}</span>
+        {resolved.hasIssues ? (
+          <span className="text-encre-douce">Corrigez les articles signalés pour continuer.</span>
         ) : (
           <div ref={orderRef}>
             <ButtonLink href="/commande">Continuer ma commande</ButtonLink>

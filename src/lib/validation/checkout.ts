@@ -67,9 +67,10 @@ export type PaymentProviderId = z.infer<typeof paymentProviderSchema>;
 export const placeOrderSchema = z
   .object({
     idempotencyKey: z.uuid(),
-    cycleId: z.uuid(),
+    /** Fournée ouverte au moment de la commande ; vide quand aucune fournée n'est ouverte (date communiquée ensuite par OHMEGATO). */
+    cycleId: z.uuid().nullable(),
     fulfillment: z.enum(["delivery", "pickup"]),
-    slotId: z.uuid({ message: "Choisissez un créneau." }),
+    slotId: z.uuid({ message: "Choisissez un créneau." }).nullable(),
     contact: contactSchema,
     delivery: deliverySchema.nullable(),
     notes: trimmed(500).optional(),
@@ -86,6 +87,12 @@ export const placeOrderSchema = z
     ),
   })
   .superRefine((value, ctx) => {
+    if (value.cycleId !== null && value.slotId === null) {
+      ctx.addIssue({ code: "custom", path: ["slotId"], message: "Choisissez un créneau." });
+    }
+    if (value.cycleId === null && value.slotId !== null) {
+      ctx.addIssue({ code: "custom", path: ["slotId"], message: "Aucun créneau sans fournée." });
+    }
     if (value.fulfillment === "delivery" && !value.delivery) {
       ctx.addIssue({ code: "custom", path: ["delivery"], message: "Indiquez l'adresse de livraison." });
     }

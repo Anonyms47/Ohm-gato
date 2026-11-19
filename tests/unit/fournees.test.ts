@@ -46,13 +46,13 @@ describe("fournée de la semaine du 19 octobre", () => {
     expect(orderKindFor(first, at("2026-10-22T08:00:00Z"))).toBe("preorder");
   });
 
-  it("sans date de remise à venir : ni commande ni paiement, état exact (aucune fermeture inventée)", () => {
+  it("sans date de remise à venir : la commande se fait sans fournée, état exact (aucune fermeture inventée)", () => {
     expect(hasUpcomingFulfillment(first, at("2026-10-23T12:00:00Z"))).toBe(true);
     expect(hasUpcomingFulfillment(first, at("2026-10-24T00:00:00Z"))).toBe(false);
     expect(orderKindFor(first, at("2026-10-24T00:00:00Z"))).toBeNull();
     expect(cyclePhase(first, at("2026-10-24T00:00:00Z"))).toBe("open");
     expect(phaseMessage("open", { ...first, fulfillmentDate: "2020-01-01" })).toBe(NO_CALENDAR_MESSAGE);
-    expect(NO_CALENDAR_MESSAGE).toMatch(/boîte.*conservée/);
+    expect(NO_CALENDAR_MESSAGE).toMatch(/commander quand même.*OHMEGATO vous communique la date/);
   });
 
   it("messages officiels, sans date de production inventée", () => {
@@ -68,7 +68,7 @@ describe("fournée de la semaine du 19 octobre", () => {
     expect(phaseMessage("surplus", first)).toBe(SURPLUS_MESSAGE);
     expect(phaseMessage("done", first)).toBe(DONE_MESSAGE);
     expect(BATCH_IN_PROGRESS_MESSAGE).not.toMatch(/sera disponible|garanti|précommandes sont terminées|fermé/i);
-    expect(BATCH_IN_PROGRESS_MESSAGE).toMatch(/prochaine fournée/);
+    expect(BATCH_IN_PROGRESS_MESSAGE).toMatch(/commander quand même/);
   });
 
   it("boutons adaptés à chaque phase, aucune fausse alerte", () => {
