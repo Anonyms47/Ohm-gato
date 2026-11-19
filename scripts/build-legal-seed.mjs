@@ -16,14 +16,16 @@ const documents = [
 // 1.2 du 29 octobre 2026 : formulation neutre (activité en cours de formalisation), zones de livraison, Orange Money, alertes de fournée.
 const update = { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" };
 const update13 = { version: "1.3", publishedAt: "2026-11-14 08:00:00+00", effectiveAt: "2026-11-14" };
+const update14 = { version: "1.4", publishedAt: "2026-11-19 08:00:00+00", effectiveAt: "2026-11-19" };
 const versions = {
   // 1.2 du 29 octobre 2026 : le prénom de la fondatrice n'apparaît plus.
   "allergenes-conservation": { version: "1.2", publishedAt: "2026-10-29 08:00:00+00", effectiveAt: "2026-10-29" },
   confidentialite: update,
   "mentions-legales": update,
   // 1.3 du 14 novembre 2026 : commandes permanentes (fournée désignée par l'atelier, dates et créneau figés à la commande).
-  "conditions-generales": update13,
-  "livraison-retrait": update13,
+  // 1.4 du 19 novembre 2026 : commander sans fournée (date communiquée par OHMEGATO).
+  "conditions-generales": update14,
+  "livraison-retrait": update14,
 };
 
 const q = (s) => `'${s.replaceAll("'", "''")}'`;
@@ -71,4 +73,5 @@ select public.admin_publish_legal_version(id, null) from public.legal_document_v
 // 1.2 (29 octobre) : documents modifiés ce jour-là ; 1.3 (14 novembre) : conditions générales et livraison/retrait (commandes permanentes).
 // À exécuter dans l'ordre 1.2 puis 1.3.
 publishFile("1.2", "2026-10-29", "29 octobre 2026", Object.entries(versions).filter(([, v]) => v === update || v.version === "1.2").map(([slug]) => slug), "");
-publishFile("1.3", "2026-11-14", "14 novembre 2026", Object.entries(versions).filter(([, v]) => v === update13).map(([slug]) => slug), "-- Commandes permanentes : conditions générales et livraison/retrait.\n");
+publishFile("1.3", "2026-11-14", "14 novembre 2026", ["conditions-generales", "livraison-retrait"], "-- Commandes permanentes : conditions générales et livraison/retrait. (Contenu actuel : voir la 1.4.)\n");
+publishFile("1.4", "2026-11-19", "19 novembre 2026", Object.entries(versions).filter(([, v]) => v === update14).map(([slug]) => slug), "-- Commander sans fournée : conditions générales et livraison/retrait.\n");

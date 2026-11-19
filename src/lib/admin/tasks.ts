@@ -43,6 +43,8 @@ export interface TaskInput {
   slotReminderHours: number;
   /** Commandes prêtes sans créneau choisi. */
   readyWithoutSlot: number;
+  /** Commandes passées sans fournée, en attente de la date de remise à communiquer. */
+  onDemandToDate?: number;
   allergensToVerify: number;
   identityMissing: boolean;
   /** E-mails aux clientes : envois suspendus (message lisible) et messages en pause ou en échec. */
@@ -96,17 +98,17 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     });
   }
 
-  // Commandes permanentes : sans fournée ouverte à date de remise à venir, les clientes ne peuvent ni finaliser ni payer.
+  // Sans fournée ouverte à date de remise à venir, les commandes se font sans fournée (date fixée ensuite par OHMEGATO).
   const acceptingOrders = Boolean(cycle) && (cycle!.status === "surplus" || (cycle!.status === "open" && hasUpcomingFulfillment(cycle!, input.now)));
   if (input.setup && !acceptingOrders) {
     const passed = cycle && cycle.status === "open";
     tasks.push({
       key: "no-open-cycle",
-      priority: "urgent",
-      title: passed ? `La date de livraison de la fournée n°${cycle!.number} est passée` : "Aucune fournée n'est ouverte aux commandes",
+      priority: "soon",
+      title: passed ? `La date de livraison de la fournée n°${cycle!.number} est passée` : "Aucune fournée n'est ouverte",
       detail: passed
-        ? "Les clientes voient leur boîte mais ne peuvent plus valider ni payer. Aucune commande existante n'est déplacée : annoncez les dates de la prochaine fournée."
-        : "Les clientes voient la carte et leur boîte mais ne peuvent ni valider ni payer. Annoncez les dates de la prochaine fournée et ouvrez-la.",
+        ? "Les clientes peuvent commander quand même : vous fixez alors la date de chaque commande. Aucune commande existante n'est déplacée. Annoncez la prochaine fournée pour proposer des dates fixes."
+        : "Les clientes peuvent commander quand même : vous fixez alors la date de chaque commande. Annoncez une fournée pour proposer des dates fixes.",
       count: 1,
       href: passed ? `/admin/fournees/nouvelle?depuis=${cycle!.id}` : "/admin/fournees/nouvelle",
       action: "Annoncer la prochaine fournée",
@@ -180,6 +182,18 @@ export function buildTasks(input: TaskInput): AdminTask[] {
     });
   }
 
+  if ((input.onDemandToDate ?? 0) > 0) {
+    const n = input.onDemandToDate!;
+    tasks.push({
+      key: "on-demand-date",
+      priority: "today",
+      title: `${n} ${plural(n, "commande attend", "commandes attendent")} sa date de livraison`,
+      detail: "Commandes passées sans fournée : fixez la date, la cliente la verra dans son suivi.",
+      count: n,
+      href: "/admin/commandes?vue=creneau#jour-date-a-fixer",
+      action: "Fixer la date",
+    });
+  }
   if (input.readyWithoutSlot > 0) {
     const n = input.readyWithoutSlot;
     tasks.push({

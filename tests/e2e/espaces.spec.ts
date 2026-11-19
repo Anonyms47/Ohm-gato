@@ -56,7 +56,7 @@ test.describe("Retrouvons votre carnet — connexion par code", () => {
     await page.getByLabel(/Comment vous appeler/).fill("Awa Diop");
     await page.getByRole("button", { name: "Enregistrer et ouvrir mon carnet" }).click();
     await expect(page).toHaveURL(/\/compte$/);
-    await expect(page.getByText("Bonjour Awa")).toBeVisible();
+    await expect(page.getByText(/^(Bonjour|Bonsoir) Awa/)).toBeVisible();
   });
 
   test("code expiré puis trop de tentatives", async ({ page }) => {

@@ -1,8 +1,8 @@
 ## Livraison dans Dakar
 
-Nous livrons dans Dakar, selon la disponibilité des livreurs. La date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande.
+Nous livrons dans Dakar, selon la disponibilité des livreurs. Pour une commande rattachée à une fournée, la date et le créneau de livraison ou de retrait sont ceux de la fournée, affichés lors de la validation de votre commande. Pour une commande passée sans fournée, OHMEGATO vous communique la date de livraison ou de retrait ensuite.
 
-La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande.
+La livraison est généralement organisée le matin, selon la fournée et le créneau confirmé pour votre commande, ou selon la date communiquée par OHMEGATO pour une commande sans fournée.
 
 ## Ce que nous vous demandons
 
@@ -28,7 +28,7 @@ Le tarif affiché au moment de votre commande est celui qui est enregistré avec
 
 Le retrait est gratuit, au {{adresse_retrait}}.
 
-Vous choisissez votre créneau de retrait dans le bon de commande. Les instructions s'affichent sur votre suivi de commande une fois la commande confirmée. Présentez la référence de votre commande au moment du retrait.
+Pour une commande rattachée à une fournée, vous choisissez votre créneau de retrait dans le bon de commande ; sans fournée, la date de retrait vous est communiquée par OHMEGATO. Les instructions s'affichent sur votre suivi de commande une fois la commande confirmée. Présentez la référence de votre commande au moment du retrait.
 
 ## Une question ?
 

@@ -19,6 +19,8 @@ function order(over: Partial<Omit<MemberOrder, "items">> & { items?: Line[] }): 
     paidAt: null,
     cycleNumber: 1,
     isCustom: false,
+    onDemand: false,
+    fulfillmentDate: null,
     slot: null,
     items: items.map((i) => ({ ...i, variantId: "v", flavorId: null, variantLabel: "Box", flavorName: null, unitPriceFcfa: 100, lineTotalFcfa: 100 * i.quantity, storage: null })),
     payments: [],

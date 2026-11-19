@@ -9,7 +9,7 @@ import { forgetPendingOrder, readPendingOrders } from "@/components/order/pendin
 import { Button, type ButtonState } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/cn";
-import { formatShortDay, formatSlot, formatTime } from "@/lib/dates";
+import { formatDay, formatShortDay, formatSlot, formatTime } from "@/lib/dates";
 import { formatFcfa } from "@/lib/money";
 import {
   isAwaitingPayment,
@@ -41,7 +41,8 @@ export interface TrackerOrder {
   reservationExpiresAt: string | null;
   cycleNumber: number | null;
   /** Précommande (jour principal de la fournée) ou commande tardive sur le surplus. */
-  orderKind?: "preorder" | "surplus";
+  orderKind?: "preorder" | "surplus" | "on_demand";
+  fulfillmentDate?: string | null;
   slot: { startsAt: string; endsAt: string } | null;
   /** Informations personnelles visibles (navigateur d'origine ou propriétaire connecté). */
   showPrivate: boolean;
@@ -283,7 +284,7 @@ export function OrderTracker({
       {/* Le ticket devient le carnet de route */}
       <section aria-labelledby="ticket-commande" className="relative mx-auto w-full max-w-md bg-blanc-casse px-6 py-6 shadow-[0_6px_14px_-8px_rgb(36_20_13/0.4)]">
         <h2 id="ticket-commande" className="text-center font-bold tracking-[0.2em]">
-          {brand.name} · {order.cycleNumber !== null ? `Fournée n°${order.cycleNumber}` : "Sur-mesure"}
+          {brand.name} · {order.cycleNumber !== null ? `Fournée n°${order.cycleNumber}` : order.orderKind === "on_demand" ? "Commande" : "Sur-mesure"}
         </h2>
         {paid && (
           <p className={cn("ohm-tampon absolute right-4 top-14 text-[1.4rem] text-succes", animateStamp && "ohm-tampon-pose")}>Payée</p>
@@ -333,7 +334,7 @@ export function OrderTracker({
           )}
           <p>
             <strong>{order.fulfillment === "pickup" ? "Retrait" : "Livraison"} :</strong>{" "}
-            {order.slot ? formatSlot(order.slot.startsAt, order.slot.endsAt) : "date convenue avec OHMEGATO"}
+            {order.slot ? formatSlot(order.slot.startsAt, order.slot.endsAt) : order.fulfillmentDate ? formatDay(order.fulfillmentDate) : order.orderKind === "on_demand" ? "date communiquée par OHMEGATO" : "date convenue avec OHMEGATO"}
           </p>
           {order.fulfillment === "pickup" ? (
             <p>{pickupAddress}</p>

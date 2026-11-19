@@ -150,3 +150,28 @@ export async function bulkSetStatus(ids: string[], target: BulkTarget): Promise<
     skipped,
   };
 }
+
+/**
+ * Commande sans fournée : OHMEGATO fixe (ou corrige) la date de livraison ou de retrait.
+ * Seules les commandes passées sans fournée sont concernées ; celles d'une fournée gardent la date de la fournée.
+ */
+export async function setOrderDate(orderId: string, date: string): Promise<AdminState> {
+  const admin = await requireAdmin();
+  if (!uuid.safeParse(orderId).success) return { ok: false, message: "Commande introuvable." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) return { ok: false, message: "Choisissez une date valide." };
+  const today = new Intl.DateTimeFormat("fr-CA", { timeZone: "Africa/Dakar" }).format(new Date());
+  if (date < today) return { ok: false, message: "La date ne peut pas être dans le passé." };
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("orders")
+    .update({ fulfillment_date_snapshot: date })
+    .eq("id", orderId)
+    .eq("order_kind", "on_demand")
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, message: adminErrorMessage(error) };
+  if (!data) return { ok: false, message: "Cette commande appartient à une fournée : sa date est celle de la fournée." };
+  await db.rpc("write_audit", { p_actor: admin.id, p_action: "order.date", p_entity: "orders", p_entity_id: orderId, p_details: { date } });
+  refresh(orderId);
+  return { ok: true, message: "Date enregistrée. Prévenez la cliente (WhatsApp)." };
+}

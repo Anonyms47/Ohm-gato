@@ -2,8 +2,8 @@
 export const ORDER_ERROR_MESSAGES: Record<string, string> = {
   EMPTY_CART: "Votre boîte est vide.",
   TOO_MANY_LINES: "Votre boîte contient trop de lignes. Regroupez certains articles.",
-  CYCLE_NOT_OPEN: "Aucune date de livraison ou de retrait n'est annoncée pour cette fournée : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée.",
-  CYCLE_DATES_PAST: "Aucune date de livraison ou de retrait à venir n'est annoncée : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Votre boîte est conservée ; la commande ouvrira dès que l'atelier aura annoncé les dates.",
+  CYCLE_NOT_OPEN: "Cette fournée n'est pas ouverte : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Rechargez la page et recommencez, votre boîte est conservée.",
+  CYCLE_DATES_PAST: "Les dates de la fournée viennent de changer : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Rechargez la page et recommencez, votre boîte est conservée.",
   PREORDER_CLOSED:
     "La prochaine fournée vient de changer : cette commande n'a pas été enregistrée et aucun paiement n'a été demandé. Actualisez la page, vérifiez les dates annoncées, puis validez de nouveau. Votre boîte est conservée.",
   SURPLUS_CLOSED: "La vente du surplus de cette fournée est terminée : cette commande n'a pas été enregistrée. Votre boîte est conservée.",

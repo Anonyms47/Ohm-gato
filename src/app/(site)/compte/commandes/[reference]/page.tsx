@@ -7,7 +7,8 @@ import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
 import { getMyOrder } from "@/lib/account/data";
 import { requireUser } from "@/lib/auth/session";
-import { formatShortDay, formatSlot } from "@/lib/dates";
+import { formatDay, formatShortDay, formatSlot } from "@/lib/dates";
+import { ON_DEMAND_DATE } from "@/lib/on-demand";
 import { formatFcfa } from "@/lib/money";
 import { isAwaitingPayment, paymentStatusLabel, statusHeadline } from "@/lib/order-status";
 import { providerLabel } from "@/lib/payments/labels";
@@ -28,7 +29,7 @@ export default async function CommandeDetail({ params }: { params: Promise<{ ref
           <p className="font-bold tabular-nums">{order.reference}</p>
           <h1 className="font-display text-[clamp(1.8rem,5vw,2.4rem)] leading-tight">{statusHeadline[order.status]}</h1>
           <p className="text-encre-douce">
-            Passée le {formatShortDay(order.createdAt)} · {order.isCustom ? "Sur-mesure" : `Fournée n°${order.cycleNumber}`}
+            Passée le {formatShortDay(order.createdAt)} · {order.isCustom ? "Sur-mesure" : order.cycleNumber === null ? "Commande" : `Fournée n°${order.cycleNumber}`}
           </p>
         </header>
         <div className="flex flex-wrap gap-3">
@@ -92,7 +93,13 @@ export default async function CommandeDetail({ params }: { params: Promise<{ ref
           <h2 id="reception" className="font-display text-[1.4rem]">
             {order.fulfillment === "pickup" ? "Retrait" : "Livraison"}
           </h2>
-          {order.slot && <p>{formatSlot(order.slot.startsAt, order.slot.endsAt)}</p>}
+          {order.slot ? (
+            <p>{formatSlot(order.slot.startsAt, order.slot.endsAt)}</p>
+          ) : order.fulfillmentDate ? (
+            <p>{formatDay(order.fulfillmentDate)}</p>
+          ) : order.onDemand ? (
+            <p>{ON_DEMAND_DATE}</p>
+          ) : null}
           {order.fulfillment === "pickup" ? (
             <p>{brand.pickupAddress} — gratuit</p>
           ) : (

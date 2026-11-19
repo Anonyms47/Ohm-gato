@@ -42,7 +42,7 @@ export function indexVariants(products: CatalogProduct[]) {
   return index;
 }
 
-export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: CycleSummary | null): ResolvedCart {
+export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: CycleSummary | null, onDemand = false): ResolvedCart {
   const index = indexVariants(products);
   const unitsUsed = new Map<string, number>();
 
@@ -55,7 +55,7 @@ export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: Cycle
     const flavor = line.flavorId ? (product.flavors.find((f) => f.id === line.flavorId) ?? null) : null;
     let issue: LineIssue | null = null;
 
-    if (!cycle?.composable) issue = "closed";
+    if (!onDemand && !cycle?.composable) issue = "closed";
     else if (!product.inCycle || !variant.enabledInCycle) issue = "not_in_cycle";
     else if (product.flavors.length > 0 && !line.flavorId) issue = "flavor_required";
     else if (line.flavorId && (!flavor || !flavor.availableInCycle)) issue = "flavor_unavailable";
@@ -84,7 +84,7 @@ export function resolveCart(cart: Cart, products: CatalogProduct[], cycle: Cycle
     subtotal: lines.reduce((sum, l) => sum + l.total, 0),
     itemCount: lines.reduce((sum, l) => sum + l.line.quantity, 0),
     hasIssues: lines.some((l) => l.issue !== null),
-    fromOtherCycle: Boolean(cart.cycleId && cycle && cart.cycleId !== cycle.id),
+    fromOtherCycle: !onDemand && Boolean(cart.cycleId && cycle && cart.cycleId !== cycle.id),
   };
 }
 

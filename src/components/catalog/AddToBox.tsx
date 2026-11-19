@@ -20,7 +20,7 @@ import { useOffscreen } from "@/lib/use-offscreen";
 export function AddToBox({ product, tone = "light", compact = false, stickyCta = false }: { product: CatalogProduct; tone?: "light" | "dark"; compact?: boolean; stickyCta?: boolean }) {
   const { add, resolved, catalog, setDrawerOpen, hydrated } = useCart();
   const groupId = useId();
-  const cycleOpen = catalog.cycle?.composable ?? false;
+  const cycleOpen = catalog.onDemand || (catalog.cycle?.composable ?? false);
   const variants = product.variants.filter((v) => v.enabledInCycle);
   const flavors = product.flavors.filter((f) => f.availableInCycle);
 

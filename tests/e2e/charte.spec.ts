@@ -9,6 +9,7 @@ test.describe("Charte graphique OHMEGATO", () => {
     expect(response?.status()).toBe(200);
     const logo = page.locator('header a[aria-label="OHMEGATO — accueil"] img');
     await expect(logo).toHaveAttribute("src", /logotype-ohmegato\.svg/);
+    await expect(logo).toBeVisible();
     const box = await logo.boundingBox();
     // Proportions d'origine (1800 × 597) : jamais déformé.
     expect(Math.abs(box!.width / box!.height - 1800 / 597)).toBeLessThan(0.05);

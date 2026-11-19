@@ -2,7 +2,7 @@
 -- désigner une nouvelle fournée remplace l'ancienne pour les NOUVELLES commandes seulement (aucun report).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(21);
 
 create temp table w as select
   (select id from public.production_cycles where status = 'open' order by number limit 1) as old_cycle,
@@ -66,6 +66,24 @@ set local role service_role;
 select throws_ok($$ select public.place_order(pg_temp.payload('00000000-0000-4000-8000-000000000950', '00000000-0000-4000-8000-000000000951', 'h-perm-4')) $$, 'P0001', 'CYCLE_DATES_PAST', 'date de remise passée : aucune commande ni paiement');
 select is((select status::text from public.production_cycles where id = '00000000-0000-4000-8000-000000000950'), 'open', 'aucune fermeture automatique quand la date est dépassée');
 reset role;
+
+-- 7. Commander sans fournée : ni fournée ni créneau, aucun stock touché, date communiquée ensuite par OHMEGATO.
+create temp table inv_before as select coalesce(sum(reserved_units), 0) as reserved from public.inventory_units;
+grant select on inv_before to service_role;
+set local role service_role;
+create temp table o3 as select (public.place_order(pg_temp.payload(null, null, 'h-perm-5')) ->> 'order_id')::uuid as id;
+select isnt((select id from o3), null, 'sans fournée : la commande est enregistrée');
+reset role;
+select is((select cycle_id from public.orders where id = (select id from o3)), null, 'sans fournée : aucune fournée rattachée');
+select is((select slot_id from public.orders where id = (select id from o3)), null, 'sans fournée : aucun créneau');
+select is((select order_kind from public.orders where id = (select id from o3)), 'on_demand', 'sans fournée : type de commande on_demand');
+select is((select fulfillment_date_snapshot from public.orders where id = (select id from o3)), null, 'sans fournée : la date reste à communiquer');
+select matches((select reference from public.orders where id = (select id from o3)), '^OHM-', 'sans fournée : numéro de commande propre');
+select is((select coalesce(sum(reserved_units), 0) from public.inventory_units), (select reserved from inv_before), 'sans fournée : aucun stock réservé');
+-- La date fixée par OHMEGATO se corrige (contrairement aux commandes d'une fournée, dont la date est figée).
+update public.orders set fulfillment_date_snapshot = current_date + 5 where id = (select id from o3);
+update public.orders set fulfillment_date_snapshot = current_date + 6 where id = (select id from o3);
+select is((select fulfillment_date_snapshot from public.orders where id = (select id from o3)), current_date + 6, 'sans fournée : la date communiquée peut être corrigée');
 
 select * from finish();
 rollback;

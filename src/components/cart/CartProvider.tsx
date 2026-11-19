@@ -121,7 +121,7 @@ export function CartProvider({ catalog, children }: { catalog: Catalog; children
   const value = useMemo<CartContextValue>(
     () => ({
       cart,
-      resolved: resolveCart(cart, catalog.products, catalog.cycle),
+      resolved: resolveCart(cart, catalog.products, catalog.cycle, catalog.onDemand),
       catalog,
       hydrated,
       add,

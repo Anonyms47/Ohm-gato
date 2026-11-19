@@ -20,11 +20,11 @@ Les photographies sont présentées à titre d'illustration. Nos pâtisseries so
 
 ## Fournées et disponibilité
 
-La production se fait par fournées. Vous pouvez commander à toute heure : chaque commande est rattachée à la prochaine fournée désignée par l'atelier, avec les dates de production, de livraison et de retrait affichées au moment de la commande. Vous ne proposez pas de date : celles de la fournée s'appliquent.
+La production se fait par fournées. Vous pouvez commander à toute heure. Quand l'atelier a désigné une fournée avec une date de livraison ou de retrait à venir, votre commande y est rattachée : les dates de production, de livraison et de retrait affichées au moment de la commande s'appliquent.
 
 Les dates et le créneau affichés lors de la validation sont conservés pour votre commande. Une modification ultérieure du calendrier de l'atelier ne change pas une commande déjà enregistrée, et aucune commande n'est reportée d'une fournée à l'autre sans votre accord. Une nouvelle fournée ne reçoit que les nouvelles commandes.
 
-Tant que l'atelier n'a pas annoncé de date de livraison ou de retrait à venir, vous pouvez composer votre boîte, mais vous ne pouvez ni valider la commande ni payer. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
+Quand aucune fournée n'est ouverte, vous pouvez commander quand même : votre commande est enregistrée sans fournée et OHMEGATO vous communique la date de livraison ou de retrait (par WhatsApp ou par téléphone), qui apparaît aussi sur votre suivi de commande. Si cette date ne vous convient pas, contactez-nous avant la remise. Chaque annonce de fournée est publiée sur le site et sur nos réseaux sociaux.
 
 La production suit les commandes : les commandes d'une fournée ne sont pas limitées par un stock affiché. Pour le surplus (douceurs restantes que l'atelier choisit de proposer après la production), seule la quantité réellement restante est commandable. Nous n'affichons ni faux stock ni compte à rebours artificiel.
 

@@ -43,7 +43,10 @@ export async function fillPickupCheckout(page: Page) {
   await page.getByRole("button", { name: "Continuer" }).click();
   await page.getByRole("radio", { name: /^Retrait/ }).check();
   await page.getByRole("button", { name: "Continuer" }).click();
-  await chooseFirstSlot(page, "Créneau de retrait");
+  // Sans fournée ouverte, aucun créneau n'est à choisir (la date est communiquée par OHMEGATO).
+  const noSlot = page.getByTestId("date-a-communiquer");
+  await noSlot.or(page.getByLabel("Créneau de retrait")).first().waitFor();
+  if (!(await noSlot.isVisible())) await chooseFirstSlot(page, "Créneau de retrait");
   await page.getByRole("button", { name: "Continuer" }).click();
   await page.getByRole("button", { name: "Continuer" }).click();
 }

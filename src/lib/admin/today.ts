@@ -122,7 +122,7 @@ export async function loadToday(): Promise<TodayData> {
   ]);
   for (const r of [attention, wave, prepare, ready, incomplete, custom, todayOrders, paidToday, slotsToday, produced]) if (r.error) throw r.error;
   const reminderEnd = new Date(now + settings.slotReminderHours * 3_600_000).toISOString();
-  const [soon, noSlot] = await Promise.all([
+  const [soon, noSlot, toDate] = await Promise.all([
     db()
       .from("orders")
       .select("id, delivery_slots!inner(starts_at)", head)
@@ -130,8 +130,16 @@ export async function loadToday(): Promise<TodayData> {
       .in("status", ["confirmed", "preparing", "finishing"])
       .gte("delivery_slots.starts_at", new Date(now).toISOString())
       .lt("delivery_slots.starts_at", reminderEnd),
-    db().from("orders").select("id", head).eq("status", "ready").is("slot_id", null),
+    db().from("orders").select("id", head).eq("status", "ready").is("slot_id", null).or("fulfillment_date_snapshot.is.null,order_kind.neq.on_demand"),
+    // Commandes passées sans fournée : en attente de la date que OHMEGATO doit communiquer.
+    db()
+      .from("orders")
+      .select("id", head)
+      .eq("order_kind", "on_demand")
+      .is("fulfillment_date_snapshot", null)
+      .in("status", ["confirmed", "preparing", "finishing", "ready", "needs_attention"]),
   ]);
+  if (toDate.error) throw toDate.error;
   if (soon.error) throw soon.error;
   if (noSlot.error) throw noSlot.error;
   const customRows = (custom.data ?? []) as { created_at: string }[];
@@ -171,6 +179,7 @@ export async function loadToday(): Promise<TodayData> {
     slotSoonNotReady: soon.count ?? 0,
     slotReminderHours: settings.slotReminderHours,
     readyWithoutSlot: noSlot.count ?? 0,
+    onDemandToDate: toDate.count ?? 0,
     allergensToVerify: toVerifyCount(activeProducts),
     identityMissing: missingIdentityFields(legal.identity).length > 0,
     emails,

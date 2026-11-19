@@ -54,13 +54,22 @@ describe("tâches de l'atelier", () => {
     expect(buildTasks({ ...empty, paymentAlertHours: 1, waveToVerify: { count: 1, oldestAt: "2026-10-15T08:00:00Z" } })[0]!.priority).toBe("urgent");
   });
 
+  it("commandes sans fournée : tâche pour fixer la date de chaque commande", () => {
+    const none = buildTasks({ ...empty, onDemandToDate: 0 });
+    expect(none.some((t) => t.key === "on-demand-date")).toBe(false);
+    const some = buildTasks({ ...empty, onDemandToDate: 2 }).find((t) => t.key === "on-demand-date");
+    expect(some?.count).toBe(2);
+    expect(some?.title).toMatch(/2 commandes attendent/);
+  });
+
   it("commandes permanentes : alerte seulement sans date de remise à venir, aucune clôture automatique", () => {
     const setup = { zonesActive: 1, paymentsWithoutLink: [], alerts: { activeSubscribers: 0, sendsToReview: 0, openCycleNumber: 1, openCycleAnnounced: true } };
     // Fournée ouverte à date de livraison future : aucune alerte, même après l'ancienne date limite.
     expect(buildTasks({ ...empty, setup, now: Date.parse("2026-10-19T00:00:00Z"), cycle: openCycle }).some((t) => t.key === "no-open-cycle")).toBe(false);
-    // Date de livraison passée : alerte urgente, sans déplacer aucune commande.
+    // Date de livraison passée : les clientes commandent sans fournée ; rappel, sans déplacer aucune commande.
     const late = buildTasks({ ...empty, setup, now: Date.parse("2026-10-24T00:00:00Z"), cycle: openCycle }).find((t) => t.key === "no-open-cycle");
-    expect(late?.priority).toBe("urgent");
+    expect(late?.priority).toBe("soon");
+    expect(late?.detail).toMatch(/commander quand même/);
     expect(late?.detail).toMatch(/Aucune commande existante n'est déplacée/);
     // Aucune fournée du tout : alerte également.
     expect(buildTasks({ ...empty, setup }).some((t) => t.key === "no-open-cycle")).toBe(true);

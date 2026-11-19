@@ -54,13 +54,14 @@ export default async function AdminCommandes({ searchParams }: { searchParams: P
   } else {
     const active = rows.filter((o) => ACTIVE_STAGES.has(orderStage(o.status, o.paymentStatus)));
     const byDay = new Map<string, AdminOrderRow[]>();
-    for (const o of [...active].sort((a, b) => (a.slotStartsAt ?? "9999").localeCompare(b.slotStartsAt ?? "9999"))) {
-      const day = o.slotStartsAt ? o.slotStartsAt.slice(0, 10) : "sans-creneau";
+    const dayOf = (o: AdminOrderRow) => o.slotStartsAt?.slice(0, 10) ?? o.fulfillmentDate ?? (o.onDemand ? "date-a-fixer" : "sans-creneau");
+    for (const o of [...active].sort((a, b) => (dayOf(a) === "date-a-fixer" ? "9998" : dayOf(a) === "sans-creneau" ? "9999" : dayOf(a)).localeCompare(dayOf(b) === "date-a-fixer" ? "9998" : dayOf(b) === "sans-creneau" ? "9999" : dayOf(b)))) {
+      const day = dayOf(o);
       byDay.set(day, [...(byDay.get(day) ?? []), o]);
     }
     groups = [...byDay.entries()].map(([day, orders]) => ({
       key: `jour-${day}`,
-      label: day === "sans-creneau" ? "Sans créneau choisi" : formatDay(day),
+      label: day === "sans-creneau" ? "Sans créneau choisi" : day === "date-a-fixer" ? "Date à fixer (commandes sans fournée)" : formatDay(day),
       orders: orders.map(toBoard),
     }));
   }
