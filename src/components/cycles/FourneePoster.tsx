@@ -127,7 +127,7 @@ export function FourneePoster({
   return (
     <article
       aria-labelledby={`fournee-${cycle.number}`}
-      className="relative mt-8 overflow-hidden rounded-[18px] border-2 border-chocolat bg-blanc-casse p-5 shadow-[0_5px_0_var(--ohm-chocolat)] sm:p-8"
+      className="relative mt-8 overflow-hidden rounded-[18px] border-2 border-chocolat bg-blanc-casse p-4 shadow-[0_5px_0_var(--ohm-chocolat)] sm:p-8"
     >
       {/* Cercle d'affiche, discret, comme sur les visuels OHMEGATO. */}
       <span aria-hidden className="ohm-cercle pointer-events-none absolute -right-16 -top-16 size-48 opacity-25 sm:size-64" />
@@ -157,7 +157,7 @@ export function FourneePoster({
       {phase !== "cancelled" && <FourneeFrise cycle={cycle} phase={phase} />}
 
       {phase !== "cancelled" && (
-        <dl className="relative mt-8 grid gap-4 rounded-[12px] bg-creme p-4 sm:grid-cols-3">
+        <dl className="relative mt-8 grid gap-4 rounded-[12px] bg-creme p-3.5 sm:p-4 sm:grid-cols-3">
           <div>
             <dt className="font-bold">Commande</dt>
             <dd>À tout moment, rattachée à cette fournée tant qu’elle est la prochaine annoncée.</dd>
@@ -176,7 +176,7 @@ export function FourneePoster({
       )}
 
       {(phase === "open" || surplus) && (deliveryWindow || pickupWindow) && (
-        <dl className="relative mt-4 grid gap-3 rounded-[12px] border-2 border-chocolat/20 p-4 sm:grid-cols-2">
+        <dl className="relative mt-4 grid gap-3 rounded-[12px] border-2 border-chocolat/20 p-3.5 sm:p-4 sm:grid-cols-2">
           {deliveryWindow && (
             <div>
               <dt className="font-bold">{surplus ? "Livraison des commandes tardives" : "Créneaux de livraison"}</dt>

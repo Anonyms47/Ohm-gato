@@ -24,24 +24,24 @@ const word: Record<StepState, string> = { done: "étape passée", current: "éta
 export function FourneeFrise({ cycle, phase }: { cycle: CycleSummary; phase: CyclePhase }) {
   const steps = friseSteps(cycle, phase);
   return (
-    <ol id="frise" aria-label="Les quatre moments de la fournée" className="relative mt-8 grid gap-5 md:grid-cols-4 md:gap-4">
+    <ol id="frise" aria-label="Les quatre moments de la fournée" className="relative mt-8 grid gap-4 md:grid-cols-4 md:gap-4">
       {/* Fil de la frise : vertical sur téléphone, horizontal ensuite. */}
-      <span aria-hidden className="absolute bottom-6 left-5 top-6 border-l-2 border-dashed border-chocolat/35 md:hidden" />
+      <span aria-hidden className="absolute bottom-6 left-[1.0625rem] top-6 border-l-2 border-dashed border-chocolat/35 md:hidden" />
       <span aria-hidden className="absolute left-8 right-8 top-5 hidden border-t-2 border-dashed border-chocolat/35 md:block" />
       {steps.map((step, index) => (
         <li
           key={step.key}
-          className="relative flex gap-4 motion-safe:animate-[ohm-entree_520ms_var(--ohm-courbe)_both] md:flex-col md:gap-3"
+          className="relative flex gap-2.5 motion-safe:animate-[ohm-entree_520ms_var(--ohm-courbe)_both] md:flex-col md:gap-3"
           style={{ animationDelay: `${index * 90}ms` }}
           aria-current={step.state === "current" ? "step" : undefined}
         >
           <span
             aria-hidden
-            className={cn("relative z-[1] grid size-10 shrink-0 place-items-center rounded-full border-2 font-display text-[1.15rem]", mark[step.state])}
+            className={cn("relative z-[1] grid size-9 shrink-0 sm:size-10 place-items-center rounded-full border-2 font-display text-[1.15rem]", mark[step.state])}
           >
             {index + 1}
           </span>
-          <div className={cn("min-w-0 flex-1 rounded-[14px] border-2 p-4", card[step.state])}>
+          <div className={cn("min-w-0 flex-1 rounded-[14px] border-2 p-3.5 sm:p-4", card[step.state])}>
             <p className="font-display text-[1.3rem] leading-tight">
               {step.title}
               <span className="sr-only"> ({word[step.state]})</span>
