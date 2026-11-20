@@ -67,6 +67,14 @@
     hyphens: manual;
   }
 
+  /* Retours à la ligne propres : titres et libellés courts équilibrés, paragraphes sans mot isolé sur la dernière ligne. */
+  h1, h2, h3, h4, .font-script, a, button, summary, dt, th, label {
+    text-wrap: balance;
+  }
+  p, li, dd, figcaption, blockquote {
+    text-wrap: pretty;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
