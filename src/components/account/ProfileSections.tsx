@@ -341,7 +341,7 @@ export function SessionsSection({ sessions }: { sessions: MemberSession[] }) {
       </ul>
       {others.length > 0 && (
         <ConfirmDialog
-          trigger={<Button variant="secondary" className="self-start">Déconnecter les autres appareils</Button>}
+          trigger={<Button variant="secondary" className="self-start">Déconnecter les autres<span className="sr-only"> appareils</span></Button>}
           title="Déconnecter les autres appareils ?"
           description={<p>Seul cet appareil restera connecté.</p>}
           confirmLabel="Déconnecter les autres appareils"
@@ -367,7 +367,7 @@ export function DataSection() {
         className="inline-flex min-h-12 w-fit items-center rounded-[10px] border-2 border-chocolat px-5 font-bold"
         download
       >
-        Télécharger mes données (JSON)
+        Télécharger mes données<span className="sr-only"> (JSON)</span>
       </a>
       {open ? (
         <form action={action} className="flex flex-col gap-3 rounded-[12px] border-2 border-erreur bg-blanc-casse p-4">

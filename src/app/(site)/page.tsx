@@ -17,7 +17,7 @@ import { socialLinks } from "@/lib/social";
 
 
 function cycleLine(cycle: CycleSummary | null): string {
-  if (!cycle) return "Aucune fournée n'est ouverte pour le moment.";
+  if (!cycle) return "Commandez quand vous voulez.";
   const phase = phaseNow(cycle);
   if (phase === "scheduled") return `Fournée annoncée : ${productionLabel(cycle)}`;
   return phaseMessage(phase, cycle) ?? "Cette fournée est terminée. Consultez Nos fournées pour découvrir la prochaine ouverture.";
@@ -78,6 +78,7 @@ export default async function FourneePage() {
             {cycle?.message && <p className="max-w-prose text-[1.15rem]">{cycle.message}</p>}
             <div className="max-w-prose rounded-[12px] border-2 border-chocolat bg-blanc-casse p-4">
               <p className="text-[1.15rem] font-bold">{cycleLine(cycle)}</p>
+              {!cycle && <p className="mt-2 text-encre-douce">Aucune fournée n&apos;est ouverte : OHMEGATO vous communique la date de livraison ou de retrait.</p>}
               {cycle && (
                 <p className="mt-2 text-encre-douce">
                   {productionLabel(cycle)} Livraison ou retrait le {formatDay(cycle.fulfillmentDate)}.
@@ -100,9 +101,12 @@ export default async function FourneePage() {
                   Voir la fournée
                 </ButtonLink>
               ) : (
-                <ButtonLink href="#prevenez-accueil" variant="secondary">
-                  Être prévenu(e) de la prochaine fournée
-                </ButtonLink>
+                <>
+                  <ButtonLink href="/carte">Composer ma boîte</ButtonLink>
+                  <Link href="#prevenez-accueil" className="inline-flex min-h-11 items-center font-bold underline decoration-caramel decoration-2 underline-offset-4">
+                    Être prévenu(e)
+                  </Link>
+                </>
               )}
             </div>
           </div>

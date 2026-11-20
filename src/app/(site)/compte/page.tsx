@@ -167,7 +167,7 @@ export default async function CompteAccueil() {
               Derniers tickets
             </h2>
             <Link href="/compte/commandes" className={`inline-flex min-h-11 items-center ${LINK}`}>
-              Tout l&apos;historique
+              Historique
             </Link>
           </div>
           {orders.length === 0 ? (
