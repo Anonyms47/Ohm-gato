@@ -85,7 +85,7 @@ export function ReopenGuide() {
       }}
       className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-4 font-bold"
     >
-      Revoir le guide de prise en main
+      Revoir le guide
     </button>
   );
 }

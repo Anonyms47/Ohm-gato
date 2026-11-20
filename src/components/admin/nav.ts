@@ -36,7 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/stock", label: "Stock et surplus", icon: "stock" },
       { href: "/admin/produits", label: "Produits", icon: "produit" },
       { href: "/admin/zones", label: "Zones de livraison", icon: "zone" },
-      { href: "/admin/alertes", label: "Alertes prochaine fournée", icon: "alerte" },
+      { href: "/admin/alertes", label: "Alertes de fournée", icon: "alerte" },
     ],
   },
   {

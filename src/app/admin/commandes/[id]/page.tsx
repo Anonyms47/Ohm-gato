@@ -60,7 +60,7 @@ export default async function AdminCommande({ params }: { params: Promise<{ id: 
   const templateLabel: Record<WhatsappTemplate, string> = {
     payment_check: "Demander la preuve de paiement",
     payment_reminder: "Relancer le paiement Wave",
-    payment_received: "Confirmer la réception du paiement",
+    payment_received: "Confirmer le paiement",
     ready_pickup: "Prévenir : commande prête",
     out_for_delivery: "Prévenir : en route",
     landmark: "Demander un point de repère",

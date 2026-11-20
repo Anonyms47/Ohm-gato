@@ -101,7 +101,7 @@ export default async function AdminCommandes({ searchParams }: { searchParams: P
             { name: "etape", label: "Étape", options: STAGES.map((s) => ({ value: s.key, label: s.label })) },
             { name: "paiement", label: "Paiement", options: [{ value: "pending", label: "À vérifier" }, { value: "paid", label: "Payée" }, { value: "refunded", label: "Remboursée" }] },
             { name: "mode", label: "Réception", options: [{ value: "delivery", label: "Livraison" }, { value: "pickup", label: "Retrait" }] },
-            { name: "fournee", label: "Fournée", options: cycles.map((c) => ({ value: c.id, label: `n°${c.number}` })) },
+            { name: "fournee", label: "Fournée", options: [...cycles.map((c) => ({ value: c.id, label: `n°${c.number}` })), { value: "sans", label: "Sans fournée" }] },
           ]}
         />
       )}

@@ -21,7 +21,7 @@ export default async function AdminLivraisons({ searchParams }: { searchParams: 
   const { fournee } = await searchParams;
   const [cycles, current] = await Promise.all([listCycles(), activeCycle()]);
   const cycleId = fournee ?? current?.id ?? null;
-  const [stops, orders] = await Promise.all([listDeliveries(cycleId), cycleId ? listOrders({ cycle: cycleId, fulfillment: "pickup" }) : Promise.resolve([])]);
+  const [stops, orders] = await Promise.all([listDeliveries(cycleId), cycleId ? listOrders({ cycle: cycleId, fulfillment: "pickup", withOnDemand: true }) : Promise.resolve([])]);
   const toDeliver = stops.filter((s) => s.status !== "delivered");
   const byDistrict = new Map<string, typeof toDeliver>();
   for (const s of toDeliver) {
@@ -91,7 +91,7 @@ export default async function AdminLivraisons({ searchParams }: { searchParams: 
                   {o.reference}
                 </Link>
                 <span>{o.customerName}</span>
-                <span className="text-encre-douce">{o.slotStartsAt ? `${formatShortDay(o.slotStartsAt)} ${formatTime(o.slotStartsAt)}` : "sans créneau"}</span>
+                <span className="text-encre-douce">{o.slotStartsAt ? `${formatShortDay(o.slotStartsAt)} ${formatTime(o.slotStartsAt)}` : o.fulfillmentDate ? formatShortDay(o.fulfillmentDate) : o.onDemand ? "date à fixer" : "sans créneau"}</span>
                 <span className="font-bold">{stageLabel(o.status, o.paymentStatus, o.fulfillment)}</span>
                 <span className="ml-auto flex gap-2">
                   <a href={telLink(o.customerPhone)} className="inline-flex min-h-11 items-center rounded-[10px] border-2 border-chocolat px-3 font-bold">

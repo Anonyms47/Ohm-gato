@@ -111,7 +111,7 @@ export function buildTasks(input: TaskInput): AdminTask[] {
         : "Les clientes peuvent commander quand même : vous fixez alors la date de chaque commande. Annoncez une fournée pour proposer des dates fixes.",
       count: 1,
       href: passed ? `/admin/fournees/nouvelle?depuis=${cycle!.id}` : "/admin/fournees/nouvelle",
-      action: "Annoncer la prochaine fournée",
+      action: "Annoncer une fournée",
     });
   }
 
