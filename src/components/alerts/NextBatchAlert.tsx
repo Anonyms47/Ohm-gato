@@ -70,7 +70,8 @@ export function NextBatchAlert({ source, className }: { source: Source; classNam
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center justify-center rounded-[10px] bg-chocolat px-5 py-2 text-center font-bold text-creme shadow-[0_3px_0_var(--ohm-cacao)] hover:bg-cacao"
             >
-              Être prévenu sur WhatsApp<span className="sr-only"> (nouvel onglet)</span>
+              <span aria-hidden>Par WhatsApp</span>
+              <span className="sr-only">Être prévenu sur WhatsApp (nouvel onglet)</span>
             </a>
             <button
               type="button"
@@ -82,7 +83,8 @@ export function NextBatchAlert({ source, className }: { source: Source; classNam
               }}
               className="inline-flex min-h-12 items-center justify-center rounded-[10px] border-2 border-chocolat bg-creme px-5 py-2 text-center font-bold hover:bg-blanc-casse"
             >
-              Être prévenu par e-mail
+              <span aria-hidden>Par e-mail</span>
+              <span className="sr-only">Être prévenu par e-mail</span>
             </button>
           </div>
           <p className="text-[0.95rem] text-encre-douce">
