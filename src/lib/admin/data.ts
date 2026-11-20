@@ -439,6 +439,8 @@ export interface OrderFilter {
   payment?: string;
   fulfillment?: string;
   cycle?: string;
+  /** Avec une fournée : y ajoute les commandes sans fournée (livraisons et retraits à planifier). */
+  withOnDemand?: boolean;
   today?: boolean;
   /** Étape de travail de l'atelier (voir order-stage.ts). */
   stage?: string;
@@ -474,7 +476,9 @@ export async function listOrders(filter: OrderFilter): Promise<AdminOrderRow[]> 
   if (filter.status) query = query.eq("status", filter.status);
   if (filter.payment) query = query.eq("payment_status", filter.payment);
   if (filter.fulfillment) query = query.eq("fulfillment", filter.fulfillment);
-  if (filter.cycle) query = query.eq("cycle_id", filter.cycle);
+  // « sans » : commandes passées sans fournée (date fixée par OHMEGATO). Une fournée précise peut y ajouter ces commandes (planning du jour).
+  if (filter.cycle === "sans") query = query.eq("order_kind", "on_demand");
+  else if (filter.cycle) query = filter.withOnDemand ? query.or(`cycle_id.eq.${filter.cycle},order_kind.eq.on_demand`) : query.eq("cycle_id", filter.cycle);
   if (filter.today) query = query.gte("created_at", startOfDakarDay());
   if (filter.q) {
     const q = filter.q.replace(/[%,()]/g, " ").trim();
@@ -651,7 +655,7 @@ export async function listDeliveries(cycleId: string | null): Promise<DeliverySt
     .eq("fulfillment", "delivery")
     .in("status", ["confirmed", "preparing", "finishing", "ready", "out_for_delivery", "delivered"])
     .order("created_at");
-  if (cycleId) query = query.or(`cycle_id.eq.${cycleId},custom_request_id.not.is.null`);
+  if (cycleId) query = query.or(`cycle_id.eq.${cycleId},custom_request_id.not.is.null,order_kind.eq.on_demand`);
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).map((o) => {

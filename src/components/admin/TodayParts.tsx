@@ -18,19 +18,19 @@ const priorityStyle: Record<TaskPriority, { label: string; dot: string; border: 
 
 /** Phrase d'accueil de la fournée active, à l'heure de Dakar. */
 export function cycleSentence(cycle: AdminCycle | null, now: number): { text: string; target: string | null; targetLabel: string | null } {
-  if (!cycle) return { text: "Aucune fournée n'est en préparation pour le moment.", target: null, targetLabel: null };
+  if (!cycle) return { text: "Aucune fournée n'est en préparation : les clientes commandent sans fournée et vous fixez la date de chaque commande.", target: null, targetLabel: null };
   const n = `la fournée n°${cycle.number}`;
   const phase = cyclePhase(cycle, now);
   const delivery = formatDay(cycle.fulfillmentDate);
   switch (phase) {
     case "scheduled":
       return cycle.status === "draft"
-        ? { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est en brouillon : elle n'est pas encore visible des clientes.`, target: null, targetLabel: null }
-        : { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est annoncée : ouvrez-la quand ses dates sont prêtes.`, target: null, targetLabel: null };
+        ? { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est en brouillon : elle n'est pas encore visible des clientes, qui commandent en attendant sans fournée (vous fixez la date).`, target: null, targetLabel: null }
+        : { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est annoncée : ouvrez-la quand ses dates sont prêtes. En attendant, les commandes se font sans fournée.`, target: null, targetLabel: null };
     case "open":
       return { text: `Les commandes de ${n} sont ouvertes à toute heure. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "closed":
-      return { text: `Les nouvelles commandes ne vont plus à ${n}. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
+      return { text: `Les nouvelles commandes ne vont plus à ${n} : elles se font sans fournée, avec une date que vous fixez. Livraison et retrait de ${n} le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "preparing":
       return { text: `${n.charAt(0).toUpperCase()}${n.slice(1)} est en production. Livraison et retrait le ${delivery}.`, target: `${cycle.fulfillmentDate}T00:00:00Z`, targetLabel: "Jour de livraison" };
     case "delivering":
