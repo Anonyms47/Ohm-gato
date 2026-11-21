@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!found) return {};
   const image = found.product.images[0];
   return {
+    alternates: { canonical: `/carte/${found.product.slug}` },
     title: found.product.name,
     description: found.product.description,
     openGraph: image ? { images: [{ url: image.url, width: image.width, height: image.height, alt: image.alt }] } : undefined,

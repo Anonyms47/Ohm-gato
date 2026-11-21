@@ -7,6 +7,7 @@ import { getPublicSettings } from "@/lib/catalog";
 
 export const metadata: Metadata = {
   title: "Notre histoire",
+  alternates: { canonical: "/notre-histoire" },
   description: "OHMEGATO associe OMEGA (Ω) et TO (Τ) : les premiers muffins préparés à l'ESP, puis une carte qui grandit, et l'envie d'un futur café.",
 };
 

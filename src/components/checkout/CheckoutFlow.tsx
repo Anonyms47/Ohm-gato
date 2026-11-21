@@ -454,7 +454,7 @@ export function CheckoutFlow({
                           <div className="grid gap-3 sm:grid-cols-2">
                             {(
                               [
-                                { value: "delivery", title: "Livraison dans Dakar", text: "Le jour prévu, sur le créneau choisi. Frais à régler au livreur selon votre position." },
+                                { value: "delivery", title: "Livraison dans Dakar", text: `${onDemand ? "À la date confirmée pour votre commande." : "À la date et sur le créneau choisis."} Frais à régler au livreur selon votre position.` },
                                 { value: "pickup", title: "Retrait", text: `${brand.pickupAddress}. Gratuit.` },
                               ] as const
                             )
@@ -672,6 +672,7 @@ function OrderTicket({
     <div className="relative text-[0.98rem]">
       <p className="text-center font-bold tracking-[0.2em]">{brand.name}</p>
       <p className="text-center text-encre-douce">{cycleNumber === null ? "Bon de commande" : `Bon de fournée n°${cycleNumber}`}</p>
+      <p className="ohm-tampon mx-auto mt-2 block w-fit text-[1rem] text-rose-encre">À vérifier</p>
       <ul className="mt-4 flex flex-col gap-2 border-y-2 border-dashed border-chocolat/30 py-3">
         {lines.map((l) => (
           <li key={l.key} className="flex justify-between gap-3">
@@ -707,7 +708,6 @@ function OrderTicket({
       </dl>
       {fulfillment === "delivery" && <p className="mt-2 font-bold">{deliveryFeeNotice(deliveryFee)}</p>}
       <p className="mt-3">{slotLabel}</p>
-      <p className="ohm-tampon absolute right-0 top-12 text-[1rem] text-rose-encre">À vérifier</p>
       <p className="mt-4 text-center font-bold">Ceci n&apos;est pas encore une confirmation.</p>
     </div>
   );

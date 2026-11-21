@@ -11,7 +11,7 @@ import { formatDay } from "@/lib/dates";
 
 export const metadata: Metadata = {
   title: "Nos fournées",
-  description: "Fournées OHMEGATO : commandez à tout moment, production selon les commandes, livraison ou retrait le jour prévu, surplus éventuel.",
+  description: "Fournées OHMEGATO : commandez à tout moment, production selon les commandes, livraison ou retrait à la date confirmée, surplus éventuel.",
   alternates: { canonical: "/fournees" },
 };
 
@@ -35,7 +35,7 @@ export default async function FourneesPage() {
         </BrandHeading>
         <p className="mt-3 max-w-prose text-[1.1rem]">
           OHMEGATO cuisine par fournées. Vous commandez à tout moment, l&apos;atelier prépare selon les commandes reçues, puis livre ou remet votre
-          boîte le jour prévu. S&apos;il reste des douceurs après les commandes confirmées, elles peuvent être proposées ensuite.
+          boîte à la date confirmée pour votre commande. S&apos;il reste des douceurs après les commandes confirmées, elles peuvent être proposées ensuite.
         </p>
 
         {cycle && phase ? (
