@@ -12,7 +12,7 @@ insert into public.legal_documents (slug, title, description, sort_order) values
 on conflict (slug) do nothing;
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'conditions-generales', '1.4', 'published', 'Conditions générales', $md$## Présentation
+select 'conditions-generales', '1.5', 'published', 'Conditions générales', $md$## Présentation
 
 OHMEGATO est une activité de pâtisserie maison actuellement en cours de formalisation à Dakar.
 
@@ -52,7 +52,7 @@ Le montant payé en ligne couvre uniquement les produits. Les frais de livraison
 
 Une commande se passe en quelques étapes :
 
-1. consulter la prochaine fournée annoncée et ses dates ;
+1. consulter la carte et, lorsqu'une fournée est ouverte, ses dates ;
 2. choisir les produits, leur format et, le cas échéant, leur parfum ;
 3. les ajouter dans « Ma boîte » ;
 4. choisir le retrait gratuit ou la livraison dans Dakar ;
@@ -147,7 +147,7 @@ Les marques et logos des prestataires cités sur le site restent la propriété 
 
 Ces conditions sont soumises au droit sénégalais, notamment aux règles applicables aux transactions électroniques et à la protection des données personnelles.
 
-En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-11-19', timestamptz '2026-11-19 08:00:00+00'
+En cas de difficulté, contactez-nous d'abord par e-mail à {{email}} ou par WhatsApp au {{telephone}} : nous recherchons une solution amiable. À défaut d'accord, le litige peut être porté devant les juridictions compétentes selon les règles applicables au Sénégal. Ces démarches ne vous privent d'aucun droit reconnu par la loi.$md$, date '2026-11-21', timestamptz '2026-11-21 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'conditions-generales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
@@ -418,7 +418,7 @@ Le site et son utilisation sont soumis au droit sénégalais.$md$, date '2026-10
 where not exists (select 1 from public.legal_document_versions where document_slug = 'mentions-legales');
 
 insert into public.legal_document_versions (document_slug, version, status, title, content, effective_at, published_at)
-select 'allergenes-conservation', '1.2', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
+select 'allergenes-conservation', '1.3', 'published', 'Allergènes et conservation', $md$## Comment lire nos informations
 
 Pour chaque produit, nous séparons trois informations :
 
@@ -428,7 +428,7 @@ Pour chaque produit, nous séparons trois informations :
 
 Une mention « sans ajout direct » ne signifie pas « sans allergène » : par exemple, un produit préparé sans ajout direct de lait peut contenir du lait ou des traces de lait provenant d'autres ingrédients, comme le chocolat. Les informations encore à vérifier ne sont pas affichées comme des certitudes.
 
-Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par la fondatrice d'OHMEGATO. Les traces liées aux emballages des ingrédients (soja, arachides, fruits à coque, sésame…) restent en cours de vérification et ne sont pas affichées tant qu'elles ne sont pas contrôlées.
+Les descriptions, les informations de recette et les conseils de conservation de chaque produit ont été confirmés par la fondatrice d'OHMEGATO.
 
 > Les produits sont préparés dans un environnement artisanal. En cas d'allergie sévère, contactez OHMEGATO avant de commander afin que la faisabilité de votre commande puisse être vérifiée.
 
@@ -441,5 +441,5 @@ Les descriptions, les informations de recette et les conseils de conservation de
 
 Respectez la chaîne du froid pour les produits contenant de la crème, une sauce ou des fruits. Ne consommez pas un produit présentant une odeur, une texture ou un aspect anormal.
 
-Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-10-29', timestamptz '2026-10-29 08:00:00+00'
+Les durées indiquées concernent un produit correctement transporté et conservé après sa réception.$md$, date '2026-11-21', timestamptz '2026-11-21 08:00:00+00'
 where not exists (select 1 from public.legal_document_versions where document_slug = 'allergenes-conservation');

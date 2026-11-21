@@ -8,6 +8,7 @@ import { cycleStatusLine } from "@/lib/cycle-status";
 
 export const metadata: Metadata = {
   title: "La carte",
+  alternates: { canonical: "/carte" },
   description: "Cookies, brownies, moelleux, muffins, cake à l'orange, choux et verrines : formats et prix de la carte OHMEGATO.",
 };
 

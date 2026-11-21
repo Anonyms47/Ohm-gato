@@ -7,6 +7,12 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Corrigé
+
+- Ticket de l'étape « Vérification » : le ticket est un contenu normal, jamais caché derrière un état ou une animation (animation décorative qui se contente de l'habiller, repli immédiat si elle ne démarre pas, affichage tout de suite avec animations réduites, rognage seulement pendant la descente), ramené dans l'écran au-dessus de la barre fixe, tampon « À vérifier » dans le flux (plus de chevauchement), cadre visible, présent à l'impression du navigateur.
+- Textes : livraison « à la date confirmée pour votre commande » (accueil, bon de commande, Nos fournées) ; phrase obsolète sur les traces retirée de « Allergènes et conservation » (version 1.3, `supabase/seed/legal-publish-1.3-allergenes.sql`) ; étape 1 des Conditions générales sans fournée obligatoire (version 1.5, `supabase/seed/legal-publish-1.5.sql`). Versions à publier en production par l'atelier ou par ces scripts, après accord.
+- Référencement : balise canonical ajoutée à l'accueil, la carte, les fiches produits, notre histoire et sur-mesure (metadataBase = adresse du site) ; pages privées toujours en noindex.
+
 ### Ajouté
 
 - Commander sans fournée : quand aucune fournée n'est ouverte (ou que sa date de remise est passée), toutes les actions restent possibles. Le catalogue complet est proposé, sans stock, sans créneau ; la commande et le paiement sont enregistrés avec `cycle_id` et `slot_id` vides (`order_kind = 'on_demand'`, numéro `OHM-XXXXX`) et OHMEGATO communique ensuite la date de livraison ou de retrait. Avec une fournée ouverte, rien ne change (date et créneau de la fournée). Atelier : fiche commande avec « Fixer la date » (modifiable, journalisée), tâche « N commandes attendent leur date », groupe « Date à fixer » dans les commandes ; suivi, carnet et reçu affichent « Date communiquée par OHMEGATO » puis la date. Conditions générales et Livraison/retrait en version 1.4 (`supabase/seed/legal-publish-1.4.sql`). Migration `20261118000001_orders_without_cycle.sql` (retour arrière dans `supabase/rollbacks`).

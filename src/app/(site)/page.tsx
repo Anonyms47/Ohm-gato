@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { NextBatchAlert } from "@/components/alerts/NextBatchAlert";
 import { Annotation, BrandHeading } from "@/components/brand/BrandHeading";
@@ -15,6 +16,9 @@ import { formatFcfa } from "@/lib/money";
 import { startingFormat } from "@/lib/starting-format";
 import { socialLinks } from "@/lib/social";
 
+
+// Titre et description viennent de la mise en page racine ; l'adresse canonique évite les doublons avec les variantes d'URL.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 function cycleLine(cycle: CycleSummary | null): string {
   if (!cycle) return "Commandez quand vous voulez.";
@@ -283,7 +287,7 @@ export default async function FourneePage() {
               <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
                 <dt className="font-bold">Livraison</dt>
                 <dd>
-                  Dans Dakar, le jour prévu de la fournée. Frais non compris, à régler directement au livreur selon votre position.
+                  Dans Dakar, à la date confirmée pour votre commande. Frais non compris, à régler directement au livreur selon votre position.
                 </dd>
               </div>
               <div className="grid gap-0.5 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">

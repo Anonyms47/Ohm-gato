@@ -8,6 +8,7 @@ import { formatSenegalPhone } from "@/lib/phone";
 
 export const metadata: Metadata = {
   title: "Sur-mesure & Événements",
+  alternates: { canonical: "/sur-mesure" },
   description:
     "Anniversaires, mariages, événements : demandez des verrines, brownies, muffins, choux, gâteaux entiers ou une création. OHMEGATO vous répond avec une proposition.",
 };

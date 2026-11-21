@@ -38,7 +38,7 @@ Le montant payé en ligne couvre uniquement les produits. Les frais de livraison
 
 Une commande se passe en quelques étapes :
 
-1. consulter la prochaine fournée annoncée et ses dates ;
+1. consulter la carte et, lorsqu'une fournée est ouverte, ses dates ;
 2. choisir les produits, leur format et, le cas échéant, leur parfum ;
 3. les ajouter dans « Ma boîte » ;
 4. choisir le retrait gratuit ou la livraison dans Dakar ;

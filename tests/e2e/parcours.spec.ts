@@ -291,13 +291,14 @@ test.describe("Mise en page et accessibilité", () => {
     await expect(page.getByLabel("Parfum").first()).toContainText("Chocolat");
   });
 
-  test("animations réduites : le récapitulatif s'imprime sans animation", async ({ browser }) => {
+  test("animations réduites : le récapitulatif est affiché sans animation", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await addToBox(page, "cookies", "Unité");
     await fillPickupCheckout(page);
-    await page.getByRole("button", { name: "Imprimer mon récapitulatif" }).click();
+    // Animations réduites : le récapitulatif est affiché tout de suite, sans imprimante à actionner ni animation.
     await expect(page.getByText("Ceci n'est pas encore une confirmation.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Imprimer mon récapitulatif" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Passer l'animation" })).toHaveCount(0);
     await context.close();
   });
