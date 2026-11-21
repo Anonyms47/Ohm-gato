@@ -9,6 +9,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Corrigé
 
+- Écran de chargement des pages (changement de page, carnet, atelier) : il couvre tout l'écran (`fixed`, plein écran, fond crème) au lieu de s'afficher dans la zone de contenu, donc le pied de page, l'en-tête et la page précédente ne se voient plus pendant le chargement. Les écrans de section (boîte, bon de commande, cartes) restent dans la page.
 - Ticket de l'étape « Vérification » : le ticket est un contenu normal, jamais caché derrière un état ou une animation (animation décorative qui se contente de l'habiller, repli immédiat si elle ne démarre pas, affichage tout de suite avec animations réduites, rognage seulement pendant la descente), ramené dans l'écran au-dessus de la barre fixe, tampon « À vérifier » dans le flux (plus de chevauchement), cadre visible, présent à l'impression du navigateur.
 - Textes : livraison « à la date confirmée pour votre commande » (accueil, bon de commande, Nos fournées) ; phrase obsolète sur les traces retirée de « Allergènes et conservation » (version 1.3, `supabase/seed/legal-publish-1.3-allergenes.sql`) ; étape 1 des Conditions générales sans fournée obligatoire (version 1.5, `supabase/seed/legal-publish-1.5.sql`). Versions à publier en production par l'atelier ou par ces scripts, après accord.
 - Référencement : balise canonical ajoutée à l'accueil, la carte, les fiches produits, notre histoire et sur-mesure (metadataBase = adresse du site) ; pages privées toujours en noindex.

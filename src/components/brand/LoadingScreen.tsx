@@ -7,7 +7,8 @@ import { cn } from "@/lib/cn";
  * Animation en CSS sur le SVG fourni par l'agence (jamais retapé). Sans animation si la personne a demandé d'en réduire
  * (le logotype reste affiché). Annoncé aux lecteurs d'écran par un message, l'image elle-même est décorative.
  *
- * - « page » : occupe la zone de contenu (changement de page, première ouverture).
+ * - « page » : couvre tout l'écran (changement de page, première ouverture) : seul l'écran de chargement est visible, jamais le pied de page ni le reste de la page précédente.
+ *   Un seul exemplaire à la fois ; le défilement de la page dessous est sans effet (elle est entièrement masquée).
  * - « section » : plus petit, pour un bloc qui se charge dans une page (carte, boîte, bon de fournée).
  */
 export function LoadingScreen({
@@ -26,7 +27,7 @@ export function LoadingScreen({
       aria-busy="true"
       className={cn(
         "grid place-items-center px-4",
-        size === "page" ? "min-h-[60dvh] py-16" : "min-h-[14rem] py-10",
+        size === "page" ? "fixed inset-0 z-[70] min-h-dvh bg-creme" : "min-h-[14rem] py-10",
         className,
       )}
     >
