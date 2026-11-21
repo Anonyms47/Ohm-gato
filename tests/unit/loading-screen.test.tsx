@@ -24,3 +24,18 @@ describe("écran de chargement", () => {
     expect(html).toContain("Chargement…");
   });
 });
+
+describe("écran de chargement de page", () => {
+  it("couvre tout l'écran : le pied de page et la page précédente ne sont jamais visibles", () => {
+    const html = renderToStaticMarkup(<LoadingScreen />);
+    expect(html).toContain("fixed");
+    expect(html).toContain("inset-0");
+    expect(html).toContain("min-h-dvh");
+    expect(html).toContain("bg-creme");
+  });
+
+  it("l'écran de section reste dans la page", () => {
+    const html = renderToStaticMarkup(<LoadingScreen size="section" />);
+    expect(html).not.toContain("fixed");
+  });
+});
