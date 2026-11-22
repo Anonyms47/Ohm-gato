@@ -16,8 +16,8 @@ const VOICE = process.env.VOICE;
 const MUSIC = process.env.MUSIC ?? "auto";
 
 // Sons des messages (instants d'apparition des bulles dans la vidéo)
-const received = [1.54, 6.49];
-const sent = [3.44];
+const timings = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/promo/timings.json"), "utf8"));
+const { received, sent } = timings;
 // Voix off : chaque phrase démarre sur sa scène (secondes)
 const lines = [
   [9.8, "Chez Ohmégato, tout commence par une fournée."],
@@ -66,7 +66,7 @@ if (MUSIC !== "none") {
   let music = MUSIC;
   if (MUSIC === "auto") {
     music = path.join(dir, "musique.wav");
-    execFileSync("python3", [path.join(ROOT, "scripts/promo/musique.py"), music, duration.toFixed(3)], { stdio: "ignore" });
+    execFileSync("python3", [path.join(ROOT, "scripts/promo/musique.py"), music, duration.toFixed(3), path.join(ROOT, "scripts/promo/timings.json")], { stdio: "ignore" });
   }
   // sous les bulles : la musique reste en retrait
   add(music, 0, 0.42);

@@ -29,11 +29,14 @@ const FPS = 60;
 
 
 // Conversation : bulles bleues (envoyées) à droite, grises (reçues) à gauche, sans noms. Rythme de lecture naturel.
-// Trois messages en grand pour accrocher ; le rythme suit la longueur de chaque message (temps de lecture naturel).
+// Conversation en grand pour accrocher ; le rythme suit la longueur de chaque message (temps de lecture naturel).
 const conversation = [
-  ["l", "Arrête tout ce que tu fais. 😳"],
-  ["r", "Quoi ?? Il s’est passé quoi ?"],
-  ["l", "J’ai trouvé des pâtisseries faites maison à Dakar… tu vas devenir accro 🍪 Regarde 👇"],
+  ["l", "Tu connais un bon endroit pour commander des petits fours ?"],
+  ["r", "Pourquoi ?"],
+  ["l", "Flemme de préparer pour le chill de ce soir 😂"],
+  ["r", "Tu connais OHMEGATO ?"],
+  ["l", "OHMEGATO ? Non. Montre stp !!"],
+  ["r", "Regarde…"],
 ];
 const msgs = [];
 {
@@ -136,6 +139,23 @@ function brandAt(t) {
 }
 
 const DURATION = times.final + 5.3;
+// repères pour la bande son (sons des bulles, musique) : scripts/promo/mix-audio.mjs
+fs.writeFileSync(
+  path.join(ROOT, "scripts/promo/timings.json"),
+  JSON.stringify(
+    {
+      received: msgs.filter((m) => m.side === "l").map((m) => m.t),
+      sent: msgs.filter((m) => m.side === "r").map((m) => m.t),
+      drop: times.browser,
+      phone: times.phone,
+      brand: times.brand,
+      final: times.final,
+      duration: DURATION,
+    },
+    null,
+    2,
+  ) + "\n",
+);
 const from = opt("--from", 0);
 const to = opt("--to", DURATION);
 const step = opt("--step", 1);

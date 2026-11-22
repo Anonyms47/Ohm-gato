@@ -4,9 +4,10 @@ Calée sur le montage : intro feutrée pendant les messages, ouverture au moment
 groove chaleureux pendant la visite, énergie sur la partie téléphone, suspension pendant que le logo s'écrit,
 résolution sur le bouton « Commander ».
 
-Usage : python3 scripts/promo/musique.py sortie.wav [durée_s]   (nécessite numpy)
+Usage : python3 scripts/promo/musique.py sortie.wav [durée_s] [timings.json]   (nécessite numpy)
 """
 
+import json
 import sys
 import wave
 
@@ -22,6 +23,10 @@ DROP = 9.09  # la bulle devient le site
 PHONE = 21.29  # partie téléphone
 BRAND = 30.79  # plein écran, le logo s'écrit
 FINAL = 41.59  # bouton « Commander »
+if len(sys.argv) > 3:
+    with open(sys.argv[3], encoding="utf-8") as f:
+        _t = json.load(f)
+    DROP, PHONE, BRAND, FINAL = _t["drop"], _t["phone"], _t["brand"], _t["final"]
 
 BPM = 96.0
 BEAT = 60.0 / BPM
@@ -120,15 +125,18 @@ CHORDS = [
 ]
 
 # 1) intro : nappe feutrée, accords doux et lointains, montée vers l'ouverture
-for i in range(4):
+n_intro = max(4, int(DROP / 2.3) + 1)
+for i in range(n_intro):
     root, notes = CHORDS[i % 4]
     at = i * 2.3
+    if at >= DROP:
+        break
     for n in notes:
         add(lowpass(pad(n, 2.6), 900), at, pan=rng.uniform(-0.4, 0.4), gain=0.9)
-riser_t = t_axis(DROP - 6.6)
+riser_t = t_axis(2.5)
 riser = rng.standard_normal(len(riser_t)) * (riser_t / riser_t[-1]) ** 2.2
 riser = riser - lowpass(riser, 2500)
-add(0.06 * riser, 6.6, gain=1.0)
+add(0.06 * riser, DROP - 2.5, gain=1.0)
 add(0.35 * np.sin(2 * np.pi * midi(29) * t_axis(0.9)) * np.exp(-t_axis(0.9) * 3), DROP - 0.05, gain=0.8)
 
 # 2) groove : à partir de l'ouverture, mesure après mesure
