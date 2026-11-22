@@ -7,6 +7,10 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Modifié
+
+- E-mails OHMEGATO refaits : direction artistique reprise de la charte (carte blanc cassé avec liseré rose, titre, tableau récapitulatif de la commande, boutons arrondis, pied de page avec WhatsApp et téléphone, version sombre pour les messageries qui la gèrent) et textes réécrits plus chaleureux. Le code de connexion et le code de retrait sont mis en évidence ; l'e-mail du code de connexion ne contient aucun lien. Aucun contenu inventé : montants, créneaux et frais viennent de la commande.
+
 ### Corrigé
 
 - E-mails OHMEGATO en mode sombre (Gmail) : le logotype, transparent, se confondait avec le fond. Il est maintenant servi avec un fond crème opaque (`logotype-ohmegato-email.png`), donc lisible en mode clair comme en mode sombre.
