@@ -18,8 +18,8 @@ export type EmailTemplate =
   | "refund_recorded"
   | "admin_digest";
 
-/** Logo servi par le site (adresse publique, lisible par les messageries). */
-const LOGO_URL = "https://ohmegato.com/brand/logotype-ohmegato.png";
+/** Logo servi par le site (adresse publique). Version à fond crème opaque : les messageries en mode sombre n'inversent pas une image opaque, le logotype reste lisible. */
+const LOGO_URL = "https://ohmegato.com/brand/logotype-ohmegato-email.png";
 
 export interface OrderEmailData {
   customerName: string;
@@ -58,7 +58,7 @@ function wrap(
   const text = [...paragraphs, highlight ? `\n${highlight}\n` : null, link ? `${link.label} : ${link.url}` : null, "", `${brand.name} · ${brand.phoneDisplay} · ohmegato.com`, extra ? `${extra.note}\nSe désinscrire : ${extra.unsubscribeUrl}` : null].filter((l) => l !== null).join("\n\n");
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5e9d6;font-family:Arial,sans-serif;color:#3a2418">
 <div style="max-width:560px;margin:0 auto;padding:24px">
-<p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="200" height="66" style="display:inline-block;width:200px;height:auto;border:0"></p>
+<p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="240" height="103" style="display:inline-block;width:240px;max-width:100%;height:auto;border:0;border-radius:12px"></p>
 <div style="background:#fbf6ee;border-radius:12px;padding:20px">
 ${paragraphs.map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escape(p)}</p>`).join("\n")}
 ${highlight ? `<p style="margin:16px 0;text-align:center"><span style="display:inline-block;background:#f5e9d6;border:2px solid #3a2418;border-radius:10px;padding:12px 22px 12px 30px;font-size:32px;font-weight:bold;letter-spacing:8px;color:#3a2418">${escape(highlight)}</span></p>` : ""}

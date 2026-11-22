@@ -36,7 +36,7 @@ describe("e-mails transactionnels", () => {
   it("commande remise : livrée ou retirée, avec le logo OHMEGATO", () => {
     expect(renderOrderEmail("order_delivered", data).subject).toContain("retirée");
     expect(renderOrderEmail("order_delivered", { ...data, fulfillment: "delivery" }).subject).toContain("livrée");
-    expect(renderOrderEmail("order_delivered", data).html).toContain("https://ohmegato.com/brand/logotype-ohmegato.png");
+    expect(renderOrderEmail("order_delivered", data).html).toContain("https://ohmegato.com/brand/logotype-ohmegato-email.png");
   });
 
   it("le HTML échappe les données saisies", () => {
@@ -57,7 +57,7 @@ describe("e-mail du code de connexion", () => {
     expect(mail.text).toContain("148861");
     expect(mail.text).toContain("valable 10 minutes");
     expect(mail.text).toContain("Si vous n'avez rien demandé");
-    expect(mail.html).toContain("logotype-ohmegato.png");
+    expect(mail.html).toContain("logotype-ohmegato-email.png");
     expect(mail.html).toContain("148861");
     expect(mail.html).toContain("#3a2418");
     expect(mail.html).not.toContain("<a ");
