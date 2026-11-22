@@ -201,9 +201,20 @@ describe("alertes de l'atelier", () => {
 describe("séparation des secrets", () => {
   const read = (path: string) => readFileSync(path, "utf8");
 
-  it("le code de connexion (SMTP Supabase) ne passe pas par l'API Brevo de l'application", () => {
+  it("le code de connexion par e-mail part au format OHMEGATO, avec repli sur l'envoi standard de Supabase", () => {
     const otp = read("src/lib/auth/otp.ts");
-    expect(otp).not.toMatch(/email\/(outbox|delivery|health)|brevo/i);
+    // Envoi par le service d'OHMEGATO (gabarit de la charte) via une seule fonction dédiée…
+    expect(otp).toMatch(/sendBrandedLoginCode/);
+    expect(otp).toMatch(/renderLoginCode/);
+    // …et repli sur Supabase Auth si cet envoi n'est pas disponible : la connexion ne dépend jamais d'un seul canal.
+    expect(otp).toMatch(/signInWithOtp\(\{ email: destination/);
+  });
+
+  it("le code de connexion n'est jamais écrit dans les journaux ni dans la base d'OHMEGATO", () => {
+    const otp = read("src/lib/auth/otp.ts");
+    const logs = otp.split("\n").filter((line) => /console\.\w+\(/.test(line));
+    for (const line of logs) expect(line).not.toMatch(/[,{]\s*(code|otp|token)\b|\$\{(code|otp)\}/);
+    expect(otp).not.toMatch(/\.from\("(otp_codes|login_codes)"\)/);
   });
 
   it("la clé Brevo reste côté serveur", () => {
