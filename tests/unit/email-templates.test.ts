@@ -48,3 +48,24 @@ describe("e-mails transactionnels", () => {
     expect(renderDigest("2026-10-15", ["2 paiements"], "https://ohmegato.com/admin").text).toContain("• 2 paiements");
   });
 });
+
+describe("e-mail du code de connexion", () => {
+  it("utilise le format OHMEGATO : logotype, code en évidence, durée de validité, aucun lien", async () => {
+    const { renderLoginCode } = await import("@/lib/email/templates");
+    const mail = renderLoginCode("148861", 10);
+    expect(mail.subject).toBe("148861 : votre code de connexion OHMEGATO");
+    expect(mail.text).toContain("148861");
+    expect(mail.text).toContain("valable 10 minutes");
+    expect(mail.text).toContain("Si vous n'avez rien demandé");
+    expect(mail.html).toContain("logotype-ohmegato.png");
+    expect(mail.html).toContain("148861");
+    expect(mail.html).toContain("#3a2418");
+    expect(mail.html).not.toContain("<a ");
+    expect(mail.listUnsubscribe).toBeUndefined();
+  });
+
+  it("échappe tout contenu inattendu dans le code", async () => {
+    const { renderLoginCode } = await import("@/lib/email/templates");
+    expect(renderLoginCode("<b>1</b>").html).not.toContain("<b>1</b>");
+  });
+});

@@ -48,13 +48,20 @@ export interface RenderedEmail {
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function wrap(subject: string, paragraphs: string[], link: { label: string; url: string } | null, extra?: { note: string; unsubscribeUrl: string; oneClickUrl?: string }): RenderedEmail {
-  const text = [...paragraphs, link ? `${link.label} : ${link.url}` : null, "", `${brand.name} · ${brand.phoneDisplay} · ohmegato.com`, extra ? `${extra.note}\nSe désinscrire : ${extra.unsubscribeUrl}` : null].filter((l) => l !== null).join("\n\n");
+function wrap(
+  subject: string,
+  paragraphs: string[],
+  link: { label: string; url: string } | null,
+  extra?: { note: string; unsubscribeUrl: string; oneClickUrl?: string },
+  highlight?: string,
+): RenderedEmail {
+  const text = [...paragraphs, highlight ? `\n${highlight}\n` : null, link ? `${link.label} : ${link.url}` : null, "", `${brand.name} · ${brand.phoneDisplay} · ohmegato.com`, extra ? `${extra.note}\nSe désinscrire : ${extra.unsubscribeUrl}` : null].filter((l) => l !== null).join("\n\n");
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5e9d6;font-family:Arial,sans-serif;color:#3a2418">
 <div style="max-width:560px;margin:0 auto;padding:24px">
 <p style="margin:0 0 16px;text-align:center"><img src="${LOGO_URL}" alt="${brand.name}" width="200" height="66" style="display:inline-block;width:200px;height:auto;border:0"></p>
 <div style="background:#fbf6ee;border-radius:12px;padding:20px">
 ${paragraphs.map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escape(p)}</p>`).join("\n")}
+${highlight ? `<p style="margin:16px 0;text-align:center"><span style="display:inline-block;background:#f5e9d6;border:2px solid #3a2418;border-radius:10px;padding:12px 22px 12px 30px;font-size:32px;font-weight:bold;letter-spacing:8px;color:#3a2418">${escape(highlight)}</span></p>` : ""}
 ${link ? `<p style="margin:16px 0 0"><a href="${escape(link.url)}" style="display:inline-block;background:#3a2418;color:#f5e9d6;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold">${escape(link.label)}</a></p>` : ""}
 </div>
 <p style="font-size:13px;color:#6b4a3a;margin:16px 0 0">${escape(brand.name)} · ${escape(brand.phoneDisplay)} · ohmegato.com</p>
@@ -134,6 +141,21 @@ export function renderDigest(date: string, lines: string[], adminUrl: string): R
     label: "Ouvrir l'atelier",
     url: adminUrl,
   });
+}
+
+/** Code de connexion à « Mon carnet » : même charte que les e-mails de commande (aucun lien, seulement le code). */
+export function renderLoginCode(code: string, validMinutes = 10): RenderedEmail {
+  return wrap(
+    `${code} : votre code de connexion OHMEGATO`,
+    [
+      "Bonjour,",
+      `Voici votre code pour ouvrir votre carnet OHMEGATO. Il est valable ${validMinutes} minutes.`,
+      "Ne le partagez avec personne. Si vous n'avez rien demandé, ignorez simplement ce message.",
+    ],
+    null,
+    undefined,
+    code,
+  );
 }
 
 /** E-mail d'essai envoyé depuis l'atelier à l'adresse de la marque (jamais à une cliente). */
