@@ -2,6 +2,8 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { deliver, emailChannel } from "@/lib/email/outbox";
+import { renderLoginCode } from "@/lib/email/templates";
 import { serverEnv } from "@/lib/env";
 import { rateLimit } from "@/lib/http";
 import { deliverLoginCode, MessagingUnavailableError, phoneLoginAvailable } from "@/lib/messaging";
@@ -129,7 +131,10 @@ export async function requestLoginCode(channel: Channel, raw: string, ip: string
     const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email: destination });
     if (error || !data.properties?.email_otp) return { ok: false, code: "SEND_FAILED" };
     testCode = data.properties.email_otp;
+  } else if (await sendBrandedLoginCode(destination)) {
+    // Code envoyé par OHMEGATO avec son propre format d'e-mail (voir renderLoginCode).
   } else {
+    // Repli : e-mail standard de Supabase si l'envoi OHMEGATO n'est pas disponible ou échoue.
     const { error } = await authClient().auth.signInWithOtp({ email: destination, options: { shouldCreateUser: true } });
     if (error) {
       // Visible dans l'atelier (État des e-mails) : date, catégorie et code HTTP seulement.
@@ -194,4 +199,24 @@ async function registerFailure(requestId: string): Promise<VerifyCodeResult> {
   const attempts = typeof data === "number" ? data : OTP_MAX_ATTEMPTS;
   if (attempts >= OTP_MAX_ATTEMPTS) return { ok: false, code: "TOO_MANY_ATTEMPTS" };
   return { ok: false, code: "CODE_INVALID", attemptsLeft: OTP_MAX_ATTEMPTS - attempts };
+}
+
+/**
+ * Code de connexion par e-mail envoyé avec le format OHMEGATO (logotype, couleurs) au lieu du modèle standard de Supabase.
+ * Le code est créé par Supabase Auth (même vérification qu'avant), jamais journalisé ni conservé ici.
+ * Retourne false si le service d'envoi n'est pas configuré ou échoue : l'appelant utilise alors l'envoi standard.
+ */
+async function sendBrandedLoginCode(email: string): Promise<boolean> {
+  const channel = emailChannel();
+  if (channel === "none") return false;
+  try {
+    const { data, error } = await supabaseAdmin().auth.admin.generateLink({ type: "magiclink", email });
+    const code = data?.properties?.email_otp;
+    if (error || !code) return false;
+    const result = await deliver(channel, { to_email: email, idempotency_key: crypto.randomUUID() }, renderLoginCode(code, OTP_TTL_SECONDS / 60));
+    if (!result.ok) console.error("Envoi du code de connexion impossible, repli sur l'envoi standard", { category: result.category });
+    return result.ok;
+  } catch {
+    return false;
+  }
 }
