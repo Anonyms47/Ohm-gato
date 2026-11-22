@@ -69,7 +69,7 @@ if (MUSIC !== "none") {
     execFileSync("python3", [path.join(ROOT, "scripts/promo/musique.py"), music, duration.toFixed(3), path.join(ROOT, "scripts/promo/timings.json")], { stdio: "ignore" });
   }
   // sous les bulles : la musique reste en retrait
-  add(music, 0, 0.42);
+  add(music, 0, Number(process.env.MUSIC_GAIN ?? 0.3));
 }
 const labels = parts.map((_, k) => `[a${k}]`).join("");
 const filter = `${parts.join(";")};${labels}amix=inputs=${parts.length}:normalize=0,apad,atrim=0:${duration.toFixed(3)},${VOICE ? "loudnorm=I=-16:TP=-1.5:LRA=11" : "alimiter=limit=0.89"}[mix]`;

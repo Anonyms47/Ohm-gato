@@ -52,7 +52,7 @@ const msgs = [];
 }
 // enchaînements calés sur la fin de la conversation (écarts identiques à la version précédente)
 const B = msgs[msgs.length - 1].t + 2.6;
-const rel = { browser: 0, tour: 1.3, phone: 12.2, phoneTour: 13.4, tap: 16.4, trio: 17.4, merge: 20.6, brand: 21.7, write: 22.8, morph: 26.9, final: 32.5 };
+const rel = { browser: 0, tour: 1.3, phone: 12.2, phoneTour: 13.4, tap: 16.4, trio: 17.4, merge: 22.1, brand: 23.2, write: 24.3, morph: 28.4, final: 34.0 };
 const times = Object.fromEntries(Object.entries(rel).map(([k, v]) => [k, B + v]));
 
 // Parcours de la page d'accueil (secondes depuis « tour » → position en px de page) et titres associés.
@@ -68,7 +68,7 @@ const captions = [
   { lines: ["Ou retiré à", "Sud Foire."], accent: ["Foire."], x: CAP_X, y: 380, t0: times.tour + 9.3, t1: times.tour + 10.7 },
   { lines: ["Choisis."], accent: ["Choisis."], x: 190, y: 430, t0: times.phone + 1.4, t1: times.tap - 0.1 },
   { lines: ["Ajoute."], accent: ["Ajoute."], x: 1290, y: 430, t0: times.tap + 0.05, t1: times.trio + 0.4 },
-  { lines: ["Ta fournée, livrée à Dakar."], accent: ["Dakar."], center: true, size: 76, y: 70, t0: times.trio + 0.5, t1: times.merge - 0.1 },
+  { lines: ["Commander n’a jamais été aussi simple.", "Prochaine fournée et disponibilités en direct."], accent: ["simple.", "direct."], center: true, size: 58, y: 52, t0: times.trio + 0.5, t1: times.merge - 0.1 },
 ];
 
 const C = (f) => "file://" + path.join(ROOT, "scripts/promo/captures", f);

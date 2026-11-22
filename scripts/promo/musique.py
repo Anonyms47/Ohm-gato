@@ -8,6 +8,7 @@ Usage : python3 scripts/promo/musique.py sortie.wav [durée_s] [timings.json]   
 """
 
 import json
+import os
 import sys
 import wave
 
@@ -17,6 +18,8 @@ SR = 48000
 OUT = sys.argv[1] if len(sys.argv) > 1 else "musique.wav"
 DUR = float(sys.argv[2]) if len(sys.argv) > 2 else 46.9
 rng = np.random.default_rng(7)
+# STYLE=calme (défaut) : ambiance feutrée, sans batterie ni montée ; STYLE=groove : version rythmée
+CALME = os.environ.get("STYLE", "calme") != "groove"
 
 # repères du montage (secondes)
 DROP = 9.09  # la bulle devient le site
@@ -136,8 +139,9 @@ for i in range(n_intro):
 riser_t = t_axis(2.5)
 riser = rng.standard_normal(len(riser_t)) * (riser_t / riser_t[-1]) ** 2.2
 riser = riser - lowpass(riser, 2500)
-add(0.06 * riser, DROP - 2.5, gain=1.0)
-add(0.35 * np.sin(2 * np.pi * midi(29) * t_axis(0.9)) * np.exp(-t_axis(0.9) * 3), DROP - 0.05, gain=0.8)
+if not CALME:
+    add(0.06 * riser, DROP - 2.5, gain=1.0)
+    add(0.35 * np.sin(2 * np.pi * midi(29) * t_axis(0.9)) * np.exp(-t_axis(0.9) * 3), DROP - 0.05, gain=0.8)
 
 # 2) groove : à partir de l'ouverture, mesure après mesure
 pent = [65, 67, 69, 72, 74, 77]
@@ -151,6 +155,11 @@ while at < BRAND - 0.05:
         add(rhodes(n, BAR * 0.9, 0.18), at, pan=rng.uniform(-0.3, 0.3))
         add(rhodes(n, BEAT * 1.4, 0.10), at + 2.5 * BEAT, pan=rng.uniform(-0.3, 0.3))
     # basse syncopée
+    if CALME:
+        add(bass(root, BAR * 0.95), at, gain=0.35)
+        at += BAR
+        bar += 1
+        continue
     add(bass(root, BEAT * 1.4), at)
     add(bass(root, BEAT * 0.6), at + 1.5 * BEAT)
     add(bass(root + 7, BEAT * 0.9), at + 2.5 * BEAT)
@@ -184,8 +193,9 @@ while arp_at < FINAL - 0.3:
     k += 1
 
 # 4) résolution : accord de Fa majeur, coup de grosse caisse, extinction douce
-add(kick(), FINAL, gain=0.9)
-add(bass(29, 3.5), FINAL, gain=0.9)
+if not CALME:
+    add(kick(), FINAL, gain=0.9)
+add(bass(29, 3.5), FINAL, gain=0.4 if CALME else 0.9)
 for n in [53, 57, 60, 64, 69]:
     add(rhodes(n, 5.0, 0.22), FINAL, pan=rng.uniform(-0.3, 0.3))
     add(pad(n, DUR - FINAL), FINAL, gain=0.8)
@@ -193,7 +203,7 @@ for n in [53, 57, 60, 64, 69]:
 # effet de pompe (la musique respire avec la grosse caisse) pendant le groove
 t_all = np.arange(n_total) / SR
 phase = ((t_all - DROP) % BEAT) / BEAT
-pump = np.where((t_all >= DROP) & (t_all < BRAND), 0.72 + 0.28 * np.minimum(1, phase / 0.45), 1.0)
+pump = np.where((t_all >= DROP) & (t_all < BRAND) & (not CALME), 0.72 + 0.28 * np.minimum(1, phase / 0.45), 1.0)
 
 # réverbération légère (réponse impulsionnelle exponentielle)
 ir_t = t_axis(1.6)
@@ -208,8 +218,9 @@ def reverb(x):
     return np.fft.irfft(np.fft.rfft(x, size) * np.fft.rfft(ir, size), size)[: len(x)]
 
 
-L2 = L * pump + 0.18 * reverb(L)
-R2 = R * pump + 0.18 * reverb(R)
+wet = 0.3 if CALME else 0.18
+L2 = L * pump + wet * reverb(L)
+R2 = R * pump + wet * reverb(R)
 
 # fondu de sortie, saturation douce, normalisation
 n_out = int(DUR * SR)
