@@ -12,6 +12,8 @@ const output = path.resolve(process.argv[3] ?? path.join(ROOT, "docs/animations/
 // sons seuls : niveau final adapté à des effets courts (pas de normalisation sur une voix)
 const PIPER = process.env.PIPER ?? "piper";
 const VOICE = process.env.VOICE;
+// musique originale (scripts/promo/musique.py) ; MUSIC=chemin.wav, ou générée automatiquement si python3 et numpy sont présents
+const MUSIC = process.env.MUSIC ?? "auto";
 
 // Sons des messages (instants d'apparition des bulles dans la vidéo)
 const received = [1.54, 6.49];
@@ -60,6 +62,15 @@ const add = (file, at, gain) => {
 received.forEach((t) => add(ding, t, 1.8));
 sent.forEach((t) => add(swoosh, t, 2.0));
 voice.forEach((file, i) => add(file, lines[i][0], 1.0));
+if (MUSIC !== "none") {
+  let music = MUSIC;
+  if (MUSIC === "auto") {
+    music = path.join(dir, "musique.wav");
+    execFileSync("python3", [path.join(ROOT, "scripts/promo/musique.py"), music, duration.toFixed(3)], { stdio: "ignore" });
+  }
+  // sous les bulles : la musique reste en retrait
+  add(music, 0, 0.42);
+}
 const labels = parts.map((_, k) => `[a${k}]`).join("");
 const filter = `${parts.join(";")};${labels}amix=inputs=${parts.length}:normalize=0,apad,atrim=0:${duration.toFixed(3)},${VOICE ? "loudnorm=I=-16:TP=-1.5:LRA=11" : "alimiter=limit=0.89"}[mix]`;
 const track = path.join(dir, "mix.wav");
