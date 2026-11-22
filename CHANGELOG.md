@@ -13,6 +13,7 @@ et le projet adhère au [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Corrigé
 
+- E-mails OHMEGATO : le liseré rose en haut de la carte est plus épais et plus saturé, avec une teinte dédiée en mode sombre, pour rester visible.
 - E-mails OHMEGATO en mode sombre (Gmail) : le logotype, transparent, se confondait avec le fond. Il est maintenant servi avec un fond crème opaque (`logotype-ohmegato-email.png`), donc lisible en mode clair comme en mode sombre.
 - E-mail du code de connexion à « Mon carnet » : il part maintenant avec le format OHMEGATO (logotype, couleurs, code en évidence, durée de validité) comme les e-mails de commande, au lieu du modèle standard de Supabase. Le code est créé par Supabase Auth (même vérification qu'avant) et envoyé par le service d'envoi d'OHMEGATO ; si cet envoi est indisponible ou échoue, l'envoi standard de Supabase prend le relais (la connexion ne dépend jamais d'un seul canal).
 - Écran de chargement des pages (changement de page, carnet, atelier) : il couvre tout l'écran (`fixed`, plein écran, fond crème) au lieu de s'afficher dans la zone de contenu, donc le pied de page, l'en-tête et la page précédente ne se voient plus pendant le chargement. Les écrans de section (boîte, bon de commande, cartes) restent dans la page.

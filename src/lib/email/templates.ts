@@ -65,7 +65,7 @@ interface MailParts {
   noLinks?: boolean;
 }
 
-const C = { creme: "#f5e9d6", blanc: "#fbf6ee", chocolat: "#3a2418", cacao: "#24140d", caramel: "#8f5216", rose: "#dca7ae", grille: "#e7cfc4", douce: "#6b4a3a" };
+const C = { creme: "#f5e9d6", blanc: "#fbf6ee", chocolat: "#3a2418", cacao: "#24140d", caramel: "#8f5216", rose: "#dca7ae", roseVif: "#e58aa0", grille: "#e7cfc4", douce: "#6b4a3a" };
 const FONT = "'Jost','Trebuchet MS',Arial,sans-serif";
 
 function wrap(m: MailParts): RenderedEmail {
@@ -102,13 +102,13 @@ function wrap(m: MailParts): RenderedEmail {
     ? `<p style="margin:22px 0 4px;text-align:center"><a href="${escape(link.url)}" class="ohm-btn" style="display:inline-block;background:${C.chocolat};color:${C.creme};padding:14px 26px;border-radius:999px;text-decoration:none;font-weight:700;font-size:16px">${escape(link.label)}</a></p>`
     : "";
   const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${escape(subject)}</title>
-<style>@media (prefers-color-scheme: dark){.ohm-bg{background:${C.cacao}!important}.ohm-card{background:${C.chocolat}!important;border-color:#5a3a2a!important}.ohm-txt,.ohm-title{color:${C.creme}!important}.ohm-soft{color:#d9c3a8!important}.ohm-facts{background:${C.cacao}!important;border-color:#5a3a2a!important}.ohm-link{color:#e8c9a0!important}.ohm-btn{background:${C.creme}!important;color:${C.chocolat}!important}}</style></head>
+<style>@media (prefers-color-scheme: dark){.ohm-bg{background:${C.cacao}!important}.ohm-card{background:${C.chocolat}!important;border-color:#5a3a2a!important;border-top-color:#f0a8b8!important}.ohm-txt,.ohm-title{color:${C.creme}!important}.ohm-soft{color:#d9c3a8!important}.ohm-facts{background:${C.cacao}!important;border-color:#5a3a2a!important}.ohm-link{color:#e8c9a0!important}.ohm-btn{background:${C.creme}!important;color:${C.chocolat}!important}}</style></head>
 <body class="ohm-bg" style="margin:0;padding:0;background:${C.creme};font-family:${FONT};color:${C.chocolat}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escape(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ohm-bg" style="background:${C.creme}"><tr><td align="center" style="padding:24px 14px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
 <tr><td align="center" style="padding:0 0 18px">${noLinks ? logoImg : `<a href="https://ohmegato.com">${logoImg}</a>`}</td></tr>
-<tr><td class="ohm-card" style="background:${C.blanc};border:1px solid ${C.grille};border-top:4px solid ${C.rose};border-radius:14px;padding:28px 24px">
+<tr><td class="ohm-card" style="background:${C.blanc};border:1px solid ${C.grille};border-top:6px solid ${C.roseVif};border-radius:14px;padding:28px 24px">
 <h1 class="ohm-title" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:700;color:${C.chocolat}">${escape(title)}</h1>
 ${body}
 ${factRows}
